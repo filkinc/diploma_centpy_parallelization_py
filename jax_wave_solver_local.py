@@ -1,5 +1,3 @@
-# jax_wave_solver.py
-
 import time
 import numpy as onp  # обычный NumPy
 import jax

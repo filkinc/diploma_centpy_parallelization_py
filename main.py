@@ -1,11 +1,11 @@
-from jax_wave_solver import JAXWave2D, benchmark
+from jax_wave_solver_local import JAXWave2D, benchmark
 import jax
 
 if __name__ == "__main__":
     # 1. Простое решение и статичный график
-    solver = JAXWave2D(nx=512, ny=512)
+    solver = JAXWave2D(nx=256, ny=256)
     device = jax.devices("cpu")[0]
-    u = solver.solve(steps=1000, device=device)
+    u = solver.solve(steps=500, device=device)
     print("Решение на устройстве:", u.device)
     solver.plot(u)
 
@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     # 3. Бенчмарк NumPy vs JAX
     print("\n== Бенчмарк NumPy vs JAX ==")
-    u_np, u_jax = benchmark(nx=1024, ny=1024, steps=2000)
+    u_np, u_jax = benchmark(nx=256, ny=256, steps=500)
 
     """
     Результат для сравнения:
