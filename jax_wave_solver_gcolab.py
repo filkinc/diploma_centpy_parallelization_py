@@ -1,5 +1,3 @@
-# jax_wave_solver.py
-
 import time
 import numpy as onp  # обычный NumPy
 import jax
@@ -7,6 +5,7 @@ import jax.numpy as jnp
 from jax import jit
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 
 @jit
@@ -69,8 +68,6 @@ class JAXWave2D:
         return frames
 
     def animate(self, steps=200, every=2, device=None, interval=50):
-        from matplotlib.animation import FuncAnimation
-
         frames = self.solve_with_history(steps=steps, every=every, device=device)
         frames_np = [onp.asarray(f) for f in frames]
 
@@ -83,26 +80,21 @@ class JAXWave2D:
             animated=True,
         )
         plt.colorbar(img, ax=ax)
-        ax.set_title("2D Wave Equation (JAX animation)")
         ax.set_xlabel("x")
         ax.set_ylabel("y")
 
-        def update(frame_idx):
-            img.set_data(frames_np[frame_idx])
-            ax.set_title(f"2D Wave Equation (step {frame_idx * every})")
+        def update(k):
+            img.set_data(frames_np[k])
+            ax.set_title(f"Step {k * every}")
             return [img]
 
         anim = FuncAnimation(
-            fig,
-            update,
-            frames=len(frames_np),
-            interval=interval,
-            blit=True,
+            fig, update, frames=len(frames_np), interval=interval, blit=True
         )
-        plt.tight_layout()
-        plt.show()
+        plt.close(fig)  # не показывать автоматически
+        return anim
 
-    def plot(self, u):
+    def plot(self, u, title="2D Wave Equation Solution (JAX)"):
         plt.figure(figsize=(8, 6))
         plt.imshow(
             jnp.asarray(u),
@@ -111,7 +103,7 @@ class JAXWave2D:
             extent=[0.0, 2.0 * jnp.pi, 0.0, 2.0 * jnp.pi],
         )
         plt.colorbar()
-        plt.title("2D Wave Equation Solution (JAX)")
+        plt.title(title)
         plt.xlabel("x")
         plt.ylabel("y")
         plt.show()
