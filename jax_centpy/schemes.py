@@ -2,17 +2,16 @@
 import jax.numpy as jnp
 from typing import Callable, Tuple
 from core import Equation1d, Pars1d
+from limiters import minmod
+
+LimiterFunc = Callable[[jnp.ndarray, jnp.ndarray], jnp.ndarray]
 
 
-def minmod(a: jnp.ndarray, b: jnp.ndarray) -> jnp.ndarray:
-    return 0.5 * (jnp.sign(a) + jnp.sign(b)) * jnp.minimum(jnp.abs(a), jnp.abs(b))
-
-
-def reconstruction_sd2(u: jnp.ndarray, theta: float = 1.0) -> Tuple[jnp.ndarray, jnp.ndarray]:
+def reconstruction_sd2(u: jnp.ndarray, limiter: LimiterFunc = minmod, theta: float = 1.0) -> Tuple[jnp.ndarray, jnp.ndarray]:
 
     diff_plus = u[2:] - u[1:-1]
     diff_minus = u[1:-1] - u[:-2]
-    slopes = minmod(theta * diff_minus, theta * diff_plus)
+    slopes = limiter(theta * diff_minus, theta * diff_plus)
 
     u_center = u[1:-1]
     u_east = u_center + 0.5 * slopes
@@ -20,12 +19,12 @@ def reconstruction_sd2(u: jnp.ndarray, theta: float = 1.0) -> Tuple[jnp.ndarray,
     return u_east, u_west
 
 
-def compute_rhs_sd2(t: float, u_inner: jnp.ndarray, pars: Pars1d, eqn: Equation1d) -> jnp.ndarray:
+def compute_rhs_sd2(t: float, u_inner: jnp.ndarray, pars: Pars1d, eqn: Equation1d, limiter: LimiterFunc = minmod) -> jnp.ndarray:
 
     n_ghost = 2
     u_padded = eqn.boundary_handler(u_inner, n_ghost)
 
-    u_R_all, u_L_all = reconstruction_sd2(u_padded)
+    u_R_all, u_L_all = reconstruction_sd2(u_padded, limiter=limiter)
 
     u_minus = u_R_all[:-1]
     u_plus = u_L_all[1:]
