@@ -1,0 +1,137 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[russian]{babel}
+\usepackage[oglav,spisok,boldsect,eqwhole,figwhole,hyperref,hyperprint,remarks,greekit]{./style/fn2kursstyle}
+\graphicspath{{./style/}{./figures/}}
+
+\usepackage{multirow}
+\usepackage{supertabular}
+\usepackage{multicol}
+\usepackage{hyperref}
+\usepackage{enumitem}
+% Параметры титульного листа
+\title{Лабораторная работа 1}
+\author{А.\,Р.~Ластра-Грек}
+\supervisor{А.\,В.~Череднеченко}
+\group{ФН2-51Б}
+\date{2023}
+
+% Переопределение команды \vec, чтобы векторы печатались полужирным курсивом
+\renewcommand{\vec}[1]{\text{\mathversion{bold}${#1}$}}%{\bi{#1}}
+\newcommand\thh[1]{\text{\mathversion{bold}${#1}$}}
+%Переопределение команды нумерации перечней: точки заменяются на скобки
+\renewcommand{\labelenumi}{\theenumi)}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{float, graphicx}
+
+\usepackage{nicefrac}
+
+\usepackage{relsize}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset { %
+	language=C++,
+	%backgroundcolor=\color{black!5}, % set backgroundcolor
+	basicstyle=\footnotesize % basic font setting
+}
+
+\frenchspacing
+\righthyphenmin=2
+\linespread{1.25}
+
+\newcounter{controlQCounter}
+\setcounter{controlQCounter}{1}
+
+\DeclareMathOperator{\cond}{cond}
+\newcommand{\tr}{\ensuremath{\mathrm{T}}}
+\newcommand{\bigO}{\ensuremath{\mathrm{O}}}
+\newcommand{\linSpan}[2]{\ensuremath{\overline{#1, \, #2}}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+
+\newcommand{\clock}[4]{\boldsymbol{\mathrm{#1}\!:\!\mathrm{#2} \to \mathrm{#3}\!:\!\mathrm{#4} \blacktriangleright} \quad}
+\newcommand{\point}{$\_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ $}
+\newcommand{\size}{1}
+
+\newenvironment{controlQ}{\textbf{Вопрос \arabic{controlQCounter}.} \addtocounter{controlQCounter}{1} \itshape}{\upshape}
+\newenvironment{controlAns}{\textrm{Ответ:} \par }{ \bigskip }
+
+\begin{document}
+	%\maketitle
+	
+	\tableofcontents
+	
+	\newpage
+	
+	\section{Введение}
+	\subsection{Мотивация}
+	
+	\newpage
+	
+	\section{Семейство методов Курганова-Тадмора}
+	
+	В данной работе будет рассмотрено три схемы, реализующие семейство методов Курганова-Тадмора: схема $SD2$ (Semi-Discrete $2$nd order), схема $SD3$ (Semi-Discrete $3$nd order) и $FD2$ (Fully-Discrete $2$nd order).
+	
+	\subsection{Постановка задачи и метод конечных объемов}
+	
+	Рассмотрим одномерное уравнение:
+	
+	\[
+	\frac{\partial u}{\partial t} + \frac{\partial f(u)}{\partial x} = 0.
+	\]
+	
+	Методы Курганова-Тадмора являются консервативными, для них характерно понятие ячейки.
+	Разобьем пространство на ячейки шириной $\Delta x$. Обозначим $x_i = i \Delta x$.
+	В методе конечных объемов мы ищем эволюцию средних значений по ячейке $\bar{u}_i(t)$
+	\[
+	\bar{u}_i(t) = \frac{1}{\Delta x} \int_{x_{i-1/2}}^{x_{i+1/2}} u(\xi, t) \, d\xi
+	\]
+	
+	(Так как я еще нигде не описывал метод Рунге-Кутты, наверное здесь следует написать о том что эти методы находят лишь правую часть уравнения, то есть они работают по пространству)
+	
+	
+	\subsection{Метод SD2 и SD3}
+	
+	Рассмотрим основную идею метода SD2. При разбиении пространства на ячейки мы знаем лишь среднее значение плотности воды или газа внутри. Если происходит ударная волна при поиске решения в виде сеточной функции (дописать определение) может возникнуть размывание и дрожание решения. Однако если мы будем учитывать не только среднее значении внутри, но и значения с каждой стороны от стыка ячейки, можно получить более точное решение. Первым шагом в методе SD2 происходит реконструкция, то есть поиск значений на краях ячейки. Для этого мы находим разностные производные вперед и назад
+	
+	\[
+		f'(x_i) \approx \frac{f(x_{i+1}) - f(x_i)}{h} ,\quad	f'(x_i) \approx \frac{f(x_i) - f(x_{i-1})}{h} 
+	\]
+	
+	после, используя лимитер следующего вида находим значения наклонов в каждой ячейке: (наверное стоит добавить определение того что такое лимитер)
+	
+	\[
+		\text{minmod}(a,b) = \frac{1}{2} \big( \operatorname{sgn}(a) + \operatorname{sgn}(b) \big) \cdot \min\big( |a|, |b| \big),
+	\]
+	
+	где \( \operatorname{sgn}(x) \) — знаковая функция:
+	\[
+	\operatorname{sgn}(x) =
+	\begin{cases} 
+		1, & x > 0, \\
+		0, & x = 0, \\
+		-1, & x < 0,
+	\end{cases}
+	\]
+	
+	\( |x| \) — модуль числа \( x \), \( \min(|a|, |b|) \) — минимум из \( |a| \) и \( |b| \).
+	
+	$u_i^{Left} = u_i - S_i \frac{\Delta x}{2}$ и $u_i^{Right} = u_i + S_i \frac{\Delta x}{2}$
+	
+	\subsection{Метод FD2}
+	
+	\section{Программная реализация и анализ результатов}
+	\subsection{Разработка и реализация вычислительной библиотеки на основе JAX}
+	\subsection{Верификация численного метода и оценка точности на тестовых задачах}
+	\subsection{Анализ производительности и сравнение версий}
+	
+	\section{Заключение}
+	\section{Список литературы}
+	
+\end{document}
