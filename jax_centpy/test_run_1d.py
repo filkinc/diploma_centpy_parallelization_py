@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from core import Pars1d
 from equations import make_burgers_1d
 from solver import Solver1d
+from visualization import create_animation
 
 jax.config.update("jax_enable_x64", True)
 
@@ -40,6 +41,8 @@ def run_test():
     plt.legend()
     plt.grid(True)
     plt.show()
+
+    create_animation(results, "test_run_1d.gif")
 
 
 if __name__ == "__main__":
