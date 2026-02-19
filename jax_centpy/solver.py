@@ -107,11 +107,9 @@ class FastSolver1d(Solver1d):
     def __init__(self, pars, eqn, scheme_name="sd2"):
         super().__init__(pars, eqn, scheme_name)
 
-        # Компилируем ВЕСЬ цикл решения
         self.solve_jit = jax.jit(self._solve_internal)
 
     def _solve_internal(self, u0):
-        # 1. Определяем функции для цикла
 
         def cond_fun(state):
             t, _, _ = state
@@ -120,46 +118,31 @@ class FastSolver1d(Solver1d):
         def body_fun(state):
             t, u, step_idx = state
 
-            # а. Считаем DT (адаптивный)
-            # Внутри JIT это происходит на устройстве, без выхода в Python
             max_speed = jnp.max(self.eqn.spectral_radius(u))
             safe_speed = jnp.maximum(max_speed, 1e-6)
             dt = self.pars.cfl * self.pars.dx / safe_speed
 
-            # Корректировка DT, чтобы не перескочить t_final
-            # jnp.minimum работает корректно внутри JIT
             dt = jnp.minimum(dt, self.pars.t_final - t)
-
-            # б. Делаем шаг
-            # Используем self.step_fn (который уже RK3)
-            # Но нам нужно вытащить функцию rhs из self.rhs_fn,
-            # так как self.step_fn ожидает её
-            # Проще вызвать напрямую логику шага
 
             u_new = self.step_fn(t, u, dt, self.rhs_fn)
 
             return t + dt, u_new, step_idx + 1
 
-        # 2. Запускаем цикл
         init_state = (0.0, u0, 0)
         final_t, final_u, final_steps = jax.lax.while_loop(cond_fun, body_fun, init_state)
 
         return final_t, final_u, final_steps
 
     def solve(self):
-        # Подготовка данных на хосте (сетка и u0)
         dx = self.pars.dx
         x = jnp.linspace(self.pars.x_init + dx / 2, self.pars.x_final - dx / 2, self.pars.J)
         u0 = self.eqn.initial_data(x)
 
-        # Запуск скомпилированного ядра
-        # block_until_ready() нужен для честного замера времени извне
         final_t, final_u, steps = self.solve_jit(u0)
 
-        # Возвращаем результат в формате, похожем на обычный solver
         return {
             "x": x,
-            "t": jnp.array([0.0, final_t]),  # Только начало и конец
+            "t": jnp.array([0.0, final_t]),
             "u_n": jnp.stack([u0, final_u]),
             "steps": steps
         }
