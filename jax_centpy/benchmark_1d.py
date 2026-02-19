@@ -1,7 +1,7 @@
 import time
 import os
 
-os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=4"
+#os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=4"
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,8 +9,9 @@ from typing import Type
 
 from core import Pars1d, Equation1d
 from equations import make_burgers_1d
-from solver import Solver1d
+from solver import Solver1d, FastSolver1d
 from parallel_solver import ParallelSolver1d
+
 
 def run_solver_benchmark(
         solver_class: Type,
@@ -96,14 +97,14 @@ def plot_benchmark_results(df_all: pd.DataFrame, filename="benchmark_comparison.
 if __name__ == "__main__":
 
     eqn = make_burgers_1d()
-    grids = [500, 1000, 2000]
+    grids = [10000]
 
-    df1 = run_solver_benchmark(Solver1d, eqn, "sd2", "JAX Single Core", grids)
+    df1 = run_solver_benchmark(FastSolver1d, eqn, "sd2", "JAX Single Core", grids)
 
-    df2 = run_solver_benchmark(ParallelSolver1d, eqn, "sd2", "JAX Parallel (4dev)", grids)
+    #df2 = run_solver_benchmark(ParallelSolver1d, eqn, "sd2", "JAX Parallel (4dev)", grids)
 
-    final_df = pd.concat([df1, df2])
-    #final_df = df1
+    #final_df = pd.concat([df1, df2])
+    final_df = df1
 
     print("\nCombined Results:")
     print(final_df)
