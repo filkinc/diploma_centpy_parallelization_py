@@ -37,3 +37,94 @@ def make_linear_advection_1d(velocity: float = 1.0):
         boundary_handler=periodic_bc,
         name=f"Linear Advection (v={velocity})"
     )
+
+
+def make_euler_2d(gamma: float = 1.4, periodic: bool = True):
+    """
+    Двумерные уравнения Эйлера для идеального газа.
+    U = [rho, rho*u, rho*v, E]
+    """
+
+    def _compute_pressure(q):
+        rho = q[..., 0]
+        u = q[..., 1] / rho
+        v = q[..., 2] / rho
+        E = q[..., 3]
+        # p = (gamma - 1) * (E - 0.5 * rho * (u^2 + v^2))
+        return (gamma - 1.0) * (E - 0.5 * rho * (u ** 2 + v ** 2))
+
+    def flux_x(q):
+        rho = q[..., 0]
+        rhou = q[..., 1]
+        rhov = q[..., 2]
+        E = q[..., 3]
+
+        u = rhou / rho
+        p = _compute_pressure(q)
+
+        # F(U) = [rho*u, rho*u^2 + p, rho*u*v, u*(E + p)]
+        return jnp.stack([
+            rhou,
+            rhou * u + p,
+            rhou * (rhov / rho),
+            u * (E + p)
+        ], axis=-1)
+
+    def flux_y(q):
+        rho = q[..., 0]
+        rhou = q[..., 1]
+        rhov = q[..., 2]
+        E = q[..., 3]
+
+        v = rhov / rho
+        p = _compute_pressure(q)
+
+        # G(U) = [rho*v, rho*u*v, rho*v^2 + p, v*(E + p)]
+        return jnp.stack([
+            rhov,
+            rhov * (rhou / rho),
+            rhov * v + p,
+            v * (E + p)
+        ], axis=-1)
+
+    def spectral_radius_x(q):
+        rho = q[..., 0]
+        u = q[..., 1] / rho
+        p = _compute_pressure(q)
+        c = jnp.sqrt(gamma * p / rho)  # скорость звука
+        return jnp.abs(u) + c
+
+    def spectral_radius_y(q):
+        rho = q[..., 0]
+        v = q[..., 2] / rho
+        p = _compute_pressure(q)
+        c = jnp.sqrt(gamma * p / rho)
+        return jnp.abs(v) + c
+
+    def initial_explosion(x, y):
+        """Задача 2D взрыва. В центре высокое давление и плотность."""
+        r = jnp.sqrt((x - 0.5) ** 2 + (y - 0.5) ** 2)
+
+        # Внутренняя область r < 0.25, внешняя r >= 0.25
+        rho = jnp.where(r < 0.25, 1.0, 0.125)
+        p = jnp.where(r < 0.25, 1.0, 0.1)
+        u = jnp.zeros_like(x)
+        v = jnp.zeros_like(x)
+
+        E = p / (gamma - 1.0) + 0.5 * rho * (u ** 2 + v ** 2)
+
+        return jnp.stack([rho, rho * u, rho * v, E], axis=-1)
+
+    # Примечание: функцию periodic_bc_2d нужно будет реализовать в boundaries.py
+    # Пока мы поставим заглушку, чтобы код компилировался
+    dummy_bc = lambda q, pad: q
+
+    return Equation2d(
+        flux_x=flux_x,
+        flux_y=flux_y,
+        spectral_radius_x=spectral_radius_x,
+        spectral_radius_y=spectral_radius_y,
+        initial_data=initial_explosion,
+        boundary_handler=dummy_bc,  # Замените на periodic_bc_2d позже
+        name="Euler 2D (Explosion)"
+    )
