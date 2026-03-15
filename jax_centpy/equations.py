@@ -1,4 +1,4 @@
-from core import Equation1d
+from core import Equation1d, Equation2d
 from boundaries import periodic_bc, neumann_bc, dirichlet_zero_bc
 import jax.numpy as jnp
 
@@ -115,8 +115,6 @@ def make_euler_2d(gamma: float = 1.4, periodic: bool = True):
 
         return jnp.stack([rho, rho * u, rho * v, E], axis=-1)
 
-    # Примечание: функцию periodic_bc_2d нужно будет реализовать в boundaries.py
-    # Пока мы поставим заглушку, чтобы код компилировался
     dummy_bc = lambda q, pad: q
 
     return Equation2d(
