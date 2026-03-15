@@ -14,10 +14,12 @@ def reconstruction_sd2(u: jnp.ndarray, limiter: LimiterFunc = minmod, theta: flo
     diff_minus = u_moved[1:-1] - u_moved[:-2]
     slopes = limiter(theta * diff_minus, theta * diff_plus)
 
-    u_center = u[1:-1]
+    u_center = u_moved[1:-1]
+
     u_east = u_center + 0.5 * slopes
     u_west = u_center - 0.5 * slopes
-    return u_east, u_west
+
+    return jnp.moveaxis(u_east, 0, axis), jnp.moveaxis(u_west, 0, axis)
 
 
 def compute_rhs_sd2(t: float, u_inner: jnp.ndarray, pars: Pars1d, eqn: Equation1d, limiter: LimiterFunc = minmod,
@@ -49,6 +51,8 @@ def compute_rhs_sd2_2d(t: float, u_inner: jnp.ndarray, pars: Pars2d, eqn: Equati
     n_ghost = 2
     u_padded = eqn.boundary_handler(u_inner, n_ghost)
 
+    is_system = u_inner.ndim == 3
+
     u_strip_x = u_padded[:, n_ghost:-n_ghost, ...]
     u_east_x, u_west_x = reconstruction_sd2(u_strip_x, limiter, theta, axis=0)
 
@@ -56,6 +60,10 @@ def compute_rhs_sd2_2d(t: float, u_inner: jnp.ndarray, pars: Pars2d, eqn: Equati
     u_R_x = u_west_x[1:, ...]
 
     a_x = jnp.maximum(eqn.spectral_radius_x(u_L_x), eqn.spectral_radius_x(u_R_x))
+
+    if is_system:
+        a_x = a_x[..., None]
+
     flux_x = 0.5 * (eqn.flux_x(u_L_x) + eqn.flux_x(u_R_x) - a_x * (u_R_x - u_L_x))
     rhs_x = -(flux_x[1:, ...] - flux_x[:-1, ...]) / pars.dx
 
@@ -66,6 +74,10 @@ def compute_rhs_sd2_2d(t: float, u_inner: jnp.ndarray, pars: Pars2d, eqn: Equati
     u_R_y = u_south_y[:, 1:, ...]
 
     a_y = jnp.maximum(eqn.spectral_radius_y(u_L_y), eqn.spectral_radius_y(u_R_y))
+
+    if is_system:
+        a_y = a_y[..., None]
+
     flux_y = 0.5 * (eqn.flux_y(u_L_y) + eqn.flux_y(u_R_y) - a_y * (u_R_y - u_L_y))
     rhs_y = -(flux_y[:, 1:, ...] - flux_y[:, :-1, ...]) / pars.dy
 
