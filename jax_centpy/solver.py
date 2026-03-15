@@ -169,7 +169,8 @@ class Solver2d:
             "minmod": limiters.minmod,
             "superbee": limiters.superbee,
             "mc": limiters.monotonized_central,
-            "van_leer": limiters.van_leer
+            "van_leer": limiters.van_leer,
+            "average": limiters.average
         }
         self.limiter = limiter_map.get(limiter_name, limiters.minmod)
 
@@ -238,8 +239,8 @@ class FastSolver2d(Solver2d):
     Идеально для бенчмарков.
     """
 
-    def __init__(self, pars: Pars2d, eqn: Equation2d, scheme_name: str = "sd2"):
-        super().__init__(pars, eqn, scheme_name)
+    def __init__(self, pars: Pars2d, eqn: Equation2d, scheme_name: str = "sd2", limiter_name: str = "minmod"):
+        super().__init__(pars, eqn, scheme_name, limiter_name)
         self.solve_jit = jax.jit(self._solve_internal)
 
     def _solve_internal(self, u0):
