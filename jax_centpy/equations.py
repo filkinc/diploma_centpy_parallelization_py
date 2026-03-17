@@ -1,5 +1,5 @@
 from core import Equation1d, Equation2d
-from boundaries import periodic_bc, neumann_bc, dirichlet_zero_bc, periodic_bc_2d
+from boundaries import periodic_bc, neumann_bc, dirichlet_zero_bc, periodic_bc_2d, neumann_bc_2d
 import jax.numpy as jnp
 
 
@@ -184,3 +184,65 @@ def make_euler_isentropic_vortex_2d(gamma: float = 1.4):
         boundary_handler=periodic_bc_2d,
         name="Euler 2D (Isentropic Vortex)"
     ), exact_solution
+
+
+def make_euler_riemann_2d(gamma: float = 1.4):
+    def _compute_pressure(q):
+        rho = q[..., 0]
+        u = q[..., 1] / rho
+        v = q[..., 2] / rho
+        E = q[..., 3]
+        return (gamma - 1.0) * (E - 0.5 * rho * (u ** 2 + v ** 2))
+
+    def flux_x(q):
+        rho, rhou, rhov, E = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
+        u = rhou / rho
+        p = _compute_pressure(q)
+        return jnp.stack([rhou, rhou * u + p, rhou * (rhov / rho), u * (E + p)], axis=-1)
+
+    def flux_y(q):
+        rho, rhou, rhov, E = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
+        v = rhov / rho
+        p = _compute_pressure(q)
+        return jnp.stack([rhov, rhov * (rhou / rho), rhov * v + p, v * (E + p)], axis=-1)
+
+    def spectral_radius_x(q):
+        rho = q[..., 0]
+        u = q[..., 1] / rho
+        c = jnp.sqrt(gamma * _compute_pressure(q) / rho)
+        return jnp.abs(u) + c
+
+    def spectral_radius_y(q):
+        rho = q[..., 0]
+        v = q[..., 2] / rho
+        c = jnp.sqrt(gamma * _compute_pressure(q) / rho)
+        return jnp.abs(v) + c
+
+    def initial_riemann(x, y):
+        # Воссоздаем 4 квадранта точно как в CPU версии
+        rho = jnp.where((x > 0.5) & (y > 0.5), 1.5,
+                        jnp.where((x <= 0.5) & (y > 0.5), 0.5323,
+                                  jnp.where((x <= 0.5) & (y <= 0.5), 0.138, 0.5323)))  # LR
+
+        vx = jnp.where((x > 0.5) & (y > 0.5), 0.0,
+                       jnp.where((x <= 0.5) & (y > 0.5), 1.206,
+                                 jnp.where((x <= 0.5) & (y <= 0.5), 1.206, 0.0)))
+
+        vy = jnp.where((x > 0.5) & (y > 0.5), 0.0,
+                       jnp.where((x <= 0.5) & (y > 0.5), 0.0,
+                                 jnp.where((x <= 0.5) & (y <= 0.5), 1.206, 1.206)))
+
+        p = jnp.where((x > 0.5) & (y > 0.5), 1.5,
+                      jnp.where((x <= 0.5) & (y > 0.5), 0.3,
+                                jnp.where((x <= 0.5) & (y <= 0.5), 0.029, 0.3)))
+
+        E = p / (gamma - 1.0) + 0.5 * rho * (vx ** 2 + vy ** 2)
+        return jnp.stack([rho, rho * vx, rho * vy, E], axis=-1)
+
+    return Equation2d(
+        flux_x=flux_x, flux_y=flux_y,
+        spectral_radius_x=spectral_radius_x, spectral_radius_y=spectral_radius_y,
+        initial_data=initial_riemann,
+        boundary_handler=neumann_bc_2d,
+        name="Euler 2D (Riemann)"
+    )
