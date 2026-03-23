@@ -1,5 +1,6 @@
 from core import Equation1d, Equation2d
-from boundaries import periodic_bc, neumann_bc, dirichlet_zero_bc, periodic_bc_2d, neumann_bc_2d
+from boundaries import periodic_bc, neumann_bc, dirichlet_zero_bc, periodic_bc_2d, neumann_bc_2d, \
+    dirichlet_riemann_bc_2d
 import jax.numpy as jnp
 
 
@@ -243,6 +244,6 @@ def make_euler_riemann_2d(gamma: float = 1.4):
         flux_x=flux_x, flux_y=flux_y,
         spectral_radius_x=spectral_radius_x, spectral_radius_y=spectral_radius_y,
         initial_data=initial_riemann,
-        boundary_handler=neumann_bc_2d,
+        boundary_handler=dirichlet_riemann_bc_2d,
         name="Euler 2D (Riemann)"
     )
