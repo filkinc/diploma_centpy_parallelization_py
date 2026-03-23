@@ -149,14 +149,12 @@ class FastSolver1d(Solver1d):
 
 
 def compute_dt_2d(pars: Pars2d, eqn: Equation2d, u: jnp.ndarray) -> float:
-    # В 2D шаг по времени ограничивается суммой скоростей по обеим осям
     max_speed_x = jnp.max(eqn.spectral_radius_x(u))
     max_speed_y = jnp.max(eqn.spectral_radius_y(u))
 
     safe_speed_x = jnp.maximum(max_speed_x, 1e-6)
     safe_speed_y = jnp.maximum(max_speed_y, 1e-6)
 
-    # Условие Куранта-Фридрихса-Леви для 2D объема
     return pars.cfl / (safe_speed_x / pars.dx + safe_speed_y / pars.dy)
 
 
@@ -182,7 +180,6 @@ class Solver2d:
         else:
             raise NotImplementedError(f"Scheme {scheme_name} not implemented for 2D yet.")
 
-        # Интегратор времени (SSP-RK3 отлично работает для 2D)
         self.step_fn = time_integration.step_ssp_rk3
 
         @jax.jit
@@ -207,7 +204,7 @@ class Solver2d:
 
         print(f"Starting 2D simulation: {self.eqn.name}")
         print(f"Grid: {self.pars.Jx}x{self.pars.Jy}, Scheme: SD2/{self.limiter.__name__}")
-        start_wall_time = time.time()
+        #start_wall_time = time.time()
 
         while t < self.pars.t_final:
             dt = float(self.compute_dt_jit(u))
@@ -221,14 +218,15 @@ class Solver2d:
             u = self.update_step_jit(t, u, dt)
             t += dt
 
-            if abs(t - next_output_time) < 1e-10:
+            if t >= next_output_time - 1e-9:
                 saved_t.append(t)
                 saved_u.append(u)
                 next_output_time += self.pars.dt_out
-                print(f"t = {t:.4f} / {self.pars.t_final:.4f}")
 
-        end_wall_time = time.time()
-        print(f"Done! Wall time: {end_wall_time - start_wall_time:.2f} s")
+                #print(f"t = {t:.4f} / {self.pars.t_final:.4f}")
+
+        #end_wall_time = time.time()
+        #print(f"Net lead time: {end_wall_time - start_wall_time:.2f} s")
 
         return {"t": jnp.array(saved_t), "u": jnp.stack(saved_u), "X": X, "Y": Y}
 
