@@ -127,6 +127,7 @@ def make_euler_explosion_2d(gamma: float = 1.4, periodic: bool = True):
     )
 
 
+# Контр пример для 2 порядка сходимости схемы sd2
 def make_euler_isentropic_vortex_2d(gamma: float = 1.4):
     """
     Гладкое точное решение: Изоэнтропийный вихрь.
@@ -188,11 +189,138 @@ def make_euler_isentropic_vortex_2d(gamma: float = 1.4):
 
 
 def make_euler_riemann_2d(gamma: float = 1.4):
-    def _compute_pressure(q):
+    def compute_pressure(q):
+        # q = [rho, rhou, rhov, E]
         rho = q[..., 0]
         u = q[..., 1] / rho
         v = q[..., 2] / rho
+        return (gamma - 1.0) * (q[..., 3] - 0.5 * rho * (u ** 2 + v ** 2))
+
+    def flux_x(q):
+        rho = q[..., 0]
+        rhou = q[..., 1]
+        rhov = q[..., 2]
         E = q[..., 3]
+
+        rho_safe = jnp.maximum(rho, 1e-10)
+        u = rhou / rho_safe
+        p = compute_pressure(q)
+
+        return jnp.stack([
+            rhou,
+            rhou * u + p,
+            rhou * (rhov / rho_safe),
+            (E + p) * u
+        ], axis=-1)
+
+    def flux_y(q):
+        rho = q[..., 0]
+        rhou = q[..., 1]
+        rhov = q[..., 2]
+        E = q[..., 3]
+
+        rho_safe = jnp.maximum(rho, 1e-10)
+        v = rhov / rho_safe
+        p = compute_pressure(q)
+
+        return jnp.stack([
+            rhov,
+            rhov * (rhou / rho_safe),
+            rhov * v + p,
+            (E + p) * v
+        ], axis=-1)
+
+    def spectral_radius_x(q):
+        rho = q[..., 0]
+        rhou = q[..., 1]
+
+        rho_safe = jnp.maximum(rho, 1e-10)
+        u = rhou / rho_safe
+        p = compute_pressure(q)
+        p_safe = jnp.maximum(p, 1e-10)
+
+        c = jnp.sqrt(gamma * p_safe / rho_safe)
+        return jnp.abs(u) + c
+
+    def spectral_radius_y(q):
+        rho = q[..., 0]
+        rhov = q[..., 2]
+
+        rho_safe = jnp.maximum(rho, 1e-10)
+        v = rhov / rho_safe
+        p = compute_pressure(q)
+        p_safe = jnp.maximum(p, 1e-10)
+
+        c = jnp.sqrt(gamma * p_safe / rho_safe)
+        return jnp.abs(v) + c
+
+    def initial_riemann(x, y):
+        # x, y - сетки, приходящие из jnp.meshgrid
+        # Верхний правый (UR)
+        rho_UR = 1.5
+        vx_UR = 0.0
+        vy_UR = 0.0
+        p_UR = 1.5
+
+        # Верхний левый (UL)
+        rho_UL = 0.5323
+        vx_UL = 1.206
+        vy_UL = 0.0
+        p_UL = 0.3
+
+        # Нижний правый (LR)
+        rho_LR = 0.5323
+        vx_LR = 0.0
+        vy_LR = 1.206
+        p_LR = 0.3
+
+        # Нижний левый (LL)
+        rho_LL = 0.138
+        vx_LL = 1.206
+        vy_LL = 1.206
+        p_LL = 0.029
+
+        # Используем jnp.where для распределения по квадрантам
+        condition_x = x >= 0.5
+        condition_y = y >= 0.5
+
+        rho = jnp.where(condition_y,
+                        jnp.where(condition_x, rho_UR, rho_UL),
+                        jnp.where(condition_x, rho_LR, rho_LL))
+
+        vx = jnp.where(condition_y,
+                       jnp.where(condition_x, vx_UR, vx_UL),
+                       jnp.where(condition_x, vx_LR, vx_LL))
+
+        vy = jnp.where(condition_y,
+                       jnp.where(condition_x, vy_UR, vy_UL),
+                       jnp.where(condition_x, vy_LR, vy_LL))
+
+        p = jnp.where(condition_y,
+                      jnp.where(condition_x, p_UR, p_UL),
+                      jnp.where(condition_x, p_LR, p_LL))
+
+        E = p / (gamma - 1.0) + 0.5 * rho * (vx ** 2 + vy ** 2)
+
+        return jnp.stack([rho, rho * vx, rho * vy, E], axis=-1)
+
+    return Equation2d(
+        flux_x=flux_x,
+        flux_y=flux_y,
+        spectral_radius_x=spectral_radius_x,
+        spectral_radius_y=spectral_radius_y,
+        initial_data=initial_riemann,
+        boundary_handler=dirichlet_riemann_bc_2d,
+        name="Euler 2D Riemann"
+    )
+
+
+# Уравнение для проверки корректности схемы и сравнения JAX и centpy
+def make_euler_sod_2d(gamma: float = 1.4):
+    def _compute_pressure(q):
+        rho, rhou, rhov, E = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
+        u = rhou / rho
+        v = rhov / rho
         return (gamma - 1.0) * (E - 0.5 * rho * (u ** 2 + v ** 2))
 
     def flux_x(q):
@@ -205,45 +333,41 @@ def make_euler_riemann_2d(gamma: float = 1.4):
         rho, rhou, rhov, E = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
         v = rhov / rho
         p = _compute_pressure(q)
-        return jnp.stack([rhov, rhov * (rhou / rho), rhov * v + p, v * (E + p)], axis=-1)
+        return jnp.stack([rhov, rhou * v, rhov * v + p, v * (E + p)], axis=-1)
 
     def spectral_radius_x(q):
-        rho = q[..., 0]
-        u = q[..., 1] / rho
-        c = jnp.sqrt(gamma * _compute_pressure(q) / rho)
-        return jnp.abs(u) + c
+        rho, rhou = q[..., 0], q[..., 1]
+        u = rhou / rho
+        p = jnp.maximum(_compute_pressure(q), 1e-10)
+        rho = jnp.maximum(rho, 1e-10)
+        return jnp.abs(u) + jnp.sqrt(gamma * p / rho)
 
     def spectral_radius_y(q):
-        rho = q[..., 0]
-        v = q[..., 2] / rho
-        c = jnp.sqrt(gamma * _compute_pressure(q) / rho)
-        return jnp.abs(v) + c
+        rho, rhov = q[..., 0], q[..., 2]
+        v = rhov / rho
+        p = jnp.maximum(_compute_pressure(q), 1e-10)
+        rho = jnp.maximum(rho, 1e-10)
+        return jnp.abs(v) + jnp.sqrt(gamma * p / rho)
 
-    def initial_riemann(x, y):
-        # Воссоздаем 4 квадранта точно как в CPU версии
-        rho = jnp.where((x > 0.5) & (y > 0.5), 1.5,
-                        jnp.where((x <= 0.5) & (y > 0.5), 0.5323,
-                                  jnp.where((x <= 0.5) & (y <= 0.5), 0.138, 0.5323)))  # LR
-
-        vx = jnp.where((x > 0.5) & (y > 0.5), 0.0,
-                       jnp.where((x <= 0.5) & (y > 0.5), 1.206,
-                                 jnp.where((x <= 0.5) & (y <= 0.5), 1.206, 0.0)))
-
-        vy = jnp.where((x > 0.5) & (y > 0.5), 0.0,
-                       jnp.where((x <= 0.5) & (y > 0.5), 0.0,
-                                 jnp.where((x <= 0.5) & (y <= 0.5), 1.206, 1.206)))
-
-        p = jnp.where((x > 0.5) & (y > 0.5), 1.5,
-                      jnp.where((x <= 0.5) & (y > 0.5), 0.3,
-                                jnp.where((x <= 0.5) & (y <= 0.5), 0.029, 0.3)))
+    def initial_sod(x, y):
+        # 1D задача Сода вдоль оси X
+        rho = jnp.where(x < 0.5, 1.0, 0.125)
+        vx = jnp.zeros_like(x)
+        vy = jnp.zeros_like(x)
+        p = jnp.where(x < 0.5, 1.0, 0.1)
 
         E = p / (gamma - 1.0) + 0.5 * rho * (vx ** 2 + vy ** 2)
         return jnp.stack([rho, rho * vx, rho * vy, E], axis=-1)
 
+    def boundary_conditions_jax(u_inner, n_ghost=2):
+        # Простейшие экстраполяционные условия Неймана
+        # В JAX mode='edge' копирует крайние ячейки в фиктивные зоны без ручных индексов
+        return jnp.pad(u_inner, ((n_ghost, n_ghost), (n_ghost, n_ghost), (0, 0)), mode='edge')
+
     return Equation2d(
         flux_x=flux_x, flux_y=flux_y,
         spectral_radius_x=spectral_radius_x, spectral_radius_y=spectral_radius_y,
-        initial_data=initial_riemann,
-        boundary_handler=dirichlet_riemann_bc_2d,
-        name="Euler 2D (Riemann)"
+        initial_data=initial_sod,
+        boundary_handler=boundary_conditions_jax,
+        name="Euler 2D (Sod)"
     )
