@@ -1,0 +1,208 @@
+\documentclass[ignoreonframetext,unicode]{beamer}
+%,aspectratio=169
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx,pgf}
+\usepackage{multimedia}
+\usepackage{relsize}
+\usepackage{mathtools}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\usetheme{Warsaw}
+
+\setbeamertemplate{caption}[numbered]
+
+\useinnertheme{circles}   %внутренняя тема
+%\useoutertheme{smoothbars}   %внешняя тема
+\usecolortheme{rose}     %цветовая схема
+%\usefonttheme{serif}    %шрифты
+%\defbeamertemplate*{footline}{shadow theme}
+%\setbeameroption{hide notes}
+
+\newcommand{\size}{0.36}
+
+%номера слайдов
+\newcommand*\oldmacro{}%
+\let\oldmacro\insertshorttitle%
+\renewcommand*\insertshorttitle{%
+	\oldmacro\hfill%
+	\insertframenumber\,/\,\inserttotalframenumber}
+\RequirePackage{caption}
+\DeclareCaptionLabelSeparator{defffis}{ }
+\captionsetup{justification=centering,labelsep=defffis}
+
+%\title{Курсовая работа}
+%\subtitle{Численные схемы для аппроксимации неограниченных решений при моделировании обтекания профиля крыла в вихревых методах}
+\title[Применение современных программных...]{Применение современных программных инструментов для ускорения численных алгоритмов}
+\author[Филькин Д.\,С.]{Докладчик: Филькин Д.\,С.\and\\[0.5mm] Научный руководитель: к.ф-м.н., доцент кафедры ФН-1 Кравченко О.\,В.}
+
+\institute[каф. Прикладная математика ФН-1]{группа ФН1-81Б}
+\date{\today}
+\titlegraphic{\includegraphics[width=2cm]{logo.png}}
+%\renewcommand{\vec}[1]{\text{\mathversion{bold}${#1}$}}
+
+\begin{document}
+	
+	\begin{frame}[plain]
+		\maketitle
+		%\insertshortinstitute{Группа ФН2-41Б}
+	\end{frame}
+	
+	% Слайд 2:
+	\begin{frame}
+		\frametitle{Цель и задачи}
+		
+		\begin{figure}[h!]
+			
+			Подумать над формулировками
+			
+			\begin{block}{}
+				\textbf{Цель работы:} реализация и оптимизация современных центральных схем высокого разрешения для решения гиперболических законов сохранения.
+				
+				\textbf{Проблема:} вычислительная сложность существующих реализаций и необходимость существенного ускорения расчетов для многомерных задач.
+			\end{block}
+			
+			\textbf{Базовый ориентир:} использование библиотеки \texttt{centpy} для верификации.
+			
+			\begin{center}
+				\href{https://github.com/anilzen/centpy}{https://github.com/anilzen/centpy}
+			\end{center}
+		\end{figure}
+	\end{frame}
+	
+	% Слайд 3:
+	\begin{frame}{}
+		\begin{itemize}
+			\item Выбор фреймворка JAX для реализации численных схем.
+			\item {Ключевые преимущества:}
+			\begin{itemize}
+				\item JIT-компиляция (Just-In-Time) для ускорения циклов по времени.
+				\item Векторизация вычислений для эффективной работы с сетками.
+				\item Нативная поддержка выполнения кода на GPU и TPU.
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+	
+	% Слайд 4: Постановка задачи
+	\begin{frame}{Математическая постановка задачи}
+		\begin{itemize}
+			\item Здесь все переписать на задачу которая будет
+			\item Рассматриваемые уравнения (уравнения Эйлера, линейный перенос, уравнение Бюргерса).
+			\item \textbf{Задача Римана} (задача о распаде произвольного разрыва) как фундаментальный тест для проверки численных схем.
+			\item Эволюция системы с начальными условиями в виде двух областей с разными параметрами, разделенных границей.
+		\end{itemize}
+	\end{frame}
+	
+	% Слайд 5:
+	% Или такой заголовок: Схемы Курганова-Тадмора не требуют точных решений задачи Римана
+	\begin{frame}{Симейство численных схем Курганова-Тадмора}
+		\begin{itemize}
+			\item \textbf{Главное преимущество:} вычисление потоков без матриц Якоби и характеристических переменных.
+			\item \textbf{Адаптивность ячеек:} использование суженных контрольных объемов вблизи разрывов минимизирует численную вязкость.
+			\item \textbf{Два класса схем KT:}
+			\begin{itemize}
+				\item \textbf{FD (Fully-Discrete):} шаг по пространству и времени связан жестким шаблоном.
+				\item \textbf{SD (Semi-Discrete):} пространство и время разделены, используются независимые ODE-солверы (например, Runge-Kutta).
+			\end{itemize}
+			\item \textbf{Порядок точности:} SD2 (линейная реконструкция) и SD3 (параболическая реконструкция).
+		\end{itemize}
+	\end{frame}
+	
+	
+	% Слайд 6:
+	\begin{frame}{Пространственная реконструкция схемы SD2}
+		\begin{block}{Линейная реконструкция:}
+			\vspace{-0.4 cm}
+			\begin{equation*}
+				u^\pm_{i+1/2} = u_i \pm \frac{\Delta x}{2} \cdot s_i = u_i \pm \text{minmod}\left( \frac{u_i - u_{i-1}}{\Delta x}, \frac{u_{i+1} - u_i}{\Delta x} \right)
+			\end{equation*}
+		\end{block}
+		
+		\begin{block}{TVD-свойство (Total Variation Diminishing)}
+			Схема не порождает новые локальные экстремумы если
+			\vspace{-0.2 cm}
+			\[
+			TV(u^{n+1}) \leq TV(u^{n}).
+			\]
+			где общая вариация решения $TV(u) = \sum_{i = 1}^{N - 1} |u_{i + 1}(t) - u_i(t)|$.
+			%Схема не порождает новые локальные экстремумы, то есть исключаются нефизичные осцилляции на разрывах.
+		\end{block}
+		
+		Для обеспечения TVD-свойства используются нелинейные ограничители наклонов (limiter): ГДЕ $\Delta x$
+		\vspace{-0.3 cm}
+		\[
+		\text{minmod}(a,b) = \frac{1}{2} \big( \operatorname{sgn}(a) + \operatorname{sgn}(b) \big) \cdot \min\big( |a|, |b| \big).
+		\]
+	\end{frame}
+	
+	
+	% Слайд 7:
+	\begin{frame}{Численный поток Курганова-Тадмора и шаг по времени}
+		\begin{itemize}
+			\item \textbf{Сведение к системе ОДУ по времени (полудискретный вид):}
+			\begin{equation*}
+				\frac{d u_i}{dt} = -\frac{1}{\Delta x} \left( H_{i+1/2} - H_{i-1/2} \right)
+			\end{equation*}
+			
+			\item \textbf{Формула численного потока KT:}
+			\begin{equation*}
+				H_{i+1/2} = \frac{f(u^+_{i+1/2}) + f(u^-_{i+1/2})}{2} - \frac{a_{i+1/2}}{2} \left( u^+_{i+1/2} - u^-_{i+1/2} \right)
+			\end{equation*}
+			
+			\item $a_{i+1/2}$ — максимальная локальная скорость волны (минимальная искусственная вязкость).
+			\item \textbf{Интегрирование по времени:} используется TVD-схема Рунге-Кутты 2-го порядка (SSP-RK2).
+		\end{itemize}
+	\end{frame}
+	
+	% Слайд 9: Физические результаты
+	\begin{frame}{Физические результаты}
+		\begin{itemize}
+			\item Демонстрация работы схемы на тестовых задачах.
+			\item \textit{[Место для графиков: начальное состояние при \(t=0\) и финальное состояние]}
+			\item Качественный анализ разрешения разрывов и отсутствия нефизичных осцилляций (свойство TVD).
+		\end{itemize}
+	\end{frame}
+	
+	
+	
+	% Слайд : Сходимость
+	\begin{frame}{Проверка порядка сходимости}
+		\begin{itemize}
+			\item Анализ падения ошибки (\(L_1\) или \(L_\infty\) норма) при последовательном дроблении сетки.
+			\item \textbf{Контрпример для TVD-схем:}
+			\begin{itemize}
+				\item Демонстрация честного второго порядка на гладких решениях.
+				\item Локальное падение порядка до первого в области разрывов (ударных волн) в соответствии с теоремой Годунова.
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+	
+	% Слайд 9: Производительность
+	\begin{frame}{Производительность и сравнение с centpy}
+		\begin{itemize}
+			\item Сравнительный анализ времени выполнения шага по времени.
+			\item \textit{[Место для таблицы или гистограммы со сравнением времени CPU/GPU]}
+			\item Итоговая оценка достигнутого ускорения (в \(X\) раз) благодаря использованию JAX.
+		\end{itemize}
+	\end{frame}
+	
+	% Слайд 10: Заключение
+	\begin{frame}{Заключение}
+		\begin{itemize}
+			\item \textbf{Итоги:} Успешно реализована и верифицирована схема SD2, получено существенное ускорение вычислений.
+			\item \textbf{Планы на будущее:}
+			\begin{itemize}
+				\item Внедрение полностью дискретной схемы (FD2).
+				\item Повышение точности пространственной дискретизации до третьего порядка (SD3).
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+
+\end{document}
