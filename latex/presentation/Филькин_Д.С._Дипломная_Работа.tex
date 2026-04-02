@@ -27,6 +27,7 @@
 %\setbeameroption{hide notes}
 
 \newcommand{\size}{0.36}
+\setbeamertemplate{caption}{\insertcaption}
 
 %номера слайдов
 \newcommand*\oldmacro{}%
@@ -202,7 +203,7 @@
 %	\end{frame}
 
 	% Слайд 5:
-	\begin{frame}{Семейство численных схем Курганова-Тадмора (KT)}
+	\begin{frame}{Семейство численных схем Курганова-Тадмора}
 %		Схемы KT относятся к классу современных центральных схем высокого разрешения, свободных от необходимости точного решения задачи Римана.
 		
 		\begin{block}{Основные особенности метода:}
@@ -252,52 +253,191 @@
 	
 	% Слайд 7:
 	\begin{frame}{Численный поток Курганова-Тадмора и шаг по времени}
-		\begin{itemize}
-			\item \textbf{Сведение к системе ОДУ по времени (полудискретный вид):}
+		\begin{block}{Сведение ДУЧП к системе ОДУ по времени:}
+			тут частная производная или полная 
 			\begin{equation*}
-				\frac{d u_i}{dt} = -\frac{1}{\Delta x} \left( H_{i+1/2} - H_{i-1/2} \right)
+				\frac{d u_i}{dt} = -\frac{ H_{i+1/2} - H_{i-1/2} }{\Delta x} 
 			\end{equation*}
-			
-			\item \textbf{Формула численного потока KT:}
-			\begin{equation*}
-				H_{i+1/2} = \frac{f(u^+_{i+1/2}) + f(u^-_{i+1/2})}{2} - \frac{a_{i+1/2}}{2} \left( u^+_{i+1/2} - u^-_{i+1/2} \right)
-			\end{equation*}
-			
-			\item $a_{i+1/2}$ — максимальная локальная скорость волны (минимальная искусственная вязкость).
-			\item \textbf{Интегрирование по времени:} используется TVD-схема Рунге-Кутты 2-го порядка (SSP-RK2).
-		\end{itemize}
+		\end{block}
+		
+		\begin{block}{Формула численного потока KT:}
+		\begin{equation*}
+			H_{i+1/2} = \frac{1}{2}\left( f(u^+_{i+1/2}) + f(u^-_{i+1/2}) - a_{i+1/2} \left( u^+_{i+1/2} - u^-_{i+1/2} \right) \right)
+		\end{equation*}
+		где $a_{i+1/2}$ — спектральный радиус
+		%максимальная локальная скорость волны (минимальная искусственная вязкость).
+		\end{block}
+		
+		\begin{block}{}
+			Для интегрирование по времени используется TVD-схема Рунге-Кутты 2-го порядка (SSP-RK2).
+		\end{block}
 	\end{frame}
 	
 	% Слайд 9: Физические результаты
 	\begin{frame}{Физические результаты}
-		\begin{itemize}
-			\item Демонстрация работы схемы на тестовых задачах.
-			\item \textit{[Место для графиков: начальное состояние при \(t=0\) и финальное состояние]}
-			\item Качественный анализ разрешения разрывов и отсутствия нефизичных осцилляций (свойство TVD).
-		\end{itemize}
+		
+		\begin{figure}[!h]
+			\begin{minipage}[h]{0.49\textwidth}
+				\centering
+				\includegraphics[width=1\textwidth]{animation/first_frame.png}
+				\caption*{(a)}
+			\end{minipage}
+			\hfill
+			\begin{minipage}[h]{0.49\textwidth}
+				\centering
+				\includegraphics[width=1\textwidth]{animation/last_frame.png}
+				\caption*{(b)}
+			\end{minipage}
+			\caption{ Эволюция плотности газа в 2D задаче Римана (a) начальные условия $t = 0$ ; (b) распределение плотности при $t = 0.4$ }
+			
+			Схема успешно разрешает сильные разрывы без нефизичных осцилляций (TVD-свойство) и сохраняет симметрию потока.
+		\end{figure}
+		
+%		\begin{itemize}
+%			\item Демонстрация работы схемы на тестовых задачах.
+%			\item \textit{[Место для графиков: начальное состояние при \(t=0\) и финальное состояние]}
+%			\item Качественный анализ разрешения разрывов и отсутствия нефизичных осцилляций (свойство TVD).
+%		\end{itemize}
 	\end{frame}
 	
 	
 	
-	% Слайд : Сходимость
-	\begin{frame}{Проверка порядка сходимости}
-		\begin{itemize}
-			\item Анализ падения ошибки (\(L_1\) или \(L_\infty\) норма) при последовательном дроблении сетки.
-			\item \textbf{Контрпример для TVD-схем:}
-			\begin{itemize}
-				\item Демонстрация честного второго порядка на гладких решениях.
-				\item Локальное падение порядка до первого в области разрывов (ударных волн) в соответствии с теоремой Годунова.
-			\end{itemize}
-		\end{itemize}
+%	% Слайд : Сходимость
+%	\begin{frame}{Анализ сеточной сходимости}
+%		\begin{table}[h]
+%			\centering
+%			\renewcommand{\arraystretch}{1.3} % Немного увеличим отступы в строках
+%			\begin{tabular}{lccc}
+%				\hline
+%				\textbf{Переменная} & \textbf{Ошибка (40$\to$80)} & \textbf{Ошибка (80$\to$160)} & \textbf{Порядок $p$} \\
+%				\hline
+%				Плотность ($\rho$) & $4.68 \times 10^{-3}$ & $1.18 \times 10^{-3}$ & \textbf{1.99} \\
+%				Импульс X ($\rho u$) & $1.08 \times 10^{-2}$ & $2.63 \times 10^{-3}$ & \textbf{2.04} \\
+%				Импульс Y ($\rho v$) & $1.08 \times 10^{-2}$ & $2.79 \times 10^{-3}$ & \textbf{1.96} \\
+%				Энергия ($E$) & $2.52 \times 10^{-2}$ & $5.94 \times 10^{-3}$ & \textbf{2.09} \\
+%				\hline
+%			\end{tabular}
+%		\end{table}
+%		
+%		На гладких течениях схема уверенно демонстрирует теоретический второй порядок сходимости ($p \approx 2$).
+%	\end{frame}
+	
+	\begin{frame}{Анализ сходимости: гладкое решение}
+		Для верификации теоретического второго порядка точности схемы SD2 проведено моделирование эволюции двумерного изэнтропического вихря.
+		Порядок $p$ вычислялся методом экстраполяции Ричардсона с шагом измельчения $r=2$:
+		
+		\vspace{-0.3 cm}
+		\begin{table}[h]
+			\centering
+			\footnotesize
+			\renewcommand{\arraystretch}{1.3}
+			\begin{tabular}{lccc}
+				\hline
+				\textbf{Переменная} & \textbf{Ошибка (50$\to$100)} & \textbf{Ошибка (100$\to$200)} & \textbf{Порядок $p$} \\
+				\hline
+				Плотность ($\rho$) & $4.68 \times 10^{-3}$ & $1.18 \times 10^{-3}$ & \textbf{1.99} \\
+				Импульс X ($\rho u$) & $1.08 \times 10^{-2}$ & $2.63 \times 10^{-3}$ & \textbf{2.04} \\
+				Импульс Y ($\rho v$) & $1.08 \times 10^{-2}$ & $2.79 \times 10^{-3}$ & \textbf{1.96} \\
+				Энергия ($E$) & $2.52 \times 10^{-2}$ & $5.94 \times 10^{-3}$ & \textbf{2.09} \\
+				\hline
+			\end{tabular}
+		\end{table}
+		
+		\begin{columns}[c]
+			\begin{column}{0.55\textwidth}
+				\vspace{-0.2cm}
+				\[
+				p = \log_2 \left( \frac{|| \mathbf{q}^{4h} - \mathbf{q}^{2h} ||_{L_1}}{|| \mathbf{q}^{2h} - \mathbf{q}^{h} ||_{L_1}} \right)
+				\]
+%				\[
+%				p = \log_2 \left( \frac{|| \mathbf{q}_{coarse} - \mathbf{q}_{medium} ||_{L_1}}{|| \mathbf{q}_{medium} - \mathbf{q}_{fine} ||_{L_1}} \right), \quad 
+%				\]
+%				\[
+%				||e||_{L_1} = \frac{1}{N_x N_y} \sum_{i=1}^{N_x} \sum_{j=1}^{N_y} |e_{i,j}|
+%				\]
+				\[
+				||\mathbf{e}||_{L_1} = \frac{1}{S} \sum_{i,j} |\mathbf{q}_{i,j}^{2h} - \mathbf{q}_{i,j}^{h}| \cdot \Delta x \Delta y
+				\]
+				добавить обозначения
+			\end{column}
+			
+			\begin{column}{0.4\textwidth}
+				\centering
+				% Вставьте сюда картинку вашего вихря
+				\includegraphics[width=0.9\textwidth]{animation/last_frame.png} \\
+				\scriptsize{\textit{Распределение плотности}}
+			\end{column}
+		\end{columns}
+		
+%		\vspace{0.3cm}
+%		\textbf{Вывод:} На решениях, не содержащих ударных волн, метод Курганова-Тадмора строго обеспечивает теоретический 2-й порядок сходимости ($p \approx 2$).
 	\end{frame}
 	
+	\begin{frame}{Анализ сходимости: разрывное решение}
+		
+		В отличие от гладкого вихря, двумерная задача Римана характеризуется сложным взаимодействием ударных волн и контактных разрывов.
+		
+		\begin{table}[h]
+			\centering
+			\footnotesize
+			\renewcommand{\arraystretch}{1.3}
+			\begin{tabular}{lccc}
+				\hline
+				\textbf{Переменная} & \textbf{Ошибка (50$\to$100)} & \textbf{Ошибка (100$\to$200)} & \textbf{Порядок $p$} \\
+				\hline
+				Плотность ($\rho$) & $1.86 \times 10^{-2}$ & $1.10 \times 10^{-2}$ & \textbf{0.76} \\
+				Импульс X ($\rho u$) & $1.60 \times 10^{-2}$ & $1.09 \times 10^{-2}$ & \textbf{0.56} \\
+				Импульс Y ($\rho v$) & $1.60 \times 10^{-2}$ & $1.09 \times 10^{-2}$ & \textbf{0.56} \\
+				Энергия ($E$) & $4.44 \times 10^{-2}$ & $2.74 \times 10^{-2}$ & \textbf{0.70} \\
+				\hline
+			\end{tabular}
+		\end{table}
+		
+		В зонах сильных газодинамических разрывов активация лимитеров принудительно <<размазывает>> скачки для подавления осцилляций. В соответствии с теоремой Годунова, это приводит к локальному падению точности до первого порядка, что снижает глобальный интегральный показатель сходимости до $\approx 0.6 - 0.8$.
+	\end{frame}
+	
+
 	% Слайд 9: Производительность
-	\begin{frame}{Производительность и сравнение с centpy}
-		\begin{itemize}
-			\item Сравнительный анализ времени выполнения шага по времени.
-			\item \textit{[Место для таблицы или гистограммы со сравнением времени CPU/GPU]}
-			\item Итоговая оценка достигнутого ускорения (в \(X\) раз) благодаря использованию JAX.
-		\end{itemize}
+%	\begin{frame}
+%		\frametitle{Эволюция плотности газа}
+%		\begin{center}
+%			\includegraphics[width=0.8\textwidth]{animation/compare_jax_centpy.png}
+%		\end{center}
+%		\medskip
+%		{\small Эволюция плотности газа в 2D задаче Римана: (a) начальные условия $t = 0$; (b) распределение плотности при $t = 0.4$}
+%	\end{frame}
+	
+	\begin{frame}{Сравнительный анализ производительности}
+		
+		\begin{columns}[c]
+			\begin{column}{0.55\textwidth}
+				\begin{figure}[h]
+					\centering
+					\includegraphics[width=1\textwidth]{animation/compare_jax_centpy.png}
+					\caption{\smaller{Зависимость времени работы решателя (сек) от размера пространственной сетки ($N \times N$) для JAX и centpy.}}
+				\end{figure}
+			\end{column}
+			
+			\begin{column}{0.55\textwidth}
+				\begin{table}[h]
+					\centering
+					\footnotesize
+					\renewcommand{\arraystretch}{1.3} % Увеличиваем интервал между строками для читаемости
+					\begin{tabular}{lccc}
+						\hline
+						Сетка & \texttt{centpy}  & JAX & Ускорение \\
+						\hline
+						$\mathbf{40\times 40}$   & 0.82   & 0.28 & \textbf{2.9$\times$} \\
+						$\mathbf{80\times 80}$   & 2.08   & 0.41 & \textbf{5.1$\times$} \\
+						$\mathbf{160\times 160}$ & 16.65  & 0.85 & \textbf{19.7$\times$} \\
+						$\mathbf{200\times 200}$ & 29.82  & 1.33 & \textbf{22.4$\times$} \\
+						$\mathbf{320\times 320}$ & 130.51 & 4.57 & \textbf{28.5$\times$} \\
+						\hline
+					\end{tabular}
+				\end{table}
+			\end{column}
+		\end{columns}
+		
 	\end{frame}
 	
 	% Слайд 10: Заключение
