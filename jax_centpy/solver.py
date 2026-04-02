@@ -180,7 +180,7 @@ class Solver2d:
         else:
             raise NotImplementedError(f"Scheme {scheme_name} not implemented for 2D yet.")
 
-        self.step_fn = time_integration.step_ssp_rk3
+        self.step_fn = time_integration.step_ssp_rk2
 
         @jax.jit
         def update_step(t, u, dt):
