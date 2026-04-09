@@ -112,7 +112,7 @@
 		\begin{itemize}
 			\item Реализовать вычислительный комплекс для системы уравнений Эйлера.
 			\item Применить современные методы аппаратного ускорения вычислений с использованием фреймворка JAX.
-			\item Провести кросс-верификацию точности решения относительно открытой библиотеки \texttt{JAXFLUIDS}.
+			\item Провести кросс-верификацию точности решения относительно открытой библиотеки \texttt{JAX-FLUIDS}.
 			\item Провести сравнение ускорения вычислений относительно открытой библиотеки \texttt{centpy}.
 		\end{itemize}
 		
@@ -155,31 +155,31 @@
 		
 		\begin{block}{Одномерная система уравнений Эйлера}
 			\[
-			\partial_t \begin{bmatrix} \rho \\ \rho u \\ \rho E \end{bmatrix} + 
-			\partial_x \begin{bmatrix} \rho u \\ \rho u^2 + p \\ (E + p)u \end{bmatrix} = 0
+			\partial_t \begin{bmatrix} \rho \\ \rho u \\ E \end{bmatrix} + 
+			\partial_x \begin{bmatrix} \rho u \\ \rho u^2 + p \\ ( E + p)u \end{bmatrix} = 0
 			\]
 			
 			с уравнением состояния идеального газа
 			\vspace{-0.3 cm}
 			\[
-			p = (\gamma - 1)\left(E - \frac{1}{2}\rho u^2 \right), \quad \gamma = 1.4
+			p = (\gamma - 1)\left( E - \frac{1}{2}\rho u^2 \right), \quad \gamma = 1.4
 			\]
 		\end{block}
 		
-		в расчетной области $x \in [0, 1.0]$, с кусочно-постоянными НУ:
+		в расчетной области $x \in [0, 1]$, с кусочно-постоянными НУ:
 		\vspace{-0.15 cm}
 		\[
 		(\rho, u, p)|_{t=0} = 
 		\begin{cases}
-			(1.0, 0, 1.0) & \text{при } x \in [0, 0.3) \\
-			(\alpha \cdot 1.0, 0, 1.0) & \text{при } x \in [0.3, 0.5] \\
-			(1.0, 0, 1.0) & \text{при } x \in (0.5, 0.8) \\
+			(1, 0, 1) & \text{при } x \in [0, 0.3) \\
+			(\alpha \cdot 1, 0, 1) & \text{при } x \in [0.3, 0.5] \\
+			(1, 0, 1) & \text{при } x \in (0.5, 0.8) \\
 			(2.667, -1.479, 4.5) & \text{при } x \in [0.8, 1.0]
 		\end{cases}
 		\]
 		
 		\vspace{-0.2 cm}
-		где каверна пониженной плотности $\alpha = 0.1$. \\
+		где зона пониженной плотности задается с параметром $\alpha = 0.1$. \\
 %		Ударная волна $(\rho_R, u_R, p_R) \approx (2.667, -1.479, 4.5)$ движется влево со скоростью $D_s \approx -2.366$. \\
 		На краях области заданы граничные условия Неймана.
 %		(нулевой градиент).
@@ -316,7 +316,7 @@
 				\caption*{\smaller{(c)}}
 			\end{minipage}
 			\vspace{-0.3 cm}
-			\caption{ \smaller{Эволюция плотности газа в 1D задаче Римана (a) $t = 0$ ; (b) $t = 0.125$; (c) $t = 0.25$}}
+			\caption{ \smaller{Эволюция примитивных переменных в модифицированной 1D задаче Римана (a) $t = 0$ ; (b) $t = 0.125$; (c) $t = 0.25$}}
 		\end{figure}
 		
 	\end{frame}
@@ -354,7 +354,7 @@
 					\vspace{-0.4 cm}
 					\includegraphics[width=0.9\textwidth]{animation/compare_libs.png}
 					
-					\caption{\smaller{Зависимость времени работы библиотек (сек) от размера пространственной сетки ($N \times N$).}}
+					\caption{\smaller{Зависимость времени работы библиотек (сек) от размера пространственной сетки ($N$).}}
 				\end{figure}
 			\end{column}
 			
@@ -431,8 +431,8 @@
 							\hline
 							Сетка & Отн. \texttt{centpy} & JAX (CPU) & JAX-FL. (CPU) & JAX-FL. (GPU) \\
 							\hline
-							$\mathbf{256}$   &  & \textbf{2.1$\times$}  & \textbf{1.2$\times$}  & \textbf{4.4$\times$} \\
-							$\mathbf{512}$   &  & \textbf{1.9$\times$}  & \textbf{1.6$\times$}  & \textbf{5.5$\times$} \\
+							$\mathbf{256}$   & $0.45\times$ & \textbf{2.1$\times$}  & \textbf{1.2$\times$}  & \textbf{4.4$\times$} \\
+							$\mathbf{512}$   & $0.71\times$ & \textbf{1.9$\times$}  & \textbf{1.6$\times$}  & \textbf{5.5$\times$} \\
 							$\mathbf{1024}$  & \textbf{1.1$\times$} & \textbf{2.7$\times$}  & \textbf{2.0$\times$}  & \textbf{6.3$\times$} \\
 							$\mathbf{2048}$  & \textbf{2.1$\times$} & \textbf{5.3$\times$}  & \textbf{3.3$\times$}  & \textbf{7.6$\times$} \\
 							$\mathbf{4096}$  & \textbf{3.0$\times$} & \textbf{10.0$\times$} & \textbf{5.7$\times$}  & \textbf{8.0$\times$} \\
