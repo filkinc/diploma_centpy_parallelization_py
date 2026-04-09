@@ -44,6 +44,9 @@
 %\subtitle{Численные схемы для аппроксимации неограниченных решений при моделировании обтекания профиля крыла в вихревых методах}
 \title[Применение современных программных...]{Применение современных программных инструментов для ускорения численных алгоритмов}
 \author[Филькин Д.\,С.]{Докладчик: Филькин Д.\,С.\and\\[0.5mm] Научный руководитель: Кравченко О.\,В.}
+%\institute[МГТУ им.~Н.\,Э.\,Баумана]{%
+%	Московский государственный технический университет\\
+%	им.~Н.\,Э.\,Баумана\\[4pt]
 %к.ф-м.н., доцент кафедры ФН-1
 
 \institute[каф. Прикладная математика ФН-1]{группа ФН1-81Б}
@@ -58,19 +61,39 @@
 		%\insertshortinstitute{Группа ФН2-41Б}
 	\end{frame}
 	
-	\begin{frame}{Актуальность и проблематика}
+%	\begin{frame}{Актуальность и проблематика (переписать)}
+%		
+%		\begin{block}{Физическая модель: Взаимодействие УВ с локальными неоднородностями}
+%			\begin{itemize}
+%				\item \textbf{1D случай:} Рассматривается прохождение ударной волны (УВ) через зону пониженной плотности («каверну» или «ямку»). На границах ямки происходят процессы отражения и преломления волн, генерирующие сложную газодинамическую структуру.
+%			\end{itemize}
+%		\end{block}
+%		
+%		\begin{alertblock}{Проблема и мотивация разработки}
+%			Для понимания динамики процесса необходимо массовое параметрическое исследование, варьирование параметра $\alpha$ \\
+%			\vspace{0.2cm}
+%			\textbf{Требование:} Необходимость проведения тысяч сценариев для выявления закономерностей ускорения или замедления ударной волны. \\
+%			
+%		\end{alertblock}
+%		
+%	\end{frame}
+
+	% Слайд: Актуальность и проблематика
+	\begin{frame}{Актуальность и мотивация исследования}
 		
-		\begin{block}{Физическая модель: Взаимодействие УВ с локальными неоднородностями}
+		\begin{block}{Физическая проблематика}
 			\begin{itemize}
-				\item \textbf{1D случай:} Рассматривается прохождение ударной волны (УВ) через зону пониженной плотности («каверну» или «ямку»). На границах ямки происходят процессы отражения и преломления волн, генерирующие сложную газодинамическую структуру.
+				\item \textbf{Взаимодействие УВ с неоднородностями:} Исследование прохождения ударной волны (УВ) через стратифицированные области пониженной плотности.
+%				\item \textbf{От 1D к 2D моделям:} Анализ одномерной задачи (взаимодействие с одиночной каверной) является фундаментом для понимания сложных многомерных эффектов (гофрированные источники, преломление и многократное отражение волн).
 			\end{itemize}
 		\end{block}
 		
-		\begin{alertblock}{Проблема и мотивация разработки}
-			Для понимания динамики процесса необходимо массовое параметрическое исследование, варьирование параметра $\alpha$ \\
-			\vspace{0.2cm}
-			\textbf{Требование:} Необходимость проведения тысяч сценариев для выявления закономерностей ускорения или замедления ударной волны. \\
-			
+		\begin{alertblock}{Вычислительная проблема и мотивация}
+			\begin{itemize}
+				\item \textbf{Необходимость массовых расчетов:} Для выявления физических закономерностей (динамика ускорения/замедления УВ) требуется проведение тысяч параметрических сценариев (варьирование параметра разрежения $\alpha$).
+%				\item \textbf{Ограничения универсальных пакетов:} Использование тяжелых CFD-фреймворков (например, \texttt{JAXFLUIDS}) нецелесообразно из-за колоссальных накладных расходов на абстрактную архитектуру и ввод-вывод.
+				\item \textbf{Решение:} Разработка специализированного, аппаратно-ускоренного инструмента для проведения сверхбыстрых серийных вычислений.
+			\end{itemize}
 		\end{alertblock}
 		
 	\end{frame}
@@ -78,7 +101,7 @@
 	\begin{frame}{Цель и задачи исследования}
 		
 		\begin{block}{Цель работы}
-			\textbf{Решение:} Разработка собственной легковесной, высокопроизводительной и аппаратно-ускоренной (GPU/JAX) библиотеки, позволяющей проводить расчеты на порядки быстрее классических универсальных CFD-пакетов (таких как JAXFLUIDS).
+%			\textbf{Решение:} Разработка собственной легковесной, высокопроизводительной и аппаратно-ускоренной (GPU/JAX) библиотеки, позволяющей проводить расчеты на порядки быстрее классических универсальных CFD-пакетов (таких как JAXFLUIDS).
 			
 			Разработать масштабируемую и высокопроизводительную программную реализацию современных центральных схем высокого разрешения (типа Курганова-Тадмора) для численного интегрирования гиперболических систем.
 		\end{block}
@@ -158,7 +181,8 @@
 		\vspace{-0.2 cm}
 		где каверна пониженной плотности $\alpha = 0.1$. \\
 %		Ударная волна $(\rho_R, u_R, p_R) \approx (2.667, -1.479, 4.5)$ движется влево со скоростью $D_s \approx -2.366$. \\
-		На краях области заданы граничные условия Неймана (нулевой градиент).
+		На краях области заданы граничные условия Неймана.
+%		(нулевой градиент).
 	\end{frame}
 
 		
@@ -220,44 +244,55 @@
 	\end{frame}
 	
 	\begin{frame}{Анализ сходимости: гладкое решение}
-		Для верификации теоретического второго порядка точности схемы SD2 проведено моделирование эволюции двумерного изэнтропического вихря.
-		Порядок $p$ вычислялся методом экстраполяции Ричардсона с шагом измельчения $r=2$:
+		\begin{block}{}
+			Для верификации теоретического второго порядка точности схемы SD2 проведено моделирование эволюции уравнения линейного переноса.
+			Порядок $p$ вычислялся методом экстраполяции Ричардсона с шагом измельчения $r=2$
+		\end{block}
 		
-		\vspace{-0.3 cm}
 		\begin{table}[h]
 			\centering
 			\footnotesize
 			\renewcommand{\arraystretch}{1.3}
 			\begin{tabular}{lccc}
 				\hline
-				\textbf{Переменная} & \textbf{Ошибка (50$\to$100)} & \textbf{Ошибка (100$\to$200)} & \textbf{Порядок $p$} \\
+				\textbf{Переменная} & \textbf{Ошибка (100$\to$200)} & \textbf{Ошибка (200$\to$400)} & \textbf{Порядок $p$} \\
 				\hline
-				Плотность ($\rho$) & $4.68 \times 10^{-3}$ & $1.18 \times 10^{-3}$ & \textbf{1.99} \\
-				Импульс X ($\rho u$) & $1.08 \times 10^{-2}$ & $2.63 \times 10^{-3}$ & \textbf{2.04} \\
-				Импульс Y ($\rho v$) & $1.08 \times 10^{-2}$ & $2.79 \times 10^{-3}$ & \textbf{1.96} \\
-				Энергия ($E$) & $2.52 \times 10^{-2}$ & $5.94 \times 10^{-3}$ & \textbf{2.09} \\
+				u(x, t) & $8.92 \times 10^{-4}$ & $2.09 \times 10^{-4}$ & \textbf{2.09} \\
 				\hline
 			\end{tabular}
 		\end{table}
 		
 		\begin{columns}[c]
 			\begin{column}{0.55\textwidth}
-				\vspace{-0.2cm}
 				\[
-				p = \log_2 \left( \frac{|| \mathbf{q}^{4h} - \mathbf{q}^{2h} ||_{L_1}}{|| \mathbf{q}^{2h} - \mathbf{q}^{h} ||_{L_1}} \right)
+				E = \|\mathbf{u}^{2h} - \mathbf{u}^{h}\|_{L_1} = \frac{1}{L} \sum_i |u_i^{2h} - u_i^h| \cdot \Delta x
 				\]
 				\[
-				||\mathbf{e}||_{L_1} = \frac{1}{S} \sum_{i,j} |\mathbf{q}_{i,j}^{2h} - \mathbf{q}_{i,j}^{h}| \cdot \Delta x \Delta y
+				p = \frac{\ln(E_1 / E_2)}{\ln(r)} = \log_2 \left( \frac{|| \mathbf{u}^{4h} - \mathbf{u}^{2h} ||_{L_1}}{|| \mathbf{u}^{2h} - \mathbf{u}^{h} ||_{L_1}} \right)
 				\]
-				\smaller{q - консервативный вектор решения}
 			\end{column}
-			
-			\begin{column}{0.4\textwidth}
-				\centering
-				\includegraphics[width=0.9\textwidth]{animation/vortex_equ.png} \\
-				\scriptsize{\textit{Распределение плотности}}
-			\end{column} 
+			\begin{column}{0.55\textwidth}
+				$u$ --- скалярное решение.
+				
+				$L$ --- общая длина одномерной расчетной области.
+				
+				$\Delta x$ --- размер шага сетки.
+				
+				$h$ --- базовый характерный размер ячейки сетки.
+			\end{column}
 		\end{columns}
+		
+%		\begin{columns}[c]
+%			\begin{column}{0.55\textwidth}
+%				
+%			\end{column}
+%			
+%			\begin{column}{0.4\textwidth}
+%				\centering
+%				\includegraphics[width=0.9\textwidth]{animation/vortex_equ.png} \\
+%				\scriptsize{\textit{Распределение плотности}}
+%			\end{column} 
+%		\end{columns}
 		
 	\end{frame}
 	
@@ -265,22 +300,25 @@
 	\begin{frame}{Численное решение}
 		
 		\begin{figure}[!h]
-			\begin{minipage}[h]{0.49\textwidth}
+			\begin{minipage}[t]{0.33\textwidth}
 				\centering
-				\includegraphics[width=1\textwidth]{animation/first_frame.png}
-				\caption*{(a)}
-			\end{minipage}
-			\hfill
-			\begin{minipage}[h]{0.49\textwidth}
+				\includegraphics[width=1.06\textwidth]{animation/rieman_modify_t0.png}
+				\caption*{\smaller{(a)}}
+			\end{minipage}\hfill
+			\begin{minipage}[t]{0.33\textwidth}
 				\centering
-				\includegraphics[width=1\textwidth]{animation/last_frame.png}
-				\caption*{(b)}
+				\includegraphics[width=\textwidth]{animation/rieman_modify_t_half.png}
+				\caption*{\smaller{(b)}}
+			\end{minipage}\hfill
+			\begin{minipage}[t]{0.33\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{animation/rieman_modify_t_final.png}
+				\caption*{\smaller{(c)}}
 			\end{minipage}
-			\caption{ Эволюция плотности газа в 2D задаче Римана (a) начальные условия $t = 0$ ; (b) распределение плотности при $t = 0.4$ }
-			
-			Схема успешно разрешает сильные разрывы без нефизичных осцилляций (TVD-свойство) и сохраняет симметрию потока.
+			\vspace{-0.3 cm}
+			\caption{ \smaller{Эволюция плотности газа в 1D задаче Римана (a) $t = 0$ ; (b) $t = 0.125$; (c) $t = 0.25$}}
 		\end{figure}
-	
+		
 	\end{frame}
 	
 	
@@ -313,43 +351,128 @@
 			\begin{column}{0.55\textwidth}
 				\begin{figure}[h]
 					\centering
-					\includegraphics[width=1\textwidth]{animation/compare_jax_centpy.png}
-					\caption{\smaller{Зависимость времени работы решателя (сек) от размера пространственной сетки ($N \times N$) для JAX и centpy.}}
+					\vspace{-0.4 cm}
+					\includegraphics[width=0.9\textwidth]{animation/compare_libs.png}
+					
+					\caption{\smaller{Зависимость времени работы библиотек (сек) от размера пространственной сетки ($N \times N$).}}
 				\end{figure}
 			\end{column}
 			
+%			\begin{column}{0.55\textwidth}
+%				\begin{table}[h]
+%					\centering
+%					\footnotesize
+%%					\renewcommand{\arraystretch}{1.3} % Увеличиваем интервал между строками для читаемости
+%					\caption{Время выполнения расчета (в секундах)}
+%					\begin{tabular}{lccccc}
+%						\hline
+%						Сетка & \texttt{centpy} (CPU) & JAX (CPU) & JAX (GPU) & JAX-FLUIDS (CPU) & JAX-FLUIDS (GPU) \\
+%						\hline
+%						$\mathbf{256}$   & 0.42   & 1.93   & \textbf{0.92}  & 1.12   & 4.02 \\
+%						$\mathbf{512}$   & 0.93   & 2.45   & \textbf{1.30}  & 2.10   & 7.21 \\
+%						$\mathbf{1024}$  & 2.42   & 6.11   & \textbf{2.25}  & 4.49   & 14.17 \\
+%						$\mathbf{2048}$  & 7.86   & 19.53  & \textbf{3.72}  & 12.21  & 28.44 \\
+%						$\mathbf{4096}$  & 22.93  & 75.51  & \textbf{7.56}  & 43.05  & 60.50 \\
+%						$\mathbf{8192}$  & 85.18  & 326.19 & \textbf{13.63} & 160.14 & 127.74 \\
+%						$\mathbf{16384}$ & 430.97 & 867.14 & \textbf{26.80} & 583.89 & 258.88 \\
+%						\hline
+%					\end{tabular}
+%				\end{table}
+%				
+%				\begin{table}[h]
+%					\centering
+%					\footnotesize
+%%					\renewcommand{\arraystretch}{1.3} % Увеличиваем интервал между строками для читаемости
+%					\caption{Ускорение JAX GPU относительно других методов}
+%					\begin{tabular}{lcccc}
+%						\hline
+%						Сетка & Относительно \texttt{centpy} & Относительно JAX (CPU) & Относительно JAX-FLUIDS (CPU) & Относительно JAX-FLUIDS (GPU) \\
+%						\hline
+%						$\mathbf{256}$   & 0.5$\times$ & \textbf{2.1$\times$}  & \textbf{1.2$\times$}  & \textbf{4.4$\times$} \\
+%						$\mathbf{512}$   & 0.7$\times$ & \textbf{1.9$\times$}  & \textbf{1.6$\times$}  & \textbf{5.5$\times$} \\
+%						$\mathbf{1024}$  & \textbf{1.1$\times$} & \textbf{2.7$\times$}  & \textbf{2.0$\times$}  & \textbf{6.3$\times$} \\
+%						$\mathbf{2048}$  & \textbf{2.1$\times$} & \textbf{5.3$\times$}  & \textbf{3.3$\times$}  & \textbf{7.6$\times$} \\
+%						$\mathbf{4096}$  & \textbf{3.0$\times$} & \textbf{10.0$\times$} & \textbf{5.7$\times$}  & \textbf{8.0$\times$} \\
+%						$\mathbf{8192}$  & \textbf{6.2$\times$} & \textbf{23.9$\times$} & \textbf{11.8$\times$} & \textbf{9.4$\times$} \\
+%						$\mathbf{16384}$ & \textbf{16.1$\times$}& \textbf{32.4$\times$} & \textbf{21.8$\times$} & \textbf{9.7$\times$} \\
+%						\hline
+%					\end{tabular}
+%				\end{table}
+%			\end{column}
 			\begin{column}{0.55\textwidth}
+				
 				\begin{table}[h]
 					\centering
-					\footnotesize
-					\renewcommand{\arraystretch}{1.3} % Увеличиваем интервал между строками для читаемости
-					\begin{tabular}{lccc}
-						\hline
-						Сетка & \texttt{centpy}  & JAX & Ускорение \\
-						\hline
-						$\mathbf{40\times 40}$   & 0.82   & 0.28 & \textbf{2.9$\times$} \\
-						$\mathbf{80\times 80}$   & 2.08   & 0.41 & \textbf{5.1$\times$} \\
-						$\mathbf{160\times 160}$ & 16.65  & 0.85 & \textbf{19.7$\times$} \\
-						$\mathbf{200\times 200}$ & 29.82  & 1.33 & \textbf{22.4$\times$} \\
-						$\mathbf{320\times 320}$ & 130.51 & 4.57 & \textbf{28.5$\times$} \\
-						\hline
-					\end{tabular}
+					\caption{\smaller{Время выполнения расчета (в сек.)}}
+					\vspace{-0.5 cm}
+					\resizebox{\textwidth}{!}{% <-- Масштабирует таблицу по ширине колонки
+						\begin{tabular}{lccccc}
+							\hline
+							Сетка & \texttt{centpy} & JAX (CPU) & JAX (GPU) & JAX-FL. (CPU) & JAX-FL. (GPU) \\
+							\hline
+							$\mathbf{256}$   & 0.42   & 1.93   & \textbf{0.92}  & 1.12   & 4.02 \\
+							$\mathbf{512}$   & 0.93   & 2.45   & \textbf{1.30}  & 2.10   & 7.21 \\
+							$\mathbf{1024}$  & 2.42   & 6.11   & \textbf{2.25}  & 4.49   & 14.17 \\
+							$\mathbf{2048}$  & 7.86   & 19.53  & \textbf{3.72}  & 12.21  & 28.44 \\
+							$\mathbf{4096}$  & 22.93  & 75.51  & \textbf{7.56}  & 43.05  & 60.50 \\
+							$\mathbf{8192}$  & 85.18  & 326.19 & \textbf{13.63} & 160.14 & 127.74 \\
+							$\mathbf{16384}$ & 430.97 & 867.14 & \textbf{26.80} & 583.89 & 258.88 \\
+							\hline
+						\end{tabular}
+					}
 				\end{table}
+				\vspace{-0.5 cm}
+				\begin{table}[h]
+					\centering
+					\caption{\smaller{Ускорение JAX GPU относительно других методов}}
+					\vspace{-0.4 cm}
+					\resizebox{\textwidth}{!}{% <-- Масштабирует таблицу по ширине колонки
+						\begin{tabular}{lcccc}
+							\hline
+							Сетка & Отн. \texttt{centpy} & JAX (CPU) & JAX-FL. (CPU) & JAX-FL. (GPU) \\
+							\hline
+							$\mathbf{256}$   &  & \textbf{2.1$\times$}  & \textbf{1.2$\times$}  & \textbf{4.4$\times$} \\
+							$\mathbf{512}$   &  & \textbf{1.9$\times$}  & \textbf{1.6$\times$}  & \textbf{5.5$\times$} \\
+							$\mathbf{1024}$  & \textbf{1.1$\times$} & \textbf{2.7$\times$}  & \textbf{2.0$\times$}  & \textbf{6.3$\times$} \\
+							$\mathbf{2048}$  & \textbf{2.1$\times$} & \textbf{5.3$\times$}  & \textbf{3.3$\times$}  & \textbf{7.6$\times$} \\
+							$\mathbf{4096}$  & \textbf{3.0$\times$} & \textbf{10.0$\times$} & \textbf{5.7$\times$}  & \textbf{8.0$\times$} \\
+							$\mathbf{8192}$  & \textbf{6.2$\times$} & \textbf{23.9$\times$} & \textbf{11.8$\times$} & \textbf{9.4$\times$} \\
+							$\mathbf{16384}$ & \textbf{16.1$\times$}& \textbf{32.4$\times$} & \textbf{21.8$\times$} & \textbf{9.7$\times$} \\
+							\hline
+						\end{tabular}
+					}
+				\end{table}
+				
 			\end{column}
 		\end{columns}
 		
 	\end{frame}
 	
-	% Слайд 10: Заключение
-	\begin{frame}{Заключение}
-		\begin{itemize}
-			\item \textbf{Итоги:} Успешно реализована и верифицирована схема SD2, получено существенное ускорение вычислений.
-			\item \textbf{Планы на будущее:}
-			\begin{itemize}
-				\item Внедрение полностью дискретной схемы (FD2).
-				\item Повышение точности пространственной дискретизации до третьего порядка (SD3).
-			\end{itemize}
-		\end{itemize}
+%	% Слайд 10: Заключение
+%	\begin{frame}{Заключение}
+%		\begin{itemize}
+%			\item \textbf{Итоги:} Успешно реализована и верифицирована схема SD2, получено существенное ускорение вычислений.
+%			\item \textbf{Планы на будущее:}
+%			\begin{itemize}
+%				\item Внедрение полностью дискретной схемы (FD2).
+%				\item Повышение точности пространственной дискретизации до третьего порядка (SD3).
+%			\end{itemize}
+%		\end{itemize}
+%	\end{frame}
+
+	% Слайд: Заключение
+	\begin{frame}{Заключение и основные результаты}
+		
+		\begin{block}{Выводы}
+			\begin{enumerate}
+				\item Решена модифицированная задача Римана для одномерного уравнения Эйлера.
+				\item Успешно реализован вычислительный комплекс для интегрирования гиперболических систем с использованием центральной схемы Курганова-Тадмора (SD2).
+				\item Применен фреймворк \texttt{JAX} для аппаратного ускорения и переноса вычислений на GPU.
+				\item Выполнено строгое математическое сравнение с библиотекой \texttt{JAX-FLUIDS}. Достигнуто идеальное совпадение профилей решений (ошибка $L_1 \sim 10^{-3}$), что подтверждает корректность алгоритма.
+				\item Достигнуто ускорение расчетов. На плотных сетках разработанная библиотека работает в 16 раз быстрее \texttt{centpy}.
+			\end{enumerate}
+		\end{block}
+		
 	\end{frame}
 	
 	

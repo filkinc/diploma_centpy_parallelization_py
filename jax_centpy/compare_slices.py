@@ -220,23 +220,142 @@ def plot_trajectories_v2(coords_jax, coords_centpy):
     plt.tight_layout()
     plt.show()
 
+
+import matplotlib.pyplot as plt
+from matplotlib.ticker import ScalarFormatter
+
+
+def plot_trajectories_v3(coords1, coords2, coords3, coords4, coords5, labels=['JAX (CPU)', 'JAX (GPU)', 'centpy', 'JAX-FLUIDS (GPU)', 'JAX-FLUIDS (CPU)']):
+    """
+    Отрисовывает графики для 4 наборов данных с высококонтрастными цветами,
+    пунктирными проекциями на оси и логарифмическим масштабом.
+    """
+    # Распаковываем координаты всех 4 массивов
+    x1, y1 = zip(*coords1)
+    x2, y2 = zip(*coords2)
+    x3, y3 = zip(*coords3)
+    x4, y4 = zip(*coords4)
+    x5, y5 = zip(*coords5)
+
+    plt.figure(figsize=(10, 8))
+
+    # Задаем контрастные цвета и разные маркеры для 4 графиков
+    colors = ['#FF0000', '#0000FF', '#008000', '#FFA500', '#FF00FF']  # Красный, Синий, Зеленый, Оранжевый
+    markers = ['o', 's', '^', 'D', '*']  # Круг, Квадрат, Треугольник, Ромб
+
+    # Собираем все уникальные значения координат для засечек
+    all_x = sorted(list(set(x1 + x2 + x3 + x4 + x5)))
+    all_y = sorted(list(set(y1 + y2 + y3 + y4 + y5)))
+
+    # Задаем минимальные границы осей (в логарифмическом масштабе нельзя использовать 0)
+    # Берем значение чуть меньше самого минимального в данных, чтобы пунктиры упирались в край графика
+    x_min_limit = min(all_x) * 0.8
+    y_min_limit = min(all_y) * 0.8
+
+    # Объединяем данные для удобного прохода циклом
+    datasets = [
+        (x1, y1, colors[0], markers[0], labels[0]),
+        (x2, y2, colors[1], markers[1], labels[1]),
+        (x3, y3, colors[2], markers[2], labels[2]),
+        (x4, y4, colors[3], markers[3], labels[3]),
+        (x5, y5, colors[4], markers[4], labels[4]),
+    ]
+
+    # Отрисовываем основные линии и их проекции
+    for x, y, color, marker, label in datasets:
+        # Основная линия
+        plt.plot(x, y, marker=marker, markersize=8, linestyle='-', linewidth=3,
+                 color=color, label=label, zorder=5)
+
+        # Рисуем пунктирные линии (проекции)
+        for xi, yi in zip(x, y):
+            # Вертикальная линия к оси X (идет до x_min_limit вместо 0)
+            plt.plot([xi, xi], [y_min_limit, yi], color=color, linestyle='--', linewidth=1.5, alpha=0.7)
+            # Горизонтальная линия к оси Y (идет до y_min_limit вместо 0)
+            plt.plot([x_min_limit, xi], [yi, yi], color=color, linestyle='--', linewidth=1.5, alpha=0.7)
+
+    # Включаем логарифмический масштаб
+    plt.xscale('log')
+    plt.yscale('log')
+
+    # Форматируем оси, чтобы отключить научный формат (10^x) и вернуть обычные числа
+    ax = plt.gca()
+    ax.xaxis.set_major_formatter(ScalarFormatter())
+    ax.yaxis.set_major_formatter(ScalarFormatter())
+
+    # Принудительно устанавливаем уникальные значения как засечки
+    # Шрифт немного уменьшен до 12, т.к. из 4 массивов соберется много уникальных чисел
+    plt.xticks(all_x, fontsize=22)
+    plt.yticks(all_y, fontsize=22)
+
+    # Устанавливаем границы осей
+    plt.xlim(left=x_min_limit, right=max(all_x) * 1.2)
+    plt.ylim(bottom=y_min_limit, top=max(all_y) * 1.2)
+
+    # Оформление
+    plt.xlabel('Плотность сетки', fontsize=22)
+    plt.ylabel('Время работы solver сек.', fontsize=22)
+
+    # Делаем обычную сетку более бледной, чтобы пунктирные проекции выделялись лучше
+    plt.grid(True, linestyle=':', alpha=0.4)
+
+    plt.legend(fontsize=18, loc='upper left', framealpha=1.0, edgecolor='black')
+
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
     #compare_all_slices('centpy_data.npz', 'gpu_data.npz')
-    fixed_jax = [
-        [40, 0.2829],
-        [80, 0.4103],
-        [160, 0.8466],
-        [200, 1.330],
-        [320, 4.5743]
+    fixed_jax_cpu = [
+        [256, 1.9267],
+        [512, 2.4545],
+        [1024, 6.1065],
+        [2048, 19.5295],
+        [4096, 75.5111],
+        [8192, 326.1863],
+        [16384, 867.1382]
+    ]
+
+    fixed_jax_gpu = [
+        [256, 0.9232],
+        [512, 1.3046],
+        [1024, 2.2491],
+        [2048, 3.7191],
+        [4096, 7.5645],
+        [8192, 13.6326],
+        [16384, 26.7994]
     ]
 
     fixed_centpy = [
-        [40, 0.8158],
-        [80, 2.0834],
-        [160, 16.6495],
-        [200, 29.8197],
-        [320, 130.5105]
+        [256, 0.4194],
+        [512, 0.9339],
+        [1024, 2.4237],
+        [2048, 7.8631],
+        [4096, 22.9333],
+        [8192, 85.1810],
+        [16384, 430.9722]
     ]
 
-    plot_trajectories(fixed_jax, fixed_centpy)
-    plot_trajectories_v2(fixed_jax, fixed_centpy)
+    fixed_jax_fluids_gpu = [
+        [256, 4.0228],
+        [512, 7.2085],
+        [1024, 14.1745],
+        [2048, 28.4376],
+        [4096, 60.4977],
+        [8192, 127.7438],
+        [16384, 258.8769]
+    ]
+
+    fixed_jax_fluids_cpu = [
+        [256, 1.1211],
+        [512, 2.1045],
+        [1024, 4.4921],
+        [2048, 12.2068],
+        [4096, 43.0459],
+        [8192, 160.1402],
+        [16384, 583.8857]
+    ]
+
+    # plot_trajectories(fixed_jax_cpu, fixed_centpy)
+    # plot_trajectories_v2(fixed_jax_cpu, fixed_centpy)
+    plot_trajectories_v3(fixed_jax_cpu, fixed_jax_gpu, fixed_centpy, fixed_jax_fluids_gpu, fixed_jax_fluids_cpu)
