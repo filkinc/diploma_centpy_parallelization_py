@@ -29,3 +29,6 @@ def van_leer(a: jnp.ndarray, b: jnp.ndarray) -> jnp.ndarray:
     eps = 1e-10
     return (a * jnp.abs(b) + jnp.abs(a) * b) / (jnp.abs(a) + jnp.abs(b) + eps)
 
+
+def average(a: jnp.ndarray, b: jnp.ndarray) -> jnp.ndarray:
+    return 0.5 * (a + b)
