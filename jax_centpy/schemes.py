@@ -86,60 +86,59 @@ def compute_rhs_sd2_2d(t: float, u_inner: jnp.ndarray, pars: Pars2d, eqn: Equati
 
 def reconstruction_sd3(u: jnp.ndarray, axis: int = 0) -> Tuple[jnp.ndarray, jnp.ndarray]:
     """
-    Кусочно-параболическая реконструкция третьего порядка (PPM).
-    Использует 5-точечный шаблон: требует минимум 2 ghost-ячейки с каждой стороны.
-
-    Для ячейки i квадратичный полином подбирается по условию сохранения среднего
-    на трёх ячейках (i-1, i, i+1) и согласования с соседними средними.
-    Формула для граничных значений:
-        u_{i+1/2} = (7/12)*(u_i + u_{i+1}) - (1/12)*(u_{i-1} + u_{i+2})
-    Затем применяется ограничитель монотонности PPM.
-
-    Возвращает (u_east, u_west) — правое и левое граничное значение каждой ячейки.
+    Кусочно-параболическая реконструкция 3-го порядка.
+    Входной массив должен иметь минимум 2 ghost-ячейки с каждой стороны.
+    Возвращает (u_east, u_west) для внутренних ячеек (срез [2:-2] вдоль axis).
     """
-    m = jnp.moveaxis(u, axis, 0)  # shape: [N, ...]
+    m = jnp.moveaxis(u, axis, 0)  # [N, ...]
 
-    # ── Высокоточная интерполяция на грани i+1/2 (4-й порядок без ограничителя) ──
-    # Требует индексы [1:-2] для получения граней между [1:-3] и [2:-2]
-    # face[k] = значение на грани между m[k] и m[k+1], k in [1, N-3]
-    face = (7.0 / 12.0) * (m[1:-2] + m[2:-1]) \
-           - (1.0 / 12.0) * (m[:-3] + m[3:])
-    # face имеет длину N-3; face[k] — грань справа от ячейки k+1 (0-based в m)
-    # Для ячеек m[1:-2] (индексы 1..N-3 в исходном массиве):
-    #   u_east[i] = face[i]       (правая грань ячейки i)
-    #   u_west[i] = face[i-1]     (левая грань ячейки i)
-    # face[k] соответствует грани между m[k+1] и m[k+2]
+    # ── Шаг 1: интерполяция значений на гранях (4-й порядок, без ограничителя) ──
+    # face[k] — значение на грани между ячейками k+1 и k+2 (0-based)
+    # face имеет длину N-3, покрывает грани от 1+1/2 до N-2-1/2
+    face = (7.0 / 12.0) * (m[1:-2] + m[2:-1]) - (1.0 / 12.0) * (m[:-3] + m[3:])
 
-    u_east_raw = face[1:]  # правая грань ячеек m[2:-2]
-    u_west_raw = face[:-1]  # левая  грань ячеек m[2:-2]
-    u_center = m[2:-2]
+    # Для ячеек m[2:-2] (длина N-4):
+    #   левая грань  = face[k-1] = face[i]   где i = 0..N-5  → face[:-1]
+    #   правая грань = face[k]   = face[i+1] где i = 0..N-5  → face[1:]
+    u_L = face[:-1]   # левая  грань, длина N-4
+    u_R = face[1:]    # правая грань, длина N-4
+    u_c = m[2:-2]     # центр ячейки, длина N-4
 
-    # ── Ограничитель монотонности PPM (Colella & Woodward 1984) ──
-    # Шаг 1: если ячейка является локальным экстремумом — сделать реконструкцию постоянной
-    is_extremum = (u_east_raw - u_center) * (u_center - u_west_raw) <= 0.0
-    u_east = jnp.where(is_extremum, u_center, u_east_raw)
-    u_west = jnp.where(is_extremum, u_center, u_west_raw)
+    # ── Шаг 2: ограничитель монотонности (упрощённый, надёжный) ──
+    # Используем соседей для построения допустимого диапазона
+    u_im1 = m[1:-3]  # u_{i-1}
+    u_ip1 = m[3:-1]  # u_{i+1}
 
-    # Шаг 2: ограничить выброс — граничное значение не должно выходить за пределы соседей
-    u_min = jnp.minimum(jnp.minimum(m[1:-3], m[2:-2]), m[3:-1])
-    u_max = jnp.maximum(jnp.maximum(m[1:-3], m[2:-2]), m[3:-1])
-    u_east = jnp.clip(u_east, u_min, u_max)
-    u_west = jnp.clip(u_west, u_min, u_max)
+    u_min = jnp.minimum(u_im1, jnp.minimum(u_c, u_ip1))
+    u_max = jnp.maximum(u_im1, jnp.maximum(u_c, u_ip1))
 
-    # Шаг 3: PPM-условие — устранение нефизичных параболических выбросов
-    # Если (u_east - u_west) * 6*(u_center - 0.5*(u_east+u_west)) > (u_east - u_west)^2
-    # то «придавить» один из концов
-    delta = u_east - u_west
-    avg = 0.5 * (u_east + u_west)
-    overshoot = 6.0 * (u_center - avg)
-    # Случай 1: левый конец выбивается
-    cond1 = delta * (u_center - avg - delta / 3.0) < -(delta ** 2) / 6.0
-    u_west = jnp.where(cond1, 3.0 * u_center - 2.0 * u_east, u_west)
-    # Случай 2: правый конец выбивается
-    cond2 = delta * (u_center - avg + delta / 3.0) > (delta ** 2) / 6.0
-    u_east = jnp.where(cond2, 3.0 * u_center - 2.0 * u_west, u_east)
+    # Шаг 2a: если локальный экстремум — константная реконструкция
+    is_extremum = (u_R - u_c) * (u_c - u_L) <= 0.0
+    u_R = jnp.where(is_extremum, u_c, u_R)
+    u_L = jnp.where(is_extremum, u_c, u_L)
 
-    return jnp.moveaxis(u_east, 0, axis), jnp.moveaxis(u_west, 0, axis)
+    # Шаг 2b: clip в допустимый диапазон (независимо, без перекрёстного влияния)
+    u_R = jnp.clip(u_R, u_min, u_max)
+    u_L = jnp.clip(u_L, u_min, u_max)
+
+    # Шаг 2c: PPM-условие на параболу — только если НЕ экстремум
+    # Каждое из условий применяем независимо, чтобы не нарушить второе
+    delta = u_R - u_L
+    u_mid = 0.5 * (u_R + u_L)
+
+    # Условие 1: парабола «уходит влево» → поднять u_L
+    cond1 = (delta * (u_c - u_mid)) > (delta * delta / 6.0)
+    u_L_c1 = 3.0 * u_c - 2.0 * u_R
+    u_L = jnp.where(~is_extremum & cond1, jnp.clip(u_L_c1, u_min, u_max), u_L)
+
+    # Условие 2: парабола «уходит вправо» → опустить u_R
+    delta2 = u_R - u_L   # пересчитать после возможного изменения u_L
+    u_mid2 = 0.5 * (u_R + u_L)
+    cond2 = (-delta2 * delta2 / 6.0) > (delta2 * (u_c - u_mid2))
+    u_R_c2 = 3.0 * u_c - 2.0 * u_L
+    u_R = jnp.where(~is_extremum & cond2, jnp.clip(u_R_c2, u_min, u_max), u_R)
+
+    return jnp.moveaxis(u_R, 0, axis), jnp.moveaxis(u_L, 0, axis)
 
 
 def compute_rhs_sd3(
