@@ -36,6 +36,11 @@ class Solver1d:
                 return schemes.compute_rhs_sd2(t, u, self.pars, self.eqn, self.limiter)
 
             self.rhs_fn = _rhs
+        elif scheme_name == "sd3":
+            def _rhs(t, u):
+                return schemes.compute_rhs_sd3(t, u, self.pars, self.eqn)
+
+            self.rhs_fn = _rhs
         else:
             raise NotImplementedError(f"Scheme {scheme_name} not implemented yet.")
 
@@ -175,6 +180,11 @@ class Solver2d:
         if scheme_name == "sd2":
             def _rhs(t, u):
                 return schemes.compute_rhs_sd2_2d(t, u, self.pars, self.eqn, self.limiter)
+
+            self.rhs_fn = _rhs
+        elif scheme_name == "sd3":
+            def _rhs(t, u):
+                return schemes.compute_rhs_sd3_2d(t, u, self.pars, self.eqn)
 
             self.rhs_fn = _rhs
         else:
