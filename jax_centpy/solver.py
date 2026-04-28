@@ -167,6 +167,7 @@ class Solver2d:
     def __init__(self, pars: Pars2d, eqn: Equation2d, scheme_name: str = "sd2", limiter_name: str = "minmod"):
         self.pars = pars
         self.eqn = eqn
+        self.scheme_name = scheme_name
 
         limiter_map = {
             "minmod": limiters.minmod,
@@ -213,7 +214,7 @@ class Solver2d:
         next_output_time = self.pars.dt_out
 
         print(f"Starting 2D simulation: {self.eqn.name}")
-        print(f"Grid: {self.pars.Jx}x{self.pars.Jy}, Scheme: SD2/{self.limiter.__name__}")
+        print(f"Grid: {self.pars.Jx}x{self.pars.Jy}, Scheme: {self.scheme_name}/{self.limiter.__name__}")
         #start_wall_time = time.time()
 
         while t < self.pars.t_final:
