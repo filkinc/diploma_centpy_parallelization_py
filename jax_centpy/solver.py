@@ -84,9 +84,7 @@ class Solver1d:
         start_wall_time = time.time()
 
         step_count = 0
-
-        # Флаг шахматного сдвига для FD2 (False = чётный шаг, True = нечётный)
-        odd = jnp.array(False)
+        odd = jnp.array(False)  # флаг шахматного сдвига для FD2
 
         while t < self.pars.t_final:
             dt = float(self.compute_dt_jit(u))
@@ -139,7 +137,6 @@ class FastSolver1d(Solver1d):
         if self.scheme_name == "fd2":
             return self._solve_internal_fd2(u0)
 
-        # SD2 / SD3: стандартный путь через step_fn
         def cond_fun(state):
             t, _, _ = state
             return t < self.pars.t_final
@@ -159,8 +156,7 @@ class FastSolver1d(Solver1d):
 
     def _solve_internal_fd2(self, u0):
         """
-        Внутренний while_loop для FD2.
-        Состояние: (t, u, step_idx, odd) — odd переключается каждый шаг.
+        while_loop для FD2 (1D). Состояние: (t, u, step_idx, odd).
         """
         def cond_fun(state):
             t, _, _, _ = state
@@ -227,20 +223,35 @@ class Solver2d:
 
             self.rhs_fn = _rhs
             self.step_fn = time_integration.step_ssp_rk2
+
         elif scheme_name == "sd3":
             def _rhs(t, u):
                 return schemes.compute_rhs_sd3_2d(t, u, self.pars, self.eqn)
 
             self.rhs_fn = _rhs
             self.step_fn = time_integration.step_ssp_rk3
+
+        elif scheme_name == "fd2":
+            # FD2 (Нессияху-Тадмор) 2D — полностью дискретная схема.
+            # Для устойчивости требуется pars.cfl <= 0.5.
+            self.rhs_fn = None
+            self.step_fn = None
+            self.fd2_step_jit = jax.jit(
+                lambda u, dt, odd: schemes.compute_step_fd2_2d(
+                    u, dt, self.pars, self.eqn, self.limiter, odd
+                )
+            )
+
         else:
-            raise NotImplementedError(f"Scheme {scheme_name} not implemented for 2D yet.")
+            raise NotImplementedError(f"Scheme '{scheme_name}' not implemented for 2D yet.")
 
-        @jax.jit
-        def update_step(t, u, dt):
-            return self.step_fn(t, u, dt, self.rhs_fn)
+        if scheme_name != "fd2":
+            @jax.jit
+            def update_step(t, u, dt):
+                return self.step_fn(t, u, dt, self.rhs_fn)
 
-        self.update_step_jit = update_step
+            self.update_step_jit = update_step
+
         self.compute_dt_jit = jax.jit(lambda u: compute_dt_2d(self.pars, self.eqn, u))
 
     def solve(self) -> Dict[str, Any]:
@@ -258,6 +269,8 @@ class Solver2d:
         print(f"Starting 2D simulation: {self.eqn.name}")
         print(f"Grid: {self.pars.Jx}x{self.pars.Jy}, Scheme: {self.scheme_name}/{self.limiter.__name__}")
 
+        odd = jnp.array(False)  # флаг шахматного сдвига для FD2
+
         while t < self.pars.t_final:
             dt = float(self.compute_dt_jit(u))
 
@@ -266,7 +279,12 @@ class Solver2d:
             if t + dt > self.pars.t_final:
                 dt = self.pars.t_final - t
 
-            u = self.update_step_jit(t, u, dt)
+            if self.scheme_name == "fd2":
+                u = self.fd2_step_jit(u, dt, odd)
+                odd = ~odd
+            else:
+                u = self.update_step_jit(t, u, dt)
+
             t += dt
 
             if t >= next_output_time - 1e-9:
@@ -284,8 +302,11 @@ class Solver2d:
 
 class FastSolver2d(Solver2d):
     """
-    Оптимизированная JAX-версия (через lax.while_loop).
-    Для бенчмарков.
+    Оптимизированная JAX-версия (через lax.while_loop). Для бенчмарков.
+    Не сохраняет промежуточные шаги.
+
+    Для FD2: состояние while_loop расширено флагом odd (bool), который
+    переключается каждый шаг для шахматной сетки Нессияху-Тадмора.
     """
 
     def __init__(self, pars: Pars2d, eqn: Equation2d, scheme_name: str = "sd2", limiter_name: str = "minmod"):
@@ -293,6 +314,9 @@ class FastSolver2d(Solver2d):
         self.solve_jit = jax.jit(self._solve_internal)
 
     def _solve_internal(self, u0):
+        if self.scheme_name == "fd2":
+            return self._solve_internal_fd2(u0)
+
         def cond_fun(state):
             t, _, _ = state
             return t < self.pars.t_final
@@ -314,3 +338,47 @@ class FastSolver2d(Solver2d):
         init_state = (0.0, u0, 0)
         final_t, final_u, total_steps = jax.lax.while_loop(cond_fun, body_fun, init_state)
         return final_u, total_steps
+
+    def _solve_internal_fd2(self, u0):
+        """
+        while_loop для FD2 (2D). Состояние: (t, u, step_idx, odd).
+        """
+        def cond_fun(state):
+            t, _, _, _ = state
+            return t < self.pars.t_final
+
+        def body_fun(state):
+            t, u, step_idx, odd = state
+
+            max_speed_x = jnp.max(self.eqn.spectral_radius_x(u))
+            max_speed_y = jnp.max(self.eqn.spectral_radius_y(u))
+            safe_speed_x = jnp.maximum(max_speed_x, 1e-6)
+            safe_speed_y = jnp.maximum(max_speed_y, 1e-6)
+
+            dt = self.pars.cfl / (safe_speed_x / self.pars.dx + safe_speed_y / self.pars.dy)
+            dt = jnp.minimum(dt, self.pars.t_final - t)
+
+            u_new = schemes.compute_step_fd2_2d(
+                u, dt, self.pars, self.eqn, self.limiter, odd
+            )
+            return t + dt, u_new, step_idx + 1, ~odd
+
+        init_state = (0.0, u0, 0, jnp.array(False))
+        final_t, final_u, total_steps, _ = jax.lax.while_loop(cond_fun, body_fun, init_state)
+        return final_u, total_steps
+
+    def solve(self):
+        x_1d = jnp.linspace(self.pars.x_init + self.pars.dx / 2, self.pars.x_final - self.pars.dx / 2, self.pars.Jx)
+        y_1d = jnp.linspace(self.pars.y_init + self.pars.dy / 2, self.pars.y_final - self.pars.dy / 2, self.pars.Jy)
+        X, Y = jnp.meshgrid(x_1d, y_1d, indexing='ij')
+        u0 = self.eqn.initial_data(X, Y)
+
+        final_u, steps = self.solve_jit(u0)
+
+        return {
+            "t": jnp.array([0.0, self.pars.t_final]),
+            "u": jnp.stack([u0, final_u]),
+            "X": X,
+            "Y": Y,
+            "steps": steps
+        }
