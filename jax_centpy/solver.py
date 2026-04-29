@@ -36,15 +36,15 @@ class Solver1d:
                 return schemes.compute_rhs_sd2(t, u, self.pars, self.eqn, self.limiter)
 
             self.rhs_fn = _rhs
+            self.step_fn = time_integration.step_ssp_rk2
         elif scheme_name == "sd3":
             def _rhs(t, u):
                 return schemes.compute_rhs_sd3(t, u, self.pars, self.eqn)
 
             self.rhs_fn = _rhs
+            self.step_fn = time_integration.step_ssp_rk3
         else:
             raise NotImplementedError(f"Scheme {scheme_name} not implemented yet.")
-
-        self.step_fn = time_integration.step_ssp_rk3
 
         @jax.jit
         def update_step(t, u, dt):
@@ -183,15 +183,15 @@ class Solver2d:
                 return schemes.compute_rhs_sd2_2d(t, u, self.pars, self.eqn, self.limiter)
 
             self.rhs_fn = _rhs
+            self.step_fn = time_integration.step_ssp_rk2
         elif scheme_name == "sd3":
             def _rhs(t, u):
                 return schemes.compute_rhs_sd3_2d(t, u, self.pars, self.eqn)
 
             self.rhs_fn = _rhs
+            self.step_fn = time_integration.step_ssp_rk3
         else:
             raise NotImplementedError(f"Scheme {scheme_name} not implemented for 2D yet.")
-
-        self.step_fn = time_integration.step_ssp_rk2
 
         @jax.jit
         def update_step(t, u, dt):
@@ -239,13 +239,18 @@ class Solver2d:
         #end_wall_time = time.time()
         #print(f"Net lead time: {end_wall_time - start_wall_time:.2f} s")
 
-        return {"t": jnp.array(saved_t), "u": jnp.stack(saved_u), "X": X, "Y": Y}
+        return {
+            "t": jnp.array(saved_t),
+            "u": jnp.stack(saved_u),
+            "X": X,
+            "Y": Y
+        }
 
 
 class FastSolver2d(Solver2d):
     """
     Оптимизированная JAX-версия (через lax.while_loop).
-    Идеально для бенчмарков.
+    Для бенчмарков.
     """
 
     def __init__(self, pars: Pars2d, eqn: Equation2d, scheme_name: str = "sd2", limiter_name: str = "minmod"):
