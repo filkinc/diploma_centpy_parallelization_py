@@ -1,4 +1,3 @@
-
 import jax
 import jax.numpy as jnp
 import time
@@ -13,7 +12,6 @@ import time_integration
 def compute_dt(pars: Pars1d, eqn: Equation1d, u: jnp.ndarray) -> float:
     max_speed = jnp.max(eqn.spectral_radius(u))
     safe_speed = jnp.maximum(max_speed, 1e-6)
-
     return pars.cfl * pars.dx / safe_speed
 
 
@@ -22,6 +20,7 @@ class Solver1d:
     def __init__(self, pars: Pars1d, eqn: Equation1d, scheme_name: str = "sd2", limiter_name: str = "minmod"):
         self.pars = pars
         self.eqn = eqn
+        self.scheme_name = scheme_name
 
         limiter_map = {
             "minmod": limiters.minmod,
@@ -37,20 +36,35 @@ class Solver1d:
 
             self.rhs_fn = _rhs
             self.step_fn = time_integration.step_ssp_rk2
+
         elif scheme_name == "sd3":
             def _rhs(t, u):
                 return schemes.compute_rhs_sd3(t, u, self.pars, self.eqn)
 
             self.rhs_fn = _rhs
             self.step_fn = time_integration.step_ssp_rk3
+
+        elif scheme_name == "fd2":
+            # FD2 (Нессияху-Тадмор) — полностью дискретная схема.
+            # Не использует rhs_fn/step_fn: время и пространство дискретизированы совместно.
+            # Для устойчивости требуется pars.cfl <= 0.5.
+            self.rhs_fn = None
+            self.step_fn = None
+            self.fd2_step_jit = jax.jit(
+                lambda u, dt, odd: schemes.compute_step_fd2_1d(
+                    u, dt, self.pars, self.eqn, self.limiter, odd
+                )
+            )
+
         else:
-            raise NotImplementedError(f"Scheme {scheme_name} not implemented yet.")
+            raise NotImplementedError(f"Scheme '{scheme_name}' not implemented yet.")
 
-        @jax.jit
-        def update_step(t, u, dt):
-            return self.step_fn(t, u, dt, self.rhs_fn)
+        if scheme_name != "fd2":
+            @jax.jit
+            def update_step(t, u, dt):
+                return self.step_fn(t, u, dt, self.rhs_fn)
 
-        self.update_step_jit = update_step
+            self.update_step_jit = update_step
 
         self.compute_dt_jit = jax.jit(lambda u: compute_dt(self.pars, self.eqn, u))
 
@@ -63,25 +77,30 @@ class Solver1d:
 
         saved_t = [t]
         saved_u = [u]
-
         next_output_time = self.pars.dt_out
 
         print(f"Starting simulation: {self.eqn.name}")
-        print(f"Grid: {self.pars.J} points, Scheme: SD2/{self.limiter.__name__}")
+        print(f"Grid: {self.pars.J} points, Scheme: {self.scheme_name}/{self.limiter.__name__}")
         start_wall_time = time.time()
 
         step_count = 0
+
+        # Флаг шахматного сдвига для FD2 (False = чётный шаг, True = нечётный)
+        odd = jnp.array(False)
 
         while t < self.pars.t_final:
             dt = float(self.compute_dt_jit(u))
 
             if t + dt > next_output_time:
                 dt = next_output_time - t
-
             if t + dt > self.pars.t_final:
                 dt = self.pars.t_final - t
 
-            u = self.update_step_jit(t, u, dt)
+            if self.scheme_name == "fd2":
+                u = self.fd2_step_jit(u, dt, odd)
+                odd = ~odd
+            else:
+                u = self.update_step_jit(t, u, dt)
 
             t += dt
             step_count += 1
@@ -107,35 +126,59 @@ class FastSolver1d(Solver1d):
     Оптимизированная версия солвера для бенчмарков.
     Использует jax.lax.while_loop для выполнения всего цикла на устройстве.
     Не сохраняет промежуточные шаги (только начальное и конечное состояние).
+
+    Для FD2: состояние while_loop расширено флагом odd (bool), который
+    переключается каждый шаг для шахматной сетки Нессияху-Тадмора.
     """
 
-    def __init__(self, pars, eqn, scheme_name="sd2"):
-        super().__init__(pars, eqn, scheme_name)
-
+    def __init__(self, pars: Pars1d, eqn: Equation1d, scheme_name: str = "sd2", limiter_name: str = "minmod"):
+        super().__init__(pars, eqn, scheme_name, limiter_name)
         self.solve_jit = jax.jit(self._solve_internal)
 
     def _solve_internal(self, u0):
+        if self.scheme_name == "fd2":
+            return self._solve_internal_fd2(u0)
 
+        # SD2 / SD3: стандартный путь через step_fn
         def cond_fun(state):
             t, _, _ = state
             return t < self.pars.t_final
 
         def body_fun(state):
             t, u, step_idx = state
-
             max_speed = jnp.max(self.eqn.spectral_radius(u))
             safe_speed = jnp.maximum(max_speed, 1e-6)
             dt = self.pars.cfl * self.pars.dx / safe_speed
-
             dt = jnp.minimum(dt, self.pars.t_final - t)
-
             u_new = self.step_fn(t, u, dt, self.rhs_fn)
-
             return t + dt, u_new, step_idx + 1
 
         init_state = (0.0, u0, 0)
         final_t, final_u, final_steps = jax.lax.while_loop(cond_fun, body_fun, init_state)
+        return final_t, final_u, final_steps
 
+    def _solve_internal_fd2(self, u0):
+        """
+        Внутренний while_loop для FD2.
+        Состояние: (t, u, step_idx, odd) — odd переключается каждый шаг.
+        """
+        def cond_fun(state):
+            t, _, _, _ = state
+            return t < self.pars.t_final
+
+        def body_fun(state):
+            t, u, step_idx, odd = state
+            max_speed = jnp.max(self.eqn.spectral_radius(u))
+            safe_speed = jnp.maximum(max_speed, 1e-6)
+            dt = self.pars.cfl * self.pars.dx / safe_speed
+            dt = jnp.minimum(dt, self.pars.t_final - t)
+            u_new = schemes.compute_step_fd2_1d(
+                u, dt, self.pars, self.eqn, self.limiter, odd
+            )
+            return t + dt, u_new, step_idx + 1, ~odd
+
+        init_state = (0.0, u0, 0, jnp.array(False))
+        final_t, final_u, final_steps, _ = jax.lax.while_loop(cond_fun, body_fun, init_state)
         return final_t, final_u, final_steps
 
     def solve(self):
@@ -201,7 +244,6 @@ class Solver2d:
         self.compute_dt_jit = jax.jit(lambda u: compute_dt_2d(self.pars, self.eqn, u))
 
     def solve(self) -> Dict[str, Any]:
-        # Генерация 2D сетки
         x_1d = jnp.linspace(self.pars.x_init + self.pars.dx / 2, self.pars.x_final - self.pars.dx / 2, self.pars.Jx)
         y_1d = jnp.linspace(self.pars.y_init + self.pars.dy / 2, self.pars.y_final - self.pars.dy / 2, self.pars.Jy)
         X, Y = jnp.meshgrid(x_1d, y_1d, indexing='ij')
@@ -215,14 +257,12 @@ class Solver2d:
 
         print(f"Starting 2D simulation: {self.eqn.name}")
         print(f"Grid: {self.pars.Jx}x{self.pars.Jy}, Scheme: {self.scheme_name}/{self.limiter.__name__}")
-        #start_wall_time = time.time()
 
         while t < self.pars.t_final:
             dt = float(self.compute_dt_jit(u))
 
             if t + dt > next_output_time:
                 dt = next_output_time - t
-
             if t + dt > self.pars.t_final:
                 dt = self.pars.t_final - t
 
@@ -233,11 +273,6 @@ class Solver2d:
                 saved_t.append(t)
                 saved_u.append(u)
                 next_output_time += self.pars.dt_out
-
-                #print(f"t = {t:.4f} / {self.pars.t_final:.4f}")
-
-        #end_wall_time = time.time()
-        #print(f"Net lead time: {end_wall_time - start_wall_time:.2f} s")
 
         return {
             "t": jnp.array(saved_t),
