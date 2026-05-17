@@ -86,3 +86,90 @@ def dirichlet_riemann_bc_2d(u, n_ghost):
     u_padded = u_padded.at[n_ghost + mid_x: n_ghost + Nx, Ny + n_ghost:].set(ur)
 
     return u_padded
+
+def wall_bc_1d(u, n_ghost):
+    """
+    Условие непротекания (твёрдая стенка) для 1D.
+    u: shape (J, num_vars), где вектор состояния [rho, rho*v, E]
+    Нормальная скорость (компонента импульса) отражается по знаку.
+    Скаляры (rho, E) — копируются.
+    """
+    # Фиктивные ячейки слева: зеркальное отражение
+    left_ghost = u[:n_ghost][::-1]                         # копируем значения
+    left_ghost = left_ghost.at[:, 1].set(-left_ghost[:, 1])  # отражаем rho*v
+
+    # Фиктивные ячейки справа
+    right_ghost = u[-n_ghost:][::-1]
+    right_ghost = right_ghost.at[:, 1].set(-right_ghost[:, 1])
+
+    return jnp.concatenate([left_ghost, u, right_ghost], axis=0)
+
+
+def wall_bc_2d(u, n_ghost):
+    """
+    Условие непротекания (твёрдая стенка) для 2D.
+    u: shape (Jx, Jy, num_vars), где вектор состояния [rho, rho*vx, rho*vy, E]
+
+    На каждой границе:
+    - Скаляры (rho, E) копируются из ближайшей внутренней ячейки
+    - Нормальная компонента скорости (импульс) отражается по знаку
+    - Тангенциальная компонента скорости копируется
+
+    Возвращает u с добавленными фиктивными ячейками размера n_ghost со всех сторон.
+    """
+    Jx, Jy, num_vars = u.shape
+
+    # Создаём массив с фиктивными ячейками
+    u_padded = jnp.zeros((Jx + 2 * n_ghost, Jy + 2 * n_ghost, num_vars))
+
+    # Копируем внутреннюю область
+    u_padded = u_padded.at[n_ghost:Jx + n_ghost, n_ghost:Jy + n_ghost].set(u)
+
+    # === ЛЕВАЯ ГРАНИЦА (x_min): отражаем x-компоненту импульса ===
+    # Берём ближайшие внутренние ячейки и отражаем по оси x
+    for i in range(n_ghost):
+        # Индекс фиктивной ячейки слева
+        ghost_idx = n_ghost - 1 - i
+        # Индекс соответствующей внутренней ячейки (зеркальное отражение)
+        real_idx = n_ghost + i
+
+        # Копируем все переменные
+        u_padded = u_padded.at[ghost_idx, n_ghost:Jy + n_ghost].set(
+            u_padded[real_idx, n_ghost:Jy + n_ghost]
+        )
+        # Отражаем rho*vx (компонента 1)
+        u_padded = u_padded.at[ghost_idx, n_ghost:Jy + n_ghost, 1].set(
+            -u_padded[real_idx, n_ghost:Jy + n_ghost, 1]
+        )
+
+    # === ПРАВАЯ ГРАНИЦА (x_max): отражаем x-компоненту импульса ===
+    for i in range(n_ghost):
+        ghost_idx = Jx + n_ghost + i
+        real_idx = Jx + n_ghost - 1 - i
+
+        u_padded = u_padded.at[ghost_idx, n_ghost:Jy + n_ghost].set(
+            u_padded[real_idx, n_ghost:Jy + n_ghost]
+        )
+        u_padded = u_padded.at[ghost_idx, n_ghost:Jy + n_ghost, 1].set(
+            -u_padded[real_idx, n_ghost:Jy + n_ghost, 1]
+        )
+
+    # === НИЖНЯЯ ГРАНИЦА (y_min): отражаем y-компоненту импульса ===
+    for j in range(n_ghost):
+        ghost_idx = n_ghost - 1 - j
+        real_idx = n_ghost + j
+
+        # Копируем ВСЮ строку (включая уже заполненные углы)
+        u_padded = u_padded.at[:, ghost_idx].set(u_padded[:, real_idx])
+        # Отражаем rho*vy (компонента 2)
+        u_padded = u_padded.at[:, ghost_idx, 2].set(-u_padded[:, real_idx, 2])
+
+    # === ВЕРХНЯЯ ГРАНИЦА (y_max): отражаем y-компоненту импульса ===
+    for j in range(n_ghost):
+        ghost_idx = Jy + n_ghost + j
+        real_idx = Jy + n_ghost - 1 - j
+
+        u_padded = u_padded.at[:, ghost_idx].set(u_padded[:, real_idx])
+        u_padded = u_padded.at[:, ghost_idx, 2].set(-u_padded[:, real_idx, 2])
+
+    return u_padded
