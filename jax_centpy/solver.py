@@ -616,8 +616,7 @@ class FastSolverWithAllLayers2d(Solver2d):
 class FastSolverWithAllLayersWithoutExtends2d:
     """
     Оптимизированный 2D солвер с сохранением всех временных слоёв.
-    Использует jax.lax.while_loop для выполнения на устройстве.
-    Сохраняет snapshots через интервалы dt_out.
+    Использует jax.lax.while_loop + динамическое обновление массивов.
     НЕТ наследования от Solver2d.
     """
 
@@ -625,7 +624,6 @@ class FastSolverWithAllLayersWithoutExtends2d:
         self.pars = pars
         self.eqn = eqn
 
-        # Настройка лимитера
         limiter_map = {
             "minmod": limiters.minmod,
             "superbee": limiters.superbee,
@@ -635,7 +633,6 @@ class FastSolverWithAllLayersWithoutExtends2d:
         }
         self.limiter = limiter_map.get(limiter_name, limiters.minmod)
 
-        # Настройка схемы
         if scheme_name == "sd2":
             def _rhs(t, u):
                 return schemes.compute_rhs_sd2_2d(t, u, self.pars, self.eqn, self.limiter)
@@ -646,35 +643,30 @@ class FastSolverWithAllLayersWithoutExtends2d:
 
         self.step_fn = time_integration.step_ssp_rk2
 
-        # Вычисляем количество snapshots
-        self.num_snapshots = int(jnp.ceil(self.pars.t_final / self.pars.dt_out)) + 1
+        # Вычисляем максимальное количество snapshots
+        self.max_snapshots = int(jnp.ceil(self.pars.t_final / self.pars.dt_out)) + 2
 
-        # JIT-компиляция всего цикла
+        # JIT-компиляция
         self.solve_jit = jax.jit(self._solve_internal)
 
-    def _solve_internal(self, u0: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray, int]:
+    def _solve_internal(self, u0: jnp.ndarray):
         """
-        Внутренний цикл с сохранением временных слоёв.
-
-        Возвращает:
-            saved_times: массив времён snapshots
-            saved_states: массив состояний в эти моменты
-            total_steps: количество временных шагов
+        Внутренний цикл с сохранением временных слоёв через динамическое обновление.
         """
-        # Предаллоцируем массивы для сохранения
-        saved_states = jnp.zeros((self.num_snapshots,) + u0.shape)
-        saved_times = jnp.zeros(self.num_snapshots)
+        # Предаллоцируем массивы фиксированного размера
+        saved_states = jnp.zeros((self.max_snapshots,) + u0.shape)
+        saved_times = jnp.zeros(self.max_snapshots)
 
-        # Сохраняем начальное состояние
+        # Сохраняем начальное состояние (индекс 0)
         saved_states = saved_states.at[0].set(u0)
         saved_times = saved_times.at[0].set(0.0)
 
         def cond_fun(state):
-            t, _, _, snapshot_idx, _ = state
+            t, _, _, _, _, _, _ = state
             return t < self.pars.t_final
 
         def body_fun(state):
-            t, u, next_output_time, snapshot_idx, step_count = state
+            t, u, next_output_time, snapshot_idx, step_count, saved_states, saved_times = state
 
             # Вычисление адаптивного шага
             max_speed_x = jnp.max(self.eqn.spectral_radius_x(u))
@@ -683,8 +675,6 @@ class FastSolverWithAllLayersWithoutExtends2d:
             safe_speed_y = jnp.maximum(max_speed_y, 1e-6)
 
             dt = self.pars.cfl / (safe_speed_x / self.pars.dx + safe_speed_y / self.pars.dy)
-
-            # Корректируем dt
             dt = jnp.minimum(dt, next_output_time - t)
             dt = jnp.minimum(dt, self.pars.t_final - t)
 
@@ -692,21 +682,33 @@ class FastSolverWithAllLayersWithoutExtends2d:
             u_new = self.step_fn(t, u, dt, self.rhs_fn)
             t_new = t + dt
 
-            # Проверяем, достигли ли момента сохранения
+            # Проверяем, нужно ли сохранять
             should_save = t_new >= next_output_time - 1e-9
 
-            # Сохраняем snapshot если нужно
-            snapshot_idx_new = jnp.where(should_save, snapshot_idx + 1, snapshot_idx)
-            saved_states_upd = jnp.where(
+            # Индекс для следующего сохранения
+            next_idx = snapshot_idx + 1
+
+            # ИСПОЛЬЗУЕМ lax.cond вместо jnp.where для условного обновления массивов
+            def save_snapshot(args):
+                ss, st, idx = args
+                # Используем динамическое обновление через .at[idx]
+                ss_new = ss.at[idx].set(u_new)
+                st_new = st.at[idx].set(t_new)
+                return ss_new, st_new
+
+            def no_save(args):
+                ss, st, _ = args
+                return ss, st
+
+            saved_states_new, saved_times_new = jax.lax.cond(
                 should_save,
-                saved_states.at[snapshot_idx_new].set(u_new),
-                saved_states
+                save_snapshot,
+                no_save,
+                (saved_states, saved_times, next_idx)
             )
-            saved_times_upd = jnp.where(
-                should_save,
-                saved_times.at[snapshot_idx_new].set(t_new),
-                saved_times
-            )
+
+            # Обновляем остальные переменные
+            snapshot_idx_new = jnp.where(should_save, next_idx, snapshot_idx)
             next_output_time_new = jnp.where(
                 should_save,
                 next_output_time + self.pars.dt_out,
@@ -718,51 +720,53 @@ class FastSolverWithAllLayersWithoutExtends2d:
                 u_new,
                 next_output_time_new,
                 snapshot_idx_new,
-                step_count + 1
+                step_count + 1,
+                saved_states_new,
+                saved_times_new
             )
 
         init_state = (
             0.0,  # t
             u0,  # u
             self.pars.dt_out,  # next_output_time
-            0,  # snapshot_idx
-            0  # step_count
+            0,  # snapshot_idx (уже сохранили u0 в индексе 0)
+            0,  # step_count
+            saved_states,  # saved_states
+            saved_times  # saved_times
         )
 
-        final_t, final_u, _, final_snapshot_idx, total_steps = jax.lax.while_loop(
+        (final_t, final_u, _, final_snapshot_idx,
+         total_steps, saved_states_final, saved_times_final) = jax.lax.while_loop(
             cond_fun, body_fun, init_state
         )
 
-        # Обрезаем до реального размера
-        actual_snapshots = final_snapshot_idx + 1
-        saved_states_trimmed = saved_states[:actual_snapshots]
-        saved_times_trimmed = saved_times[:actual_snapshots]
+        # Возвращаем всё + количество реально сохранённых snapshots
+        actual_count = final_snapshot_idx + 1
 
-        return saved_times_trimmed, saved_states_trimmed, total_steps
+        return saved_times_final, saved_states_final, actual_count, total_steps
 
     def solve(self) -> Dict[str, Any]:
-        """
-        Запускает решение 2D задачи.
-
-        Возвращает словарь с:
-            - X, Y: координатные сетки
-            - t: массив времён snapshots
-            - u: массив состояний (num_snapshots, Jx, Jy, num_vars)
-            - steps: количество временных шагов
-        """
+        """Запускает решение 2D задачи."""
         # Генерация 2D сетки
-        x_1d = jnp.linspace(self.pars.x_init + self.pars.dx / 2, self.pars.x_final - self.pars.dx / 2, self.pars.Jx)
-        y_1d = jnp.linspace(self.pars.y_init + self.pars.dy / 2, self.pars.y_final - self.pars.dy / 2, self.pars.Jy)
+        x_1d = jnp.linspace(self.pars.x_init + self.pars.dx / 2,
+                            self.pars.x_final - self.pars.dx / 2, self.pars.Jx)
+        y_1d = jnp.linspace(self.pars.y_init + self.pars.dy / 2,
+                            self.pars.y_final - self.pars.dy / 2, self.pars.Jy)
         X, Y = jnp.meshgrid(x_1d, y_1d, indexing='ij')
 
         u0 = self.eqn.initial_data(X, Y)
 
-        saved_times, saved_states, total_steps = self.solve_jit(u0)
+        saved_times, saved_states, actual_count, total_steps = self.solve_jit(u0)
+
+        # Обрезаем массивы НА HOST-СТОРОНЕ (после JIT)
+        actual_count_int = int(actual_count)
+        saved_times_trimmed = saved_times[:actual_count_int]
+        saved_states_trimmed = saved_states[:actual_count_int]
 
         return {
             "X": X,
             "Y": Y,
-            "t": saved_times,
-            "u": saved_states,
+            "t": saved_times_trimmed,
+            "u": saved_states_trimmed,
             "steps": total_steps
         }
