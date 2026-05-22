@@ -248,8 +248,7 @@ class FastSolverWithAllLayers1d(Solver1d):
 class FastSolverWithAllLayersWithoutExtends1d:
     """
     Оптимизированный 1D солвер с сохранением всех временных слоёв.
-    Использует jax.lax.while_loop для выполнения на устройстве.
-    Сохраняет snapshots через интервалы dt_out.
+    Использует jax.lax.while_loop + динамическое обновление массивов.
     НЕТ наследования от Solver1d.
     """
 
@@ -275,45 +274,45 @@ class FastSolverWithAllLayersWithoutExtends1d:
         else:
             raise NotImplementedError(f"Scheme {scheme_name} not implemented yet.")
 
-        self.step_fn = time_integration.step_ssp_rk3
+        self.step_fn = time_integration.step_ssp_rk2
 
-        # Вычисляем количество snapshots заранее
-        self.num_snapshots = int(jnp.ceil(self.pars.t_final / self.pars.dt_out)) + 1
+        # Вычисляем максимальное количество snapshots
+        self.max_snapshots = int(jnp.ceil(self.pars.t_final / self.pars.dt_out)) + 2
 
-        # JIT-компиляция всего цикла
+        # JIT-компиляция
         self.solve_jit = jax.jit(self._solve_internal)
 
-    def _solve_internal(self, u0: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray, int]:
+    def _solve_internal(self, u0: jnp.ndarray):
         """
-        Внутренний цикл с сохранением временных слоёв.
+        Внутренний цикл с сохранением временных слоёв через динамическое обновление.
 
         Возвращает:
-            saved_times: массив времён snapshots
-            saved_states: массив состояний в эти моменты
+            saved_times: массив времён (фиксированной длины)
+            saved_states: массив состояний (фиксированной длины)
+            actual_count: реальное количество сохранённых snapshots
             total_steps: количество временных шагов
         """
-        # Предаллоцируем массивы для сохранения
-        # saved_states[i] — состояние в момент saved_times[i]
-        saved_states = jnp.zeros((self.num_snapshots,) + u0.shape)
-        saved_times = jnp.zeros(self.num_snapshots)
+        # Предаллоцируем массивы фиксированного размера
+        saved_states = jnp.zeros((self.max_snapshots,) + u0.shape)
+        saved_times = jnp.zeros(self.max_snapshots)
 
-        # Сохраняем начальное состояние
+        # Сохраняем начальное состояние (индекс 0)
         saved_states = saved_states.at[0].set(u0)
         saved_times = saved_times.at[0].set(0.0)
 
         def cond_fun(state):
-            t, _, _, snapshot_idx, _ = state
+            t, _, _, _, _, _, _ = state
             return t < self.pars.t_final
 
         def body_fun(state):
-            t, u, next_output_time, snapshot_idx, step_count = state
+            t, u, next_output_time, snapshot_idx, step_count, saved_states, saved_times = state
 
             # Вычисление адаптивного шага
             max_speed = jnp.max(self.eqn.spectral_radius(u))
             safe_speed = jnp.maximum(max_speed, 1e-6)
             dt = self.pars.cfl * self.pars.dx / safe_speed
 
-            # Корректируем dt для попадания в next_output_time
+            # Корректируем dt
             dt = jnp.minimum(dt, next_output_time - t)
             dt = jnp.minimum(dt, self.pars.t_final - t)
 
@@ -321,21 +320,32 @@ class FastSolverWithAllLayersWithoutExtends1d:
             u_new = self.step_fn(t, u, dt, self.rhs_fn)
             t_new = t + dt
 
-            # Проверяем, достигли ли момента сохранения
+            # Проверяем, нужно ли сохранять
             should_save = t_new >= next_output_time - 1e-9
 
-            # Сохраняем snapshot если нужно
-            snapshot_idx_new = jnp.where(should_save, snapshot_idx + 1, snapshot_idx)
-            saved_states_upd = jnp.where(
+            # Индекс для следующего сохранения
+            next_idx = snapshot_idx + 1
+
+            # Условное сохранение через lax.cond
+            def save_snapshot(args):
+                ss, st, idx = args
+                ss_new = ss.at[idx].set(u_new)
+                st_new = st.at[idx].set(t_new)
+                return ss_new, st_new
+
+            def no_save(args):
+                ss, st, _ = args
+                return ss, st
+
+            saved_states_new, saved_times_new = jax.lax.cond(
                 should_save,
-                saved_states.at[snapshot_idx_new].set(u_new),
-                saved_states
+                save_snapshot,
+                no_save,
+                (saved_states, saved_times, next_idx)
             )
-            saved_times_upd = jnp.where(
-                should_save,
-                saved_times.at[snapshot_idx_new].set(t_new),
-                saved_times
-            )
+
+            # Обновляем остальные переменные
+            snapshot_idx_new = jnp.where(should_save, next_idx, snapshot_idx)
             next_output_time_new = jnp.where(
                 should_save,
                 next_output_time + self.pars.dt_out,
@@ -347,32 +357,34 @@ class FastSolverWithAllLayersWithoutExtends1d:
                 u_new,
                 next_output_time_new,
                 snapshot_idx_new,
-                step_count + 1
+                step_count + 1,
+                saved_states_new,
+                saved_times_new
             )
 
         init_state = (
             0.0,  # t
             u0,  # u
             self.pars.dt_out,  # next_output_time
-            0,  # snapshot_idx (начинаем с 0, т.к. u0 уже сохранён)
-            0  # step_count
+            0,  # snapshot_idx (уже сохранили u0 в индексе 0)
+            0,  # step_count
+            saved_states,  # saved_states
+            saved_times  # saved_times
         )
 
-        final_t, final_u, _, final_snapshot_idx, total_steps = jax.lax.while_loop(
+        (final_t, final_u, _, final_snapshot_idx,
+         total_steps, saved_states_final, saved_times_final) = jax.lax.while_loop(
             cond_fun, body_fun, init_state
         )
 
-        # Обрезаем массивы до реально использованного размера
-        # +1 потому что snapshot_idx указывает на последний записанный индекс
-        actual_snapshots = final_snapshot_idx + 1
-        saved_states_trimmed = saved_states[:actual_snapshots]
-        saved_times_trimmed = saved_times[:actual_snapshots]
+        # Возвращаем всё + количество реально сохранённых snapshots
+        actual_count = final_snapshot_idx + 1
 
-        return saved_times_trimmed, saved_states_trimmed, total_steps
+        return saved_times_final, saved_states_final, actual_count, total_steps
 
     def solve(self) -> Dict[str, Any]:
         """
-        Запускает решение задачи.
+        Запускает решение 1D задачи.
 
         Возвращает словарь с:
             - x: координатная сетка
@@ -384,12 +396,17 @@ class FastSolverWithAllLayersWithoutExtends1d:
         x = jnp.linspace(self.pars.x_init + dx / 2, self.pars.x_final - dx / 2, self.pars.J)
         u0 = self.eqn.initial_data(x)
 
-        saved_times, saved_states, total_steps = self.solve_jit(u0)
+        saved_times, saved_states, actual_count, total_steps = self.solve_jit(u0)
+
+        # Обрезаем массивы НА HOST-СТОРОНЕ (после JIT)
+        actual_count_int = int(actual_count)
+        saved_times_trimmed = saved_times[:actual_count_int]
+        saved_states_trimmed = saved_states[:actual_count_int]
 
         return {
             "x": x,
-            "t": saved_times,
-            "u_n": saved_states,
+            "t": saved_times_trimmed,
+            "u_n": saved_states_trimmed,
             "steps": total_steps
         }
 
