@@ -136,16 +136,23 @@ def verify_sine_1d(sine_equation_cls, scheme_name="sd2", limiter="minmod",
         out    = solver.solve()
 
         # u_n shape: (N_times, J, 3)  — берём последний слой
-        u_n = to_np(out["u_n"][-1])  # (J,) — скаляр, никакого prim_from_cons
+        U_final = to_np(out["u_n"][-1])  # (J, 3)
 
-        dx = 1.0 / J
-        x = np.linspace(0.5 * dx, 1.0 - 0.5 * dx, J)
-        u_ref = np.sin(2.0 * np.pi * (x - t_final))  # точное решение переноса
+        # Восстанавливаем примитивные переменные
+        rho_n, u_n, p_n = prim_from_cons_1d(U_final, gamma)
 
-        errs = [errors(u_n, u_ref)]
+        # Точное решение
+        rho_r, u_r, p_r = exact_sine_1d(J, t_final, gamma)
+
+        errs = [
+            errors(rho_n, rho_r),
+            errors(u_n, u_r),
+            errors(p_n, p_r),
+        ]
         results.append((J, errs))
+        print(f"  J={J:>5} готово")
 
-    print_convergence_table(results, var_names=["u"])
+        print_convergence_table(results, var_names=["rho", "u", "p"])
     return results
 
 
