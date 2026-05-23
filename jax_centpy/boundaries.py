@@ -2,12 +2,13 @@ import jax.numpy as jnp
 
 
 def periodic_bc(u, n_ghost):
-    return jnp.pad(u, (n_ghost, n_ghost), mode='wrap')
+    """Периодические ГУ для 1D системы u shape (J, num_vars)"""
+    return jnp.pad(u, ((n_ghost, n_ghost), (0, 0)), mode='wrap')
 
 
 def neumann_bc(u, n_ghost):
-    # "Свободный выход" или нулевая производная: u[-1] = u[0]
-    return jnp.pad(u, (n_ghost, n_ghost), mode='edge')
+    # Граничные условия Неймана: дублирование крайних ячеек (нулевой градиент)
+    return jnp.pad(u, ((n_ghost, n_ghost), (0, 0)), mode='edge')
 
 
 def dirichlet_zero_bc(u, n_ghost):
