@@ -170,8 +170,8 @@ def make_vortex_pars(N, cfl=0.45, t_final=10.0, L=10.0):
         dt_out=t_final,   # сохраняем только финальный слой
     )
 
-def verify_vortex_2d(vortex_equation_cls, pars, scheme_name="sd2", limiter="minmod",
-                     grids=(20, 40, 80, 160), t_final=10.0, gamma=1.4):
+def verify_vortex_2d(vortex_equation_cls, scheme_name="sd2", limiter="minmod",
+                     grids=(20, 40, 80, 160), t_final=10.0, cfl=0.475, gamma=1.4):
     """
     vortex_equation_cls: класс уравнения Эйлера с начальными условиями вихря.
     """
@@ -181,6 +181,19 @@ def verify_vortex_2d(vortex_equation_cls, pars, scheme_name="sd2", limiter="minm
 
     results = []
     for N in grids:
+
+        pars = Pars2d(
+            x_init=0.0,
+            x_final=10.0,
+            y_init=0.0,
+            y_final=10.0,
+            t_final=t_final,
+            dt_out=0.005,
+            Jx=N,
+            Jy=N,
+            cfl=cfl,
+            scheme="sd2"
+        )
 
         solver = FastSolverWithAllLayersWithoutExtends2d(pars, vortex_equation_cls, scheme_name=scheme_name, limiter_name=limiter)
         out = solver.solve()
