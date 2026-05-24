@@ -377,14 +377,6 @@ class FastSolverWithAllLayersWithoutExtends1d:
             dt = jnp.minimum(dt, self.pars.t_final - t)
 
             # Один шаг интегрирования
-            def _do_sd2(_):
-                u_new = self.step_fn(t, u, dt, self.rhs_fn)
-                return u_new, odd
-
-            def _do_fd2(_):
-                u_new = self.fd2_step_jit(u, dt, odd)
-                return u_new, jnp.logical_not(odd)
-
             if self.is_fd2:
                 u_new = self.fd2_step_jit(u, dt, odd)
                 odd_new = jnp.logical_not(odd)
@@ -791,10 +783,25 @@ class FastSolverWithAllLayersWithoutExtends2d:
                 return schemes.compute_rhs_sd2_2d(t, u, self.pars, self.eqn, self.limiter)
 
             self.rhs_fn = _rhs
+            self.step_fn = time_integration.step_ssp_rk2
+            self.is_fd2 = False
+
+        elif scheme_name == "fd2":
+            # FD2 (Нессияху–Тадмор) 2D — полностью дискретная схема.
+            # Не использует rhs_fn/step_fn.
+            self.rhs_fn = None
+            self.step_fn = None
+            self.is_fd2 = True
+
+            # JIT‑обёртка для шага FD2 2D
+            self.fd2_step_jit = jax.jit(
+                lambda u, dt, odd: schemes.compute_step_fd2_2d(
+                    u, dt, self.pars, self.eqn, self.limiter, odd
+                )
+            )
+
         else:
             raise NotImplementedError(f"Scheme {scheme_name} not implemented for 2D yet.")
-
-        self.step_fn = time_integration.step_ssp_rk2
 
         # Вычисляем максимальное количество snapshots
         self.max_snapshots = int(jnp.ceil(self.pars.t_final / self.pars.dt_out)) + 2
@@ -815,11 +822,11 @@ class FastSolverWithAllLayersWithoutExtends2d:
         saved_times = saved_times.at[0].set(0.0)
 
         def cond_fun(state):
-            t, _, _, _, _, _, _ = state
+            t, _, _, _, _, _, _, _ = state
             return t < self.pars.t_final
 
         def body_fun(state):
-            t, u, next_output_time, snapshot_idx, step_count, saved_states, saved_times = state
+            t, u, next_output_time, snapshot_idx, step_count, saved_states, saved_times, odd = state
 
             # Вычисление адаптивного шага
             max_speed_x = jnp.max(self.eqn.spectral_radius_x(u))
@@ -832,7 +839,13 @@ class FastSolverWithAllLayersWithoutExtends2d:
             dt = jnp.minimum(dt, self.pars.t_final - t)
 
             # Один шаг интегрирования
-            u_new = self.step_fn(t, u, dt, self.rhs_fn)
+            if self.is_fd2:
+                u_new = self.fd2_step_jit(u, dt, odd)
+                odd_new = jnp.logical_not(odd)
+            else:
+                u_new = self.step_fn(t, u, dt, self.rhs_fn)
+                odd_new = odd
+
             t_new = t + dt
 
             # Проверяем, нужно ли сохранять
@@ -875,21 +888,23 @@ class FastSolverWithAllLayersWithoutExtends2d:
                 snapshot_idx_new,
                 step_count + 1,
                 saved_states_new,
-                saved_times_new
+                saved_times_new,
+                odd_new,
             )
 
         init_state = (
             0.0,  # t
             u0,  # u
             self.pars.dt_out,  # next_output_time
-            0,  # snapshot_idx (уже сохранили u0 в индексе 0)
+            0,  # snapshot_idx
             0,  # step_count
-            saved_states,  # saved_states
-            saved_times  # saved_times
+            saved_states,
+            saved_times,
+            jnp.array(False),  # odd
         )
 
         (final_t, final_u, _, final_snapshot_idx,
-         total_steps, saved_states_final, saved_times_final) = jax.lax.while_loop(
+         total_steps, saved_states_final, saved_times_final, _) = jax.lax.while_loop(
             cond_fun, body_fun, init_state
         )
 
