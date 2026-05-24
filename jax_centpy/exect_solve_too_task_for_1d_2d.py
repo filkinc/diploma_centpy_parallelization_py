@@ -109,7 +109,7 @@ def make_sine_pars(J, cfl=0.45, t_final=1.0):
     )
 
 def verify_sine_1d(sine_equation_cls, scheme_name="sd2", limiter="minmod",
-                   grids=(50, 100, 200, 400), t_final=1.0, gamma=1.4):
+                   grids=(50, 100, 200, 400), t_final=1.0, cfl=0.6, gamma=1.4):
     """
     sine_equation_cls: класс уравнения Эйлера с начальными условиями синуса.
     Создаётся как sine_equation_cls(pars) или sine_equation_cls().
@@ -125,10 +125,10 @@ def verify_sine_1d(sine_equation_cls, scheme_name="sd2", limiter="minmod",
         pars = Pars1d(
             x_init=0.0,
             x_final=1.0,
-            t_final=1,  # Время моделирования (достаточно для сдвига на 1/4 фазы)
+            t_final=t_final,  # Время моделирования (достаточно для сдвига на 1/4 фазы)
             dt_out=0.25,  # Выводим только финальное состояние для экономии памяти
             J=J,  # Количество ячеек (N)
-            cfl=0.6,  # Число Куранта
+            cfl=cfl,  # Число Куранта
             scheme=scheme_name
         )
 
