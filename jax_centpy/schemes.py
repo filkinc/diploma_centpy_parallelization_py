@@ -212,3 +212,179 @@ def compute_rhs_sd3_2d(
     rhs_y = -(flux_y[:, 1:, ...] - flux_y[:, :-1, ...]) / pars.dy
 
     return rhs_x + rhs_y
+
+
+def compute_step_fd2_1d(
+        u_inner: jnp.ndarray,
+        dt: float,
+        pars: Pars1d,
+        eqn: Equation1d,
+        limiter: LimiterFunc,
+        odd: jnp.ndarray,
+) -> jnp.ndarray:
+    """
+    Один шаг схемы Нессияху-Тадмора (NT/FD2) для 1D.
+
+    Полностью дискретная схема 2-го порядка с шахматной сеткой.
+    Параметр odd (JAX bool scalar) задаёт направление сдвига:
+      odd=True  → обновляем ячейки на «правом» полуцелом шаблоне (corrector[1:])
+      odd=False → обновляем ячейки на «левом» полуцелом шаблоне (corrector[:-1])
+
+    Математика (Nessyahu & Tadmor, 1990):
+      1. Predictor:  u_half[i] = u[i] - (dt/2dx) * limiter(f[i+1]-f[i], f[i]-f[i-1])
+      2. Corrector:  u_new[i] = 0.5*(u[i+1]+u[i])
+                               + 0.125*(sigma[i] - sigma[i+1])
+                               - (dt/dx)*(f_half[i+1] - f_half[i])
+      где sigma[i] = limiter(u[i]-u[i-1], u[i+1]-u[i]).
+
+    Примечание по CFL: устойчивость гарантируется при pars.cfl <= 0.5.
+
+    Args:
+        u_inner: внутреннее решение, форма (J,)
+        dt:      шаг по времени
+        pars:    параметры сетки (dx)
+        eqn:     уравнение (boundary_handler, flux)
+        limiter: ограничитель уклонов (minmod, superbee, ...)
+        odd:     JAX bool scalar, флаг шахматного сдвига
+
+    Returns:
+        u_new_inner: обновлённое решение, форма (J,)
+    """
+    n_ghost = 2
+    u = eqn.boundary_handler(u_inner, n_ghost)  # [J + 4]
+
+    # Уклоны решения sigma[i] = limiter(u[i+1]-u[i], u[i]-u[i-1]), размер J+2
+    sigma = limiter(u[1:-1] - u[:-2], u[2:] - u[1:-1])
+
+    # Поток в каждой точке, размер J+4
+    f = eqn.flux(u)
+
+    # Уклоны потока для предиктора, размер J+2
+    f_sigma = limiter(f[1:-1] - f[:-2], f[2:] - f[1:-1])
+
+    # Предиктор: полшага по времени в каждой точке [1:-1], затем берём внутренние
+    # u_half_all имеет размер J+2, у_half_inner — J (срез [1:-1])
+    u_half_inner = (u[1:-1] - 0.5 * (dt / pars.dx) * f_sigma)[1:-1]
+    u_half = eqn.boundary_handler(u_half_inner, n_ghost)  # [J + 4]
+    f_half = eqn.flux(u_half)  # [J + 4]
+
+    # Корректор (правая часть одинакова для обеих веток), размер J+1
+    #
+    # u[2:-1]       = u[2..J+2], размер J+1
+    # u[1:-2]       = u[1..J+1], размер J+1
+    # sigma[:-1]    = sigma[0..J], соответствует u_prime[1..J+1], размер J+1
+    # sigma[1:]     = sigma[1..J+1], соответствует u_prime[2..J+2], размер J+1
+    # f_half[2:-1]  = f_half[2..J+2], размер J+1
+    # f_half[1:-2]  = f_half[1..J+1], размер J+1
+    corrector = (
+            0.5 * (u[2:-1] + u[1:-2])
+            + 0.125 * (sigma[:-1] - sigma[1:])
+            - (dt / pars.dx) * (f_half[2:-1] - f_half[1:-2])
+    )  # размер J+1
+
+    # odd=True  → corrector[1:]  (берём «правые» J значений: шаблон сдвинут на +0.5)
+    # odd=False → corrector[:-1] (берём «левые»  J значений: шаблон возвращён)
+    return jnp.where(odd, corrector[1:], corrector[:-1])
+
+
+def compute_step_fd2_2d(
+        u_inner: jnp.ndarray,
+        dt: float,
+        pars: Pars2d,
+        eqn: Equation2d,
+        limiter: LimiterFunc,
+        odd: jnp.ndarray,
+) -> jnp.ndarray:
+    """
+    Один шаг 2D схемы Нессияху-Тадмора (NT/FD2).
+
+    Полностью дискретная схема 2-го порядка на шахматной сетке.
+    Алгоритм:
+      1. sigma_x, sigma_y — уклоны решения по x и y (slope-limited)
+      2. un_half — среднее по 4 угловым ячейкам + поправка уклонами (Predictor 1)
+      3. u_star  — предиктор по потокам: u - 0.5*dt*(df_x/dx + dg_y/dy) (Predictor 2)
+      4. Корректор: un_half - 0.5*dt/dx*(avg_x flux) - 0.5*dt/dy*(avg_y flux)
+
+    Сдвиг сетки:
+      odd=True  → corrector_rhs[1:, 1:]  (Jx×Jy значений, сдвиг (+0.5, +0.5))
+      odd=False → corrector_rhs[:-1, :-1] (Jx×Jy значений, исходные позиции)
+
+    Устойчивость: pars.cfl <= 0.5
+    Работает для скалярных уравнений и систем (u_inner.ndim == 3).
+    """
+    n_ghost = 2
+    u = eqn.boundary_handler(u_inner, n_ghost)  # (Jx+4, Jy+4[, nq])
+
+    # ── Уклоны решения по x и y, форма (Jx+2, Jy+2[, nq]) ──
+    # sigma_x[i,j] = limiter(u[i,j]-u[i-1,j], u[i+1,j]-u[i,j])
+    sigma_x = limiter(
+        u[1:-1, 1:-1, ...] - u[:-2, 1:-1, ...],
+        u[2:, 1:-1, ...] - u[1:-1, 1:-1, ...]
+    )
+    # sigma_y[i,j] = limiter(u[i,j]-u[i,j-1], u[i,j+1]-u[i,j])
+    sigma_y = limiter(
+        u[1:-1, 1:-1, ...] - u[1:-1, :-2, ...],
+        u[1:-1, 2:, ...] - u[1:-1, 1:-1, ...]
+    )
+
+    # ── Predictor 1: un_half — взвешенное среднее по 4 угловым ячейкам ──
+    # Размер (Jx+1, Jy+1[, nq]) = (N-3, M-3)
+    #
+    # Маппинг: sigma_x[:-1, :-1] = u_prime_x[1:-2, 1:-2] оригинального кода
+    #          sigma_x[1:,  :-1] = u_prime_x[2:-1, 1:-2]
+    #          sigma_x[:-1, 1:]  = u_prime_x[1:-2, 2:-1]
+    #          sigma_x[1:,  1:]  = u_prime_x[2:-1, 2:-1]
+    un_half_rhs = 0.25 * (
+        (u[1:-2, 1:-2, ...] + u[2:-1, 1:-2, ...] + u[1:-2, 2:-1, ...] + u[2:-1, 2:-1, ...])
+        + 0.25 * (
+            (sigma_x[:-1, :-1, ...] - sigma_x[1:, :-1, ...])
+            + (sigma_x[:-1, 1:, ...] - sigma_x[1:, 1:, ...])
+            + (sigma_y[:-1, :-1, ...] - sigma_y[:-1, 1:, ...])
+            + (sigma_y[1:, :-1, ...] - sigma_y[1:, 1:, ...])
+        )
+    )  # (Jx+1, Jy+1[, nq])
+
+    # ── Predictor 2: u_star — предиктор для вычисления потоков ──
+    f = eqn.flux_x(u)  # (Jx+4, Jy+4[, nq])
+    g = eqn.flux_y(u)  # (Jx+4, Jy+4[, nq])
+
+    # Уклоны потоков по соответствующим направлениям, форма (Jx+2, Jy+2[, nq])
+    f_sigma_x = limiter(
+        f[1:-1, 1:-1, ...] - f[:-2, 1:-1, ...],
+        f[2:, 1:-1, ...] - f[1:-1, 1:-1, ...]
+    )
+    g_sigma_y = limiter(
+        g[1:-1, 1:-1, ...] - g[1:-1, :-2, ...],
+        g[1:-1, 2:, ...] - g[1:-1, 1:-1, ...]
+    )
+
+    # u_star в точках [1:-1, 1:-1], форма (Jx+2, Jy+2[, nq])
+    u_star_all = u[1:-1, 1:-1, ...] - 0.5 * dt * (
+        f_sigma_x / pars.dx + g_sigma_y / pars.dy
+    )
+    # Берём только физические внутренние ячейки и применяем граничные условия
+    u_star_inner = u_star_all[1:-1, 1:-1, ...]  # (Jx, Jy[, nq])
+    u_star = eqn.boundary_handler(u_star_inner, n_ghost)  # (Jx+4, Jy+4[, nq])
+
+    f_star = eqn.flux_x(u_star)  # (Jx+4, Jy+4[, nq])
+    g_star = eqn.flux_y(u_star)  # (Jx+4, Jy+4[, nq])
+
+    # ── Корректор ──
+    # Все слагаемые имеют форму (Jx+1, Jy+1[, nq]) = (N-3, M-3)
+    #
+    # Поток по x: среднее двух горизонтальных граней
+    flux_x_term = 0.5 * (dt / pars.dx) * (
+        (f_star[2:-1, 1:-2, ...] - f_star[1:-2, 1:-2, ...])
+        + (f_star[2:-1, 2:-1, ...] - f_star[1:-2, 2:-1, ...])
+    )
+    # Поток по y: среднее двух вертикальных граней
+    flux_y_term = 0.5 * (dt / pars.dy) * (
+        (g_star[1:-2, 2:-1, ...] - g_star[1:-2, 1:-2, ...])
+        + (g_star[2:-1, 2:-1, ...] - g_star[2:-1, 1:-2, ...])
+    )
+
+    corrector_rhs = un_half_rhs - flux_x_term - flux_y_term  # (Jx+1, Jy+1[, nq])
+
+    # odd=True  → corrector_rhs[1:, 1:]  (сдвиг (+0.5, +0.5): берём правый-верхний угол)
+    # odd=False → corrector_rhs[:-1, :-1] (исходные позиции: берём левый-нижний угол)
+    return jnp.where(odd, corrector_rhs[1:, 1:, ...], corrector_rhs[:-1, :-1, ...])
