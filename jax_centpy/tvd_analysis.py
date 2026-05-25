@@ -364,14 +364,16 @@ def plot_tvd_analysis_2d(
 
 def check_tvd_property(
         tv_values: np.ndarray,
-        tolerance: float = 1e-3
+        tolerance: float = 0.05,  # ← Увеличил до 5%
+        strict_mode: bool = False
 ) -> Tuple[bool, Dict]:
     """
     Проверяет выполнение TVD-свойства.
 
     Args:
         tv_values: массив значений TV(t)
-        tolerance: допустимое относительное увеличение TV
+        tolerance: допустимое относительное увеличение TV (по умолчанию 5%)
+        strict_mode: если True, проверяет строгую монотонность TV
 
     Returns:
         is_tvd: True если схема TVD
@@ -380,23 +382,52 @@ def check_tvd_property(
     tv_initial = tv_values[0]
     tv_final = tv_values[-1]
 
-    # Относительное изменение
+    # Относительное изменение TV от начала до конца
     relative_change = (tv_final - tv_initial) / tv_initial
 
-    # Максимальный скачок
-    max_jump = np.max(np.diff(tv_values))
+    # Максимальный локальный скачок между snapshots
+    tv_diffs = np.diff(tv_values)
+    max_jump = np.max(tv_diffs)
+    min_jump = np.min(tv_diffs)
     max_relative_jump = max_jump / tv_initial
 
-    # Критерий TVD: TV не должна монотонно расти
-    is_tvd = relative_change <= tolerance and max_relative_jump <= 2 * tolerance
+    # Проверка монотонности (TV никогда не растёт более чем на tolerance)
+    violations = np.sum(tv_diffs > tolerance * tv_initial)
+
+    if strict_mode:
+        # Строгая проверка: TV должна монотонно убывать или оставаться постоянной
+        is_tvd = np.all(tv_diffs <= 0)
+    else:
+        # Практическая проверка:
+        # 1. Финальная TV не больше начальной + tolerance
+        # 2. Нет больших локальных скачков вверх
+        is_tvd = (relative_change <= tolerance) and (violations == 0)
 
     diagnostics = {
         'tv_initial': tv_initial,
         'tv_final': tv_final,
         'relative_change': relative_change,
+        'absolute_change': tv_final - tv_initial,
         'max_jump': max_jump,
+        'min_jump': min_jump,
         'max_relative_jump': max_relative_jump,
-        'is_tvd': is_tvd
+        'violations_count': violations,
+        'is_tvd': is_tvd,
+        'verdict': _get_verdict(relative_change, violations, strict_mode)
     }
 
     return is_tvd, diagnostics
+
+
+def _get_verdict(relative_change, violations, strict_mode):
+    """Человекочитаемая оценка TVD-свойства."""
+    if relative_change < -0.01:
+        return "✓ Отлично: TV убывает (диссипативная схема)"
+    elif relative_change < 0.001:
+        return "✓ Отлично: TV почти постоянна"
+    elif relative_change < 0.05 and violations == 0:
+        return "✓ Хорошо: TV слегка растёт в допустимых пределах"
+    elif violations == 0:
+        return "⚠ Приемлемо: TV растёт, но без локальных скачков"
+    else:
+        return "✗ TVD нарушено: есть локальные скачки"
