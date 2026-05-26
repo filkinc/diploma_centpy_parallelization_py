@@ -1,7 +1,6 @@
 """
 tvd_analysis.py
 Инструменты для проверки TVD-свойства численных схем.
-Каждый график сохраняется отдельно для удобства вставки в диплом.
 """
 
 import jax.numpy as jnp
@@ -53,8 +52,8 @@ def compute_tv_2d(u: jnp.ndarray, variable_idx: int = 0) -> float:
 
 
 def compute_tv_evolution_1d(
-        solution: Dict,
-        variable_idx: int = 0
+    solution: Dict,
+    variable_idx: int = 0
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Вычисляет эволюцию TV для всех временных слоёв (1D).
@@ -79,8 +78,8 @@ def compute_tv_evolution_1d(
 
 
 def compute_tv_evolution_2d(
-        solution: Dict,
-        variable_idx: int = 0
+    solution: Dict,
+    variable_idx: int = 0
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Вычисляет эволюцию TV для всех временных слоёв (2D).
@@ -105,9 +104,9 @@ def compute_tv_evolution_2d(
 
 
 def check_tvd_property(
-        tv_values: np.ndarray,
-        tolerance: float = 0.05,
-        strict_mode: bool = False
+    tv_values: np.ndarray,
+    tolerance: float = 0.05,
+    strict_mode: bool = False
 ) -> Tuple[bool, Dict]:
     """
     Проверяет выполнение TVD-свойства.
@@ -140,7 +139,7 @@ def check_tvd_property(
         # Строгая проверка: TV должна монотонно убывать или оставаться постоянной
         is_tvd = np.all(tv_diffs <= 0)
     else:
-        # Практическая проверка: 
+        # Практическая проверка:
         # 1. Финальная TV не больше начальной + tolerance
         # 2. Нет больших локальных скачков вверх
         is_tvd = (relative_change <= tolerance) and (violations == 0)
@@ -175,41 +174,85 @@ def _get_verdict(relative_change, violations, strict_mode):
         return "✗ TVD нарушено: есть локальные скачки"
 
 
-def plot_tvd_analysis_1d_separate(
-        solution: Dict,
-        exact_solution: Optional[Dict] = None,
-        variable_idx: int = 0,
-        variable_name: str = "Плотность ρ",
-        snapshot_indices: Optional[list] = None,
-        output_dir: str = "tvd_figures",
-        prefix: str = "tvd_1d",
-        figsize_profiles: Tuple = (12, 8),
-        figsize_tv: Tuple = (10, 6),
-        figsize_zoom: Tuple = (10, 6),
-        dpi: int = 150,
-        show_points: bool = True,
-        point_step: int = 5
+def plot_tv_evolution_only(
+    solution: Dict,
+    variable_idx: int = 0,
+    figsize: Tuple = (10, 6),
+    show: bool = True,
+    save_path: Optional[str] = None,
+    dpi: int = 150
 ):
     """
-    Создаёт TVD-анализ для 1D задачи с сохранением каждого графика отдельно.
+    Отрисовка ТОЛЬКО графика эволюции TV(t) - упрощённая версия.
 
     Args:
         solution: результат solver.solve()
-        exact_solution: (опционально) точное решение
-        variable_idx: индекс переменной для анализа
-        variable_name: название переменной
-        snapshot_indices: индексы snapshots (None = автовыбор)
-        output_dir: папка для сохранения графиков
-        prefix: префикс имён файлов
-        figsize_profiles: размер графика профилей
-        figsize_tv: размер графика TV(t)
-        figsize_zoom: размер графика zoom
-        dpi: разрешение сохраняемых изображений
-        show_points: показывать точки на графиках
-        point_step: шаг для отображения точек (каждая N-я точка)
+        variable_idx: индекс переменной (0 = ρ)
+        figsize: размер графика
+        show: показать график (True) или только сохранить (False)
+        save_path: путь для сохранения (None = не сохранять)
+        dpi: разрешение
 
     Returns:
-        paths: словарь с путями к сохранённым файлам
+        None (график отображается или сохраняется)
+    """
+    # Вычисляем TV эволюцию
+    tv_times, tv_values = compute_tv_evolution_1d(solution, variable_idx)
+
+    # Создаём график
+    fig, ax = plt.subplots(figsize=figsize)
+
+    # Основная линия TV(t) - ВСЕ ТОЧКИ
+    ax.plot(tv_times, tv_values, 'b-o', linewidth=2, markersize=4)
+
+    # Референсная линия TV(t=0)
+    ax.axhline(tv_values[0], color='r', linestyle='--', linewidth=2,
+               label=f'TV(t=0) = {tv_values[0]:.4f}')
+
+    # Оформление (БЕЗ заголовка и БЕЗ текстовой плашки)
+    ax.set_xlabel('Время t', fontsize=14)
+    ax.set_ylabel('TV(u)', fontsize=14)
+    ax.legend(fontsize=12, loc='best')
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+
+    # Сохранение (если указан путь)
+    if save_path is not None:
+        output_file = Path(save_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(output_file, dpi=dpi, bbox_inches='tight')
+        print(f"✓ Сохранено: {output_file}")
+
+    # Отображение (если show=True)
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
+# ============================================================================
+# СТАРЫЕ ФУНКЦИИ (для обратной совместимости)
+# ============================================================================
+
+def plot_tvd_analysis_1d_separate(
+    solution: Dict,
+    exact_solution: Optional[Dict] = None,
+    variable_idx: int = 0,
+    variable_name: str = "Плотность ρ",
+    snapshot_indices: Optional[list] = None,
+    output_dir: str = "tvd_figures",
+    prefix: str = "tvd_1d",
+    figsize_profiles: Tuple = (12, 8),
+    figsize_tv: Tuple = (10, 6),
+    figsize_zoom: Tuple = (10, 6),
+    dpi: int = 150,
+    show_points: bool = True,
+    point_step: int = 5
+):
+    """
+    Создаёт TVD-анализ для 1D задачи с сохранением каждого графика отдельно.
+    (СТАРАЯ ВЕРСИЯ - для совместимости)
     """
     # Создаём папку для результатов
     output_path = Path(output_dir)
@@ -249,8 +292,8 @@ def plot_tvd_analysis_1d_separate(
             var = u[:, variable_idx]
 
         ax1.plot(x, var, line_style, color=colors[idx],
-                 label=f't = {t:.3f}', markersize=markersize,
-                 linewidth=1.5, markevery=markevery)
+                label=f't = {t:.3f}', markersize=markersize,
+                linewidth=1.5, markevery=markevery)
 
         # Если есть точное решение
         if exact_solution is not None:
@@ -260,7 +303,7 @@ def plot_tvd_analysis_1d_separate(
             else:
                 var_exact = u_exact[:, variable_idx]
             ax1.plot(x, var_exact, '--', color=colors[idx],
-                     linewidth=2, alpha=0.7)
+                    linewidth=2, alpha=0.7)
 
     ax1.set_xlabel('x', fontsize=14)
     ax1.set_ylabel(variable_name, fontsize=14)
@@ -281,7 +324,7 @@ def plot_tvd_analysis_1d_separate(
 
     ax2.plot(tv_times, tv_values, 'b-o', linewidth=2, markersize=4)
     ax2.axhline(tv_values[0], color='r', linestyle='--', linewidth=2,
-                label=f'TV(t=0) = {tv_values[0]:.4f}')
+               label=f'TV(t=0) = {tv_values[0]:.4f}')
 
     # Проверка монотонности
     tv_increase = tv_values[-1] - tv_values[0]
@@ -289,8 +332,8 @@ def plot_tvd_analysis_1d_separate(
 
     textstr = f'ΔTV = {tv_increase:.2e}\nMax jump = {tv_max_increase:.2e}'
     ax2.text(0.05, 0.95, textstr, transform=ax2.transAxes,
-             verticalalignment='top', fontsize=12,
-             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+            verticalalignment='top', fontsize=12,
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
     ax2.set_xlabel('Время t', fontsize=14)
     ax2.set_ylabel('TV(u)', fontsize=14)
@@ -327,7 +370,7 @@ def plot_tvd_analysis_1d_separate(
     var_zoom = var_final[idx_min:idx_max]
 
     ax3.plot(x_zoom, var_zoom, 'bo-', markersize=5, linewidth=1.5,
-             label='Численное', markevery=1)
+            label='Численное', markevery=1)
 
     if exact_solution is not None:
         u_exact_final = exact_solution['u_n'][-1]
@@ -338,7 +381,7 @@ def plot_tvd_analysis_1d_separate(
 
         var_exact_zoom = var_exact_final[idx_min:idx_max]
         ax3.plot(x_zoom, var_exact_zoom, 'r--', linewidth=2,
-                 alpha=0.7, label='Точное')
+                alpha=0.7, label='Точное')
 
     ax3.set_xlabel('x', fontsize=14)
     ax3.set_ylabel(variable_name, fontsize=14)
@@ -357,187 +400,184 @@ def plot_tvd_analysis_1d_separate(
     return saved_files
 
 
-def plot_tvd_analysis_2d_separate(
+def plot_tv_evolution_only_2d(
         solution: Dict,
         variable_idx: int = 0,
-        variable_name: str = "Плотность ρ",
-        snapshot_indices: Optional[list] = None,
-        slice_axis: str = 'y',
-        slice_position: float = 0.5,
-        output_dir: str = "tvd_figures",
-        prefix: str = "tvd_2d",
-        figsize_contour: Tuple = (8, 6),
-        figsize_profiles: Tuple = (12, 7),
-        figsize_tv: Tuple = (10, 6),
-        figsize_schlieren: Tuple = (8, 6),
-        dpi: int = 150,
-        show_points: bool = True,
-        point_step: int = 5
+        figsize: Tuple = (10, 6),
+        show: bool = True,
+        save_path: Optional[str] = None,
+        dpi: int = 150
 ):
     """
-    Создаёт TVD-анализ для 2D задачи с сохранением каждого графика отдельно.
+    Отрисовка ТОЛЬКО графика эволюции TV(t) для 2D - упрощённая версия.
 
     Args:
-        solution: результат solver.solve()
-        variable_idx: индекс переменной
-        variable_name: название переменной
-        snapshot_indices: индексы snapshots (None = автовыбор 4 шт)
-        slice_axis: направление среза ('x' или 'y')
-        slice_position: позиция среза в относительных координатах [0, 1]
-        output_dir: папка для сохранения
-        prefix: префикс файлов
-        figsize_*: размеры графиков
+        solution: результат solver.solve() для 2D
+        variable_idx: индекс переменной (0 = ρ)
+        figsize: размер графика
+        show: показать график (True) или только сохранить (False)
+        save_path: путь для сохранения (None = не сохранять)
         dpi: разрешение
-        show_points: показывать точки
-        point_step: шаг точек
 
     Returns:
-        paths: словарь с путями к файлам
+        None (график отображается или сохраняется)
     """
-    output_path = Path(output_dir)
-    output_path.mkdir(exist_ok=True)
-
-    times = np.array(solution['t'])
-    u_snapshots = solution['u']
-    X = np.array(solution['X'])
-    Y = np.array(solution['Y'])
-
-    # Выбор snapshots
-    if snapshot_indices is None:
-        n_snapshots = min(4, len(times))
-        snapshot_indices = np.linspace(0, len(times) - 1, n_snapshots, dtype=int)
-
-    # TV эволюция
+    # Вычисляем TV эволюцию
     tv_times, tv_values = compute_tv_evolution_2d(solution, variable_idx)
 
-    saved_files = {}
+    # Создаём график
+    fig, ax = plt.subplots(figsize=figsize)
 
-    # ==================== Цветовые карты для каждого момента ====================
-    for col_idx, snap_idx in enumerate(snapshot_indices):
-        fig, ax = plt.subplots(figsize=figsize_contour)
+    # Основная линия TV(t) - ВСЕ ТОЧКИ
+    ax.plot(tv_times, tv_values, 'b-o', linewidth=2, markersize=4)
 
-        u = u_snapshots[snap_idx]
-        var = u[..., variable_idx]
-        t = times[snap_idx]
+    # Референсная линия TV(t=0)
+    ax.axhline(tv_values[0], color='r', linestyle='--', linewidth=2,
+               label=f'TV(t=0) = {tv_values[0]:.4f}')
 
-        im = ax.contourf(X, Y, var, levels=50, cmap='jet')
-        ax.set_title(f'{variable_name} при t = {t:.3f}',
-                     fontsize=16, fontweight='bold')
-        ax.set_xlabel('x', fontsize=14)
-        ax.set_ylabel('y', fontsize=14)
-        plt.colorbar(im, ax=ax, label=variable_name)
+    # Оформление (БЕЗ заголовка и БЕЗ текстовой плашки)
+    ax.set_xlabel('Время t', fontsize=14)
+    ax.set_ylabel('TV(u)', fontsize=14)
+    ax.legend(fontsize=12, loc='best')
+    ax.grid(True, alpha=0.3)
 
-        file_contour = output_path / f"{prefix}_contour_t{col_idx:02d}.png"
-        fig.savefig(file_contour, dpi=dpi, bbox_inches='tight')
-        saved_files[f'contour_t{col_idx}'] = str(file_contour)
-        plt.close(fig)
-        print(f"✓ Сохранено: {file_contour}")
+    plt.tight_layout()
 
-    # ==================== Профили вдоль среза ====================
-    if slice_axis == 'y':
-        Jy = X.shape[1]
-        slice_idx = int(slice_position * (Jy - 1))
-        x_slice = X[:, slice_idx]
-        slice_label = f'y = {Y[0, slice_idx]:.2f}'
+    # Сохранение (если указан путь)
+    if save_path is not None:
+        output_file = Path(save_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(output_file, dpi=dpi, bbox_inches='tight')
+        print(f"✓ Сохранено: {output_file}")
+
+    # Отображение (если show=True)
+    if show:
+        plt.show()
     else:
-        Jx = X.shape[0]
-        slice_idx = int(slice_position * (Jx - 1))
-        x_slice = Y[slice_idx, :]
-        slice_label = f'x = {X[slice_idx, 0]:.2f}'
-
-    fig_profile, ax_profile = plt.subplots(figsize=figsize_profiles)
-
-    colors = plt.cm.viridis(np.linspace(0, 1, len(snapshot_indices)))
-    line_style = 'o-' if show_points else '-'
-    markersize = 3 if show_points else 0
-    markevery = point_step if show_points else None
-
-    for idx, snap_idx in enumerate(snapshot_indices):
-        u = u_snapshots[snap_idx]
-        var = u[..., variable_idx]
-        t = times[snap_idx]
-
-        if slice_axis == 'y':
-            profile = var[:, slice_idx]
-        else:
-            profile = var[slice_idx, :]
-
-        ax_profile.plot(x_slice, profile, line_style, color=colors[idx],
-                        label=f't = {t:.3f}', markersize=markersize,
-                        linewidth=1.5, markevery=markevery)
-
-    ax_profile.set_xlabel(slice_axis, fontsize=14)
-    ax_profile.set_ylabel(variable_name, fontsize=14)
-    ax_profile.set_title(f'Профили вдоль среза {slice_label}',
-                         fontsize=16, fontweight='bold')
-    ax_profile.legend(fontsize=11, ncol=2)
-    ax_profile.grid(True, alpha=0.3)
-
-    file_profile = output_path / f"{prefix}_profiles.png"
-    fig_profile.savefig(file_profile, dpi=dpi, bbox_inches='tight')
-    saved_files['profiles'] = str(file_profile)
-    plt.close(fig_profile)
-    print(f"✓ Сохранено: {file_profile}")
-
-    # ==================== TV эволюция ====================
-    fig_tv, ax_tv = plt.subplots(figsize=figsize_tv)
-
-    ax_tv.plot(tv_times, tv_values, 'b-o', linewidth=2, markersize=4)
-    ax_tv.axhline(tv_values[0], color='r', linestyle='--', linewidth=2,
-                  label=f'TV(t=0) = {tv_values[0]:.4f}')
-
-    tv_increase = tv_values[-1] - tv_values[0]
-    textstr = f'ΔTV = {tv_increase:.2e}'
-    ax_tv.text(0.05, 0.95, textstr, transform=ax_tv.transAxes,
-               verticalalignment='top', fontsize=12,
-               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-
-    ax_tv.set_xlabel('Время t', fontsize=14)
-    ax_tv.set_ylabel('TV(u)', fontsize=14)
-    ax_tv.set_title('Эволюция полной вариации (2D)',
-                    fontsize=16, fontweight='bold')
-    ax_tv.legend(fontsize=12)
-    ax_tv.grid(True, alpha=0.3)
-
-    file_tv = output_path / f"{prefix}_tv_evolution.png"
-    fig_tv.savefig(file_tv, dpi=dpi, bbox_inches='tight')
-    saved_files['tv_evolution'] = str(file_tv)
-    plt.close(fig_tv)
-    print(f"✓ Сохранено: {file_tv}")
-
-    # ==================== Schlieren ====================
-    fig_schlieren, ax_schlieren = plt.subplots(figsize=figsize_schlieren)
-
-    u_final = u_snapshots[-1]
-    var_final = u_final[..., variable_idx]
-
-    grad_x = np.gradient(var_final, axis=0)
-    grad_y = np.gradient(var_final, axis=1)
-    grad_magnitude = np.sqrt(grad_x ** 2 + grad_y ** 2)
-
-    im_schlieren = ax_schlieren.contourf(X, Y, np.log10(grad_magnitude + 1e-10),
-                                         levels=50, cmap='gray')
-    ax_schlieren.set_title(f'Schlieren (|∇ρ|) при t = {times[-1]:.3f}',
-                           fontsize=16, fontweight='bold')
-    ax_schlieren.set_xlabel('x', fontsize=14)
-    ax_schlieren.set_ylabel('y', fontsize=14)
-    plt.colorbar(im_schlieren, ax=ax_schlieren, label='log10(|∇ρ|)')
-
-    file_schlieren = output_path / f"{prefix}_schlieren.png"
-    fig_schlieren.savefig(file_schlieren, dpi=dpi, bbox_inches='tight')
-    saved_files['schlieren'] = str(file_schlieren)
-    plt.close(fig_schlieren)
-    print(f"✓ Сохранено: {file_schlieren}")
-
-    return saved_files
+        plt.close(fig)
 
 
-# Совместимость с предыдущим интерфейсом
-def plot_tvd_analysis_1d(*args, **kwargs):
-    """Обёртка для обратной совместимости (возвращает старый формат)."""
-    return plot_tvd_analysis_1d_separate(*args, **kwargs)
+# Пример использования 1D
+
+# from tvd_analysis import (
+#     plot_tv_evolution_only,  # НОВАЯ ФУНКЦИЯ!
+#     compute_tv_evolution_1d,
+#     check_tvd_property
+# )
+#
+# # Инициализация задачи Гладкого синуса
+# eqn = make_euler_sine_1d()
+# pars = Pars1d(
+#     x_init=0.0,
+#     x_final=1.0,
+#     t_final=1.0,
+#     dt_out=0.25,
+#     J=400,
+#     cfl=0.475,
+#     scheme="sd2"
+# )
+#
+# # Решение задачи
+# solver = FastSolverWithAllLayersWithoutExtends1d(pars, eqn, limiter_name="minmod", scheme_name="sd2")
+# sol = solver.solve()
+#
+# # ==================== ПРОСТО ПОКАЗАТЬ ГРАФИК ====================
+# print("\n" + "="*60)
+# print("ГРАФИК ЭВОЛЮЦИИ TV(t)")
+# print("="*60)
+#
+# plot_tv_evolution_only(
+#     sol,
+#     variable_idx=0,
+#     figsize=(10, 6),
+#     show=True,           # Показать на экране
+#     save_path=None,      # НЕ сохранять в файл
+#     dpi=150
+# )
+#
+# # ==================== TVD-ДИАГНОСТИКА ====================
+# tv_times, tv_values = compute_tv_evolution_1d(sol, variable_idx=0)
+# is_tvd, diag = check_tvd_property(tv_values, tolerance=0.05)
+#
+# print("\n" + "="*60)
+# print("TVD-ДИАГНОСТИКА")
+# print("="*60)
+# print(f"TV начальная:              {diag['tv_initial']:.6f}")
+# print(f"TV финальная:              {diag['tv_final']:.6f}")
+# print(f"Абсолютное изменение:      {diag['absolute_change']:.6e}")
+# print(f"Относительное изменение:   {diag['relative_change']:.4e} ({diag['relative_change']*100:.2f}%)")
+# print(f"Макс локальный скачок:     {diag['max_jump']:.4e}")
+# print(f"Количество нарушений:      {diag['violations_count']}")
+# print("-" * 60)
+# print(f"ВЕРДИКТ: {diag['verdict']}")
+# print(f"TVD выполняется: {'✓ ДА' if is_tvd else '✗ НЕТ'}")
+# print("="*60)
 
 
-def plot_tvd_analysis_2d(*args, **kwargs):
-    """Обёртка для обратной совместимости."""
-    return plot_tvd_analysis_2d_separate(*args, **kwargs)
+# Пример использования 2D
+
+# from tvd_analysis import (
+#     plot_tv_evolution_only_2d,  # ДЛЯ 2D!
+#     compute_tv_evolution_2d,
+#     check_tvd_property
+# )
+#
+# # Инициализация 2D задачи (например, вихрь)
+# eqn_2d = make_isentropic_vortex_2d(
+#     center=(5.0, 5.0),
+#     strength=5.0,
+#     velocity_inf=(1.0, 1.0)
+# )
+#
+# pars_2d = Pars2d(
+#     x_init=0.0,
+#     x_final=10.0,
+#     y_init=0.0,
+#     y_final=10.0,
+#     t_final=10.0,
+#     dt_out=0.5,
+#     Jx=80,
+#     Jy=80,
+#     cfl=0.475,
+#     scheme="sd2"
+# )
+#
+# # Решение задачи
+# from solver import FastSolverWithAllLayersWithoutExtends2d
+#
+# solver_2d = FastSolverWithAllLayersWithoutExtends2d(
+#     pars_2d, eqn_2d, limiter_name="minmod", scheme_name="sd2"
+# )
+# sol_2d = solver_2d.solve()
+#
+# # ==================== ПРОСТО ПОКАЗАТЬ ГРАФИК ====================
+# print("\n" + "="*60)
+# print("ГРАФИК ЭВОЛЮЦИИ TV(t) для 2D")
+# print("="*60)
+#
+# plot_tv_evolution_only_2d(
+#     sol_2d,
+#     variable_idx=0,
+#     figsize=(10, 6),
+#     show=True,           # Показать на экране
+#     save_path=None,      # НЕ сохранять в файл
+#     dpi=150
+# )
+#
+# # ==================== TVD-ДИАГНОСТИКА ====================
+# tv_times, tv_values = compute_tv_evolution_2d(sol_2d, variable_idx=0)
+# is_tvd, diag = check_tvd_property(tv_values, tolerance=0.05)
+#
+# print("\n" + "="*60)
+# print("TVD-ДИАГНОСТИКА (2D)")
+# print("="*60)
+# print(f"TV начальная:              {diag['tv_initial']:.6f}")
+# print(f"TV финальная:              {diag['tv_final']:.6f}")
+# print(f"Абсолютное изменение:      {diag['absolute_change']:.6e}")
+# print(f"Относительное изменение:   {diag['relative_change']:.4e} ({diag['relative_change']*100:.2f}%)")
+# print(f"Макс локальный скачок:     {diag['max_jump']:.4e}")
+# print(f"Количество нарушений:      {diag['violations_count']}")
+# print("-" * 60)
+# print(f"ВЕРДИКТ: {diag['verdict']}")
+# print(f"TVD выполняется: {'✓ ДА' if is_tvd else '✗ НЕТ'}")
+# print("="*60)
