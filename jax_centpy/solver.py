@@ -437,14 +437,14 @@ class FastSolverWithAllLayersWithoutExtends1d:
         )
 
         (final_t, final_u, _, final_snapshot_idx,
-         total_steps, saved_states_final, saved_times_final, _) = jax.lax.while_loop(
+         total_steps, saved_states_final, saved_times_final, final_odd) = jax.lax.while_loop(
             cond_fun, body_fun, init_state
         )
 
         # Возвращаем всё + количество реально сохранённых snapshots
         actual_count = final_snapshot_idx + 1
 
-        return saved_times_final, saved_states_final, actual_count, total_steps
+        return saved_times_final, saved_states_final, actual_count, total_steps, final_odd
 
     def solve(self) -> Dict[str, Any]:
         """
@@ -460,15 +460,22 @@ class FastSolverWithAllLayersWithoutExtends1d:
         x = jnp.linspace(self.pars.x_init + dx / 2, self.pars.x_final - dx / 2, self.pars.J)
         u0 = self.eqn.initial_data(x)
 
-        saved_times, saved_states, actual_count, total_steps = self.solve_jit(u0)
+        saved_times, saved_states, actual_count, total_steps, final_odd = self.solve_jit(u0)
 
         # Обрезаем массивы НА HOST-СТОРОНЕ (после JIT)
         actual_count_int = int(actual_count)
         saved_times_trimmed = saved_times[:actual_count_int]
         saved_states_trimmed = saved_states[:actual_count_int]
 
+        # FD2: компенсация шахматной сетки
+        if self.is_fd2 and bool(final_odd):
+            x_output = x - dx / 2
+            print(f"[FD2] Финальный шаг на шахматной сетке, x сдвинут на +dx/2")
+        else:
+            x_output = x
+
         return {
-            "x": x,
+            "x": x_output,
             "t": saved_times_trimmed,
             "u_n": saved_states_trimmed,
             "steps": total_steps
