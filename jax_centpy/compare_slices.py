@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib
+
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+
 
 def plot_trajectories(coords_jax, coords_centpy):
     """
@@ -114,10 +116,11 @@ def plot_trajectories_v2(coords_jax, coords_centpy):
 
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import ScalarFormatter, FuncFormatter
 
 
-def plot_trajectories_v3(coords1, coords2, coords3, coords4, coords5, labels=['JAX (CPU)', 'JAX (GPU)', 'centpy', 'JAX-FLUIDS (GPU)', 'JAX-FLUIDS (CPU)']):
+def plot_trajectories_v3(coords1, coords2, coords3, coords4, coords5,
+                         labels=['JAX (CPU)', 'JAX (GPU)', 'centpy', 'JAX-FLUIDS (GPU)', 'JAX-FLUIDS (CPU)']):
     """
     Отрисовывает графики для 4 наборов данных с высококонтрастными цветами,
     пунктирными проекциями на оси и логарифмическим масштабом.
@@ -305,7 +308,7 @@ def plot_trajectories_v5(coords1, coords2, coords3, coords4, coords5,
         })
 
         # Размер графика можно сделать чуть больше (например, 8x6)
-        fig, ax = plt.subplots(figsize=(8, 6))
+        fig, ax = plt.subplots(figsize=(10, 8))
 
         x1, y1 = zip(*coords1)
         x2, y2 = zip(*coords2)
@@ -345,8 +348,14 @@ def plot_trajectories_v5(coords1, coords2, coords3, coords4, coords5,
         ax.set_xscale('log')
         ax.set_yscale('log')
 
-        ax.xaxis.set_major_formatter(ScalarFormatter())
-        ax.yaxis.set_major_formatter(ScalarFormatter())
+        # Форматер для оси X (Плотность сетки): убираем нули после запятой (1024)
+        formatter_x = FuncFormatter(lambda x, _: '{:g}'.format(x))
+
+        # Форматер для оси Y (Время): строго 2 знака после запятой (0.01, 1.50, 12.00)
+        formatter_y = FuncFormatter(lambda y, _: '{:.2f}'.format(y))
+
+        ax.xaxis.set_major_formatter(formatter_x)
+        ax.yaxis.set_major_formatter(formatter_y)
 
         # Цифры на осях (теперь они будут 14-го размера, как мы задали в rcParams)
         ax.set_xticks(all_x)
@@ -365,12 +374,13 @@ def plot_trajectories_v5(coords1, coords2, coords3, coords4, coords5,
         plt.tight_layout()
         plt.show()
 
+
 if __name__ == "__main__":
     #compare_all_slices('centpy_data.npz', 'gpu_data.npz')
 
-#========================================================
-# 1D
-# ========================================================
+    #========================================================
+    # 1D
+    # ========================================================
 
     # JAX_FLUIDS для 1d
 
@@ -393,7 +403,6 @@ if __name__ == "__main__":
         [8192, 161.555818],
         [16384, 633.203686]
     ]
-
 
     # centpy SD2 для 1d
 
@@ -463,9 +472,9 @@ if __name__ == "__main__":
         [16384, 8.819256]
     ]
 
-# ========================================================
-# 2D
-# ========================================================
+    # ========================================================
+    # 2D
+    # ========================================================
 
     # JAX_FLUIDS для 2d
 
@@ -537,13 +546,21 @@ if __name__ == "__main__":
     ]
 
     # SD2 1d
-    plot_trajectories_v5(jax_cpu_sd2_1d, jax_gpu_sd2_1d, centpy_sd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d)
+    plot_trajectories_v5(jax_cpu_sd2_1d, jax_gpu_sd2_1d, centpy_sd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d,
+                         labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'centpy SD2', 'JAX-FLUIDS (GPU)',
+                                 'JAX-FLUIDS (CPU)'])
 
     # FD2 1d
-    plot_trajectories_v5(jax_cpu_fd2_1d, jax_gpu_fd2_1d, centpy_fd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d)
+    plot_trajectories_v5(jax_cpu_fd2_1d, jax_gpu_fd2_1d, centpy_fd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d,
+                         labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
+                                 'JAX-FLUIDS (CPU)'])
 
     # SD2 2d
-    plot_trajectories_v5(jax_cpu_sd2_2d, jax_gpu_sd2_2d, centpy_sd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d)
+    plot_trajectories_v5(jax_cpu_sd2_2d, jax_gpu_sd2_2d, centpy_sd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
+                         labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'centpy SD2', 'JAX-FLUIDS (GPU)',
+                                 'JAX-FLUIDS (CPU)'])
 
     # FD2 2d
-    plot_trajectories_v5(jax_cpu_fd2_2d, jax_gpu_fd2_2d, centpy_fd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d)
+    plot_trajectories_v5(jax_cpu_fd2_2d, jax_gpu_fd2_2d, centpy_fd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
+                         labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
+                                 'JAX-FLUIDS (CPU)'])
