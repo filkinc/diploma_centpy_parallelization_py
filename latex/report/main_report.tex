@@ -274,24 +274,24 @@
     \newpage
 	
 	\section-{ВВЕДЕНИЕ}
-    В физике и технике возникают проблемы, связанные с необходимостью изучения высокоскоростных течений и взаимодействия скачков уплотнения с неоднородностями среды. Такие задачи ставят, например, аэродинамика больших скоростей, проектирование сверхзвуковых двигателей и разработка перспективных летательных аппаратов. В связи с этим в настоящее время одной из актуальных областей прикладной газовой динамики является изучение процессов распространения ударных волн в газе с локальным энерговложением, которое открывает новые методы управления аэродинамическими характеристиками и снижения волнового сопротивления.
+    В физике и технике возникают проблемы, связанные с необходимостью изучения высокоскоростных течений и взаимодействия скачков уплотнения с неоднородностями среды. Такие задачи ставят, например, аэродинамика больших скоростей, проектирование сверхзвуковых двигателей и разработка перспективных летательных аппаратов. В связи с этим в настоящее время одной из актуальных областей прикладной газовой динамики является изучение процессов распространения ударных волн в газе с локальным энерговложением, которое открывает новые методы управления аэродинамическими характеристиками и снижения волнового сопротивления~\cite{knight2008}.
 
-    Для описания газодинамической среды идеального газа используется система уравнений Эйлера. Непосредственное аналитическое решение таких систем возможно лишь в ограниченном ряде случаев, например в классической задаче Римана для одномерного случая. Однако подобные точные решения позволяют изучить лишь качественные особенности поведения объекта. В инженерных же приложениях одной из главных задач является получение точных количественных результатов. Поэтому возникает потребность в  численных методах для задач газовой динамики.
+    Для описания газодинамической среды идеального газа используется система уравнений Эйлера~\cite{landau}. Непосредственное аналитическое решение таких систем возможно лишь в ограниченном ряде случаев, например в классической задаче Римана для одномерного случая~\cite{toro,kulikovsky}. Однако подобные точные решения позволяют изучить лишь качественные особенности поведения объекта. В инженерных же приложениях одной из главных задач является получение точных количественных результатов. Поэтому возникает потребность в  численных методах для задач газовой динамики.
 
     Более того, для всестороннего анализа подобных физических процессов часто требуется проведение ресурсоемких расчетов, зависящих от различных варьируемых параметров. 
     Большинство современных пакетов  для газодинамического моделирования опираются на классические методы программирования для CPU, что при серийных расчетах на мелких сетках требует значительных временных затрат или доступа к дорогостоящим суперкомпьютерам. В связи с этим возникает потребность в разработке эффективного программного комплекса, переносящего известный класс численных методов на современные архитектуры, с использованием инструментов дифференцируемого программирования и аппаратного ускорения. При разработке программного комплекса, реализующего численное моделирование распространения ударной волны, будем опираться на следующие основные принципы:
 
     \begin{itemize}
-        \item использование математической библиотеки высокопроизводительных вычислений JAX для обеспечения векторизации и JIT-компиляции;
+        \item использование математической библиотеки высокопроизводительных вычислений JAX~\cite{jax} для обеспечения векторизации и JIT-компиляции;
         \item вычисления на GPU с использованием облачной платформы Google Colab для программного ускорения ресурсоемких задач;
-        \item интеграция с открытыми библиотеками Matplotlib/SciencePlots для визуализации
+        \item интеграция с открытыми библиотеками Matplotlib/SciencePlots~\cite{matplotlib} для визуализации
     \end{itemize}
 
     Целью работы является разработка и исследование программного комлекса для высокопроизводительного численного моделирования распространения ударной волны в газе с локальным энерговложением средствами библиотеки JAX. Для достижения этой цели были решены следующие задачи:
 
     \begin{enumerate}
-        \item программная адаптация и высокопроизводительная реализация семейства центральных разностных схем SD2, FD2 на базе библиотеки JAX;
-        \item проведение кросс-верификации разработанного комплекса путем сравнения с данными открытых CFD-библиотек centpy и JAX-FLUIDS, а также с алгоритмом точного решения задачи Римана;
+        \item программная адаптация и высокопроизводительная реализация семейства центральных разностных схем SD2, FD2~\cite{nessyahu1990,kurganov2000} на базе библиотеки JAX;
+        \item проведение кросс-верификации разработанного комплекса путем сравнения с данными открытых CFD-библиотек centpy~\cite{centpy} и JAX-FLUIDS~\cite{jaxfluids}, а также с алгоритмом точного решения задачи Римана;
         \item оценка вычислительной эффективности реализованных алгоритмов и анализ аппаратного ускорения на CPU и GPU;
         \item демонстрация возможностей разработанного комплекса на задаче моделирования динамики параметров газа при прохождении ударной волны через зону локального энерговложения.
     \end{enumerate}
@@ -303,7 +303,7 @@
 
     \subsection{Система уравнений Эйлера}
 
-    Течение идеального сжимаемого невязкого газа описывается системой дифференциальных уравнений Эйлера, которая выражает фундаментальные физические законы: сохранения массы, импульса и полной энергии. 
+    Течение идеального сжимаемого невязкого газа описывается системой дифференциальных уравнений Эйлера~\cite{landau}, которая выражает фундаментальные физические законы: сохранения массы, импульса и полной энергии.
 
     Для произвольного фиксированного контрольного объема $\Omega$ с границей $\partial\Omega$ в отсутствие внешних массовых сил и источников тепловыделения эти законы в интегральной форме формулируются следующим образом:
 
@@ -311,12 +311,12 @@
     \item Закон сохранения массы: изменение массы газа внутри объема равно макроскопическому потоку массы через его границу
     \begin{equation}
     \label{eq:mass_cons}
-    \frac{\partial}{\partial t} \int_{\Omega} \rho \, d\Omega + \oint_{\partial\Omega} \rho (\mathbf{v} \cdot \mathbf{n}) \, dS = 0.
+    \frac{\partial}{\partial t} \int_{\Omega} \rho \, d\Omega + \oint_{\partial\Omega} \rho (\mathrm{v} \cdot \mathrm{n}) \, dS = 0.
     \end{equation}
     \item Закон сохранения импульса: изменение импульса внутри объема обусловлено потоком импульса через границу и действием поверхностных сил газодинамического давления $p$
     \begin{equation}
     \label{eq:momentum_cons}
-    \frac{\partial}{\partial t} \int_{\Omega} \rho \mathbf{v} \, d\Omega + \oint_{\partial\Omega} \rho \mathbf{v} (\mathbf{v} \cdot \mathbf{n}) \, dS + \oint_{\partial\Omega} p \mathbf{n} \, dS = 0.
+    \frac{\partial}{\partial t} \int_{\Omega} \rho \mathbf{v} \, d\Omega + \oint_{\partial\Omega} \rho \mathrm{v} (\mathrm{v} \cdot \mathrm{n}) \, dS + \oint_{\partial\Omega} p \mathrm{n} \, dS = 0.
     \end{equation}
     \item Закон сохранения полной энергии: изменение полной энергии газа равно работе сил давления и конвективному переносу энергии через границу
     \begin{equation}
@@ -338,9 +338,9 @@
 \end{cases}
 \end{equation}
     
-    В задачах вычислительной газовой динамики, при моделировании распространения ударных волн принципиально важно использовать уравнения в консервативной форме. Только такая форма записи гарантирует корректное выполнение законов сохранения на поверхностях разрывов и позволяет правильно рассчитывать параметры ударных волн в соответствии с условиями Ренкина-Гюгонио.
+Полученная система~(\ref{eq:euler_diff_2d}) записана в консервативной (дивергентной) форме. При моделировании распространения ударных волн использование именно такой формы принципиально важно: только она гарантирует корректное выполнение законов сохранения на поверхностях разрывов и позволяет правильно рассчитывать параметры ударных волн в соответствии с условиями Ренкина-Гюгонио~\cite{godunov,leveque1992}.
 
-    В двумерном пространственном случае в декартовой системе координат $D(x, y)$ система уравнений Эйлера в консервативном виде записывается в форме матричного гиперболического уравнения
+Для компактности систему~(\ref{eq:euler_diff_2d}) удобно представить в матричной (векторной) форме. В двумерном пространственном случае в декартовой системе координат $D(x, y)$ она записывается в виде матричного гиперболического уравнения
     \begin{equation}
     \label{eq:euler_2d}
     \frac{\partial U}{\partial t} + \frac{\partial F(U)}{\partial x} + \frac{\partial G(U)}{\partial y} = 0,
@@ -401,27 +401,27 @@
     p = (\gamma - 1) \left( \rho E - \frac{(\rho u)^2 + (\rho v)^2}{2\rho} \right).
     \end{equation}
     
-    В случае рассмотрения одномерных течений, градиенты параметров по оси $y$ полагаются равными нулю $\frac{\partial}{\partial y} = 0$, а компонента скорости $v$ и вектор потока $G(U)$ исключаются из системы, что приводит (\ref{eq:euler_2d}) к классической одномерной задаче.
+    В случае рассмотрения одномерных течений, градиенты параметров по оси $y$ полагаются равными нулю $\frac{\partial}{\partial y} = 0$, а компонента скорости $v$ и вектор потока $G(U)$ исключаются из системы, что сводит её~(\ref{eq:euler_2d}) к одномерному случаю.
 
     В реальных же приложениях взаимодействие плоского фронта ударной волны с нагретой областью носит существенно многомерный характер. Тем не менее, исследование данной проблемы методически верно начинать с одномерной постановки. Во-первых, одномерное сечение по нормали к зонам нагрева позволяет исключить поперечные потоки и изолированно изучить фундаментальные механизмы рефракции фронта. Во-вторых, применяемые в работе схемы сквозного счета базируются на методе расщепления по направлениям. Двумерный расчет сводится к последовательному решению множества локальных 1D-задач. Таким образом, верифицированная одномерная модель является базовым математическим и алгоритмическим ядром разрабатываемого программного комплекса.
 
 \subsection{Квазилинейная форма уравнений и характеристические скорости}
 
-Приведем подробный вывод матрицы Якоби и её собственных значений для одномерных уравнений Эйлера. Система уравнений Эйлера в консервативной форме имеет вид
+Приведем подробный вывод матрицы Якоби и её собственных значений для одномерных уравнений Эйлера~\cite{toro}. Система уравнений Эйлера в консервативной форме имеет вид
 \begin{equation}
     \label{eq:euler_1d}
     \frac{\partial U}{\partial t} + \frac{\partial F(U)}{\partial x} = 0,
 \end{equation}
 где $U$ --- вектор консервативных переменных, а $F(U)$ --- вектор потоков
 \begin{equation}
-    U = \begin{pmatrix} U_1 \\ U_2 \\ U_3 \end{pmatrix} = \begin{pmatrix} \rho \\ \rho u \\ E \end{pmatrix}, \quad
+    U = \begin{pmatrix} U_1 \\ U_2 \\ U_3 \end{pmatrix} = \begin{pmatrix} \rho \\ \rho u \\ \rho E \end{pmatrix}, \quad
     F(U) = \begin{pmatrix} F_1 \\ F_2 \\ F_3 \end{pmatrix} = \begin{pmatrix} \rho u \\ \rho u^2 + p \\ u( \rho E + p) \end{pmatrix}.
 \end{equation}
-Здесь $\rho$ --- плотность, $u$ --- скорость, $p$ --- давление, $E$ --- полная энергия единицы объёма.
+Здесь $\rho$ --- плотность, $u$ --- скорость, $p$ --- давление, $E$ --- удельная полная энергия (отнесённая к единице массы), так что $\rho E$ --- полная энергия единицы объёма.
 
 Для замыкания системы используется уравнение состояния идеального газа
 \begin{equation}
-    p = (\gamma - 1)\left( E - \frac{\rho u^2}{2} \right),
+    p = (\gamma - 1)\left( \rho E - \frac{\rho u^2}{2} \right),
 \end{equation}
 где $\gamma$ --- показатель адиабаты. Выразим давление $p$ исключительно через компоненты вектора $U$
 \begin{equation}
@@ -450,35 +450,35 @@
     A_{23} &= \gamma - 1.
 \end{align}
 
-Для вывода третьей строки введём полную энтальпию $H = \frac{E+p}{\rho}$. Из уравнения состояния следует, что 
+Для вывода третьей строки введём полную удельную энтальпию $H = \frac{\rho E+p}{\rho}$. Из уравнения состояния следует, что 
 \begin{equation}
-    \frac{\gamma E}{\rho} = H + \frac{\gamma-1}{2}u^2.
+    \gamma E = H + \frac{\gamma-1}{2}u^2.
 \end{equation} 
 
 Вычисляем производные
 \begin{multline}
     \quad \quad \! A_{31} = -\gamma \frac{U_2 U_3}{U_1^2} + (\gamma - 1)\frac{U_2^3}{U_1^3} \\
-    \quad \quad \quad = -u \left( \frac{\gamma E}{\rho} - (\gamma-1)u^2 \right) \\
+    \quad \quad \quad = -u \left( \gamma E - (\gamma-1)u^2 \right) \\
     = u\left(\frac{\gamma-1}{2}u^2 - H\right),
 \end{multline}
 \vspace{-1.5 cm}
 \begin{align}
-    A_{32} &= \gamma \frac{U_3}{U_1} - \frac{3(\gamma-1)}{2}\frac{U_2^2}{U_1^2} = \frac{\gamma E}{\rho} - \frac{3}{2}(\gamma-1)u^2 = H - (\gamma-1)u^2, \\
+    A_{32} &= \gamma \frac{U_3}{U_1} - \frac{3(\gamma-1)}{2}\frac{U_2^2}{U_1^2} = \gamma E - \frac{3}{2}(\gamma-1)u^2 = H - (\gamma-1)u^2, \\
     A_{33} &= \gamma \frac{U_2}{U_1} = \gamma u.
 \end{align}
     
-Собирая вычисленные элементы вместе, получаем матрицу Якоби $\mathrm{A}$
+Собирая вычисленные элементы вместе, получаем матрицу Якоби $A$
 \begin{equation}
-    \mathrm{A} = \begin{pmatrix}
+    A = \begin{pmatrix}
     0 & 1 & 0 \\
     \frac{\gamma-3}{2}u^2 & (3-\gamma)u & \gamma-1 \\
     u\left(\frac{\gamma-1}{2}u^2 - H\right) & H - (\gamma-1)u^2 & \gamma u
     \end{pmatrix}.
 \end{equation}
 
-Скорости распространения волн определяются собственными значениями $\lambda$ матрицы $\mathrm{A}$, которые являются корнями характеристического уравнения
+Скорости распространения волн определяются собственными значениями $\lambda$ матрицы $A$, которые являются корнями характеристического уравнения
 \begin{equation}
-    \det(\mathrm{A} - \lambda \mathrm{I}) = 0.
+    \det(A - \lambda I) = 0.
 \end{equation}
 
 Раскрытие данного определителя приводит к кубическому уравнению относительно $\lambda$. Вводя скорость звука $a = \sqrt{(\gamma-1)\left(H - \frac{u^2}{2}\right)}$, находим три действительных корня характеристического уравнения
@@ -486,11 +486,11 @@
     \lambda_1 = u - a, \quad \lambda_2 = u, \quad \lambda_3 = u + a.
 \end{equation}
 
-Поскольку характеристическое уравнение имеет степень $n=3$, мы получаем три собственных значения. В математической теории гиперболических систем каждому действительному собственному значению соответствует своя характеристическая кривая в фазовом пространстве. Физически это означает, что при решении задачи о распаде произвольного разрыва образуется ровно три нелинейные волны: две акустические ($\lambda_1$ и $\lambda_3$) и одна энтропийная ($\lambda_2$, контактный разрыв). Именно эти скорости в дальнейшем используются для вычисления численной вязкости в центральных схемах Курганова-Тадмора.
+Поскольку характеристическое уравнение имеет степень $n=3$, система обладает тремя действительными собственными значениями, что подтверждает её гиперболичность~\cite{kulikovsky}. Каждому собственному значению отвечает своё семейство характеристик в плоскости $(x, t)$. Физически это означает, что при распаде произвольного разрыва образуются три волны: две акустические ($\lambda_1$ и $\lambda_3$), отвечающие нелинейным характеристическим полям (ударные волны или волны разрежения), и одна энтропийная ($\lambda_2$), отвечающая линейно вырожденному полю (контактному разрыву). Именно эти скорости в дальнейшем используются для вычисления численной вязкости в центральных схемах Курганова--Тадмора~\cite{kurganov2000}.
 
 \subsection{Классическая задача о распаде произвольного разрыва} 
     
-    В вычислительной газовой динамике фундаментальную роль играет задача Римана о распаде произвольного разрыва. Математически классическая одномерная задача Римана представляет собой задачу Коши для системы уравнений Эйлера с начальными условиями в виде кусочно-постоянных функций, имеющих единственный разрыв в точке $x = x_0$
+    В вычислительной газовой динамике фундаментальную роль играет задача Римана о распаде произвольного разрыва~\cite{godunov,toro}. Математически классическая одномерная задача Римана представляет собой задачу Коши для системы уравнений Эйлера с начальными условиями в виде кусочно-постоянных функций, имеющих единственный разрыв в точке $x = x_0$:
     \begin{equation}
     \label{eq:riemann_init}
     U(x, 0) = 
@@ -499,13 +499,13 @@
     U_R, & \text{при } x > x_0 
     \end{cases}
     \end{equation}
-    где $U_L$ и $U_R$ — векторы консервативных параметров слева и справа от разрыва.
+    где $U_L$ и $U_R$ --- векторы консервативных параметров слева и справа от разрыва.
 
     Опираясь на полученный ранее характеристический анализ (наличие трех волн $\lambda_1, \lambda_2, \lambda_3$), математическая теория показывает, что распад начального разрыва приводит к формированию автомодельного течения, зависящего только от переменной $x/t$. Структура этого течения состоит из левой волны (ударной или веера разрежения), правой волны (ударной или веера разрежения) и центрального контактного разрыва, на котором давление $p_*$ и скорость $u_*$ непрерывны, а плотность терпит скачок.
 
-Таким образом, нахождение точного решения сводится к определению параметров газа в так называемой ``звездной области`` (Star Region), заключенной между левой и правой волнами.
+Таким образом, нахождение точного решения сводится к определению параметров газа в так называемой <<звездной области>> (Star Region), заключенной между левой и правой волнами.
 
-Ключевым этапом алгоритма точного решателя Римана (Exact Riemann Solver), подробно описанного Э. Торо, является нахождение давления $p_*$ в контактном разрыве. Для этого выводится единое нелинейное алгебраическое уравнение
+Ключевым этапом алгоритма точного решателя Римана (Exact Riemann Solver), подробно описанного Э. Торо~\cite{toro}, является нахождение давления $p_*$ в контактном разрыве. Для этого выводится единое нелинейное алгебраическое уравнение
 \begin{equation}
 \label{eq:toro_function}
 f(p_*, U_L, U_R) \equiv f_L(p_*, U_L) + f_R(p_*, U_R) + \Delta u = 0,
@@ -2321,155 +2321,200 @@ $8192 \to 16384$ множитель уже $3.26$, то есть близок к
 \newpage
 \section-{ЗАКЛЮЧЕНИЕ}
 
+В рамках настоящей выпускной квалификационной работы разработан и исследован
+программный комплекс для высокопроизводительного численного моделирования
+распространения ударной волны в газе с локальным энерговложением, построенный на
+основе библиотеки дифференцируемого программирования JAX. Поставленная цель
+достигнута, а все сформулированные во введении задачи решены. Основные результаты
+работы состоят в следующем.
+
+\begin{enumerate}
+    \item На основе системы уравнений Эйлера в консервативной форме сформулирована
+    математическая модель течения идеального сжимаемого газа и поставлена
+    модифицированная задача о прохождении ударной волны через зону локального
+    энерговложения (область пониженной плотности) в одномерной и двумерной
+    постановках.
+
+    \item Выполнена программная адаптация и высокопроизводительная реализация
+    семейства центральных разностных схем высокого разрешения SD2 и FD2 средствами
+    библиотеки JAX. Применение JIT-компиляции, векторизации и переноса всего цикла
+    интегрирования по времени на вычислительное устройство обеспечило исполнение
+    единого программного кода как на центральном (CPU), так и на графическом (GPU)
+    процессоре без его модификации.
+
+    \item Проведена верификация реализованных численных методов. На гладких задачах
+    (синус Эйлера в одномерном случае и изоэнтропийный вихрь в двумерном) методом
+    самосходимости на основе экстраполяции Ричардсона подтверждён заявленный второй
+    порядок точности схем. Монотонность и неосцилляторность численного решения
+    верифицированы на скалярных задачах с разрывами: в одномерном случае~--- через
+    контроль полной вариации, в двумерном~--- через выполнение принципа максимума,
+    что для схем выше первого порядка является нетривиальным результатом.
+
+    \item Выполнена кросс-верификация разработанного комплекса: результаты
+    сопоставлены с алгоритмом точного решения задачи Римана, а также с данными
+    открытых CFD-библиотек \textsc{centpy} и JAX-FLUIDS. Профили плотности, скорости
+    и давления показали хорошее согласие во всех рассмотренных постановках, что
+    подтверждает корректность разработанной реализации.
+
+    \item Проведена оценка вычислительной эффективности и анализ аппаратного
+    ускорения на CPU и GPU. Показано, что в двумерных задачах разработанный решатель
+    на GPU ускоряет собственную CPU-реализацию до $33$ раз (схема SD2) и до $60$ раз
+    (схема FD2), опережает классическую библиотеку \textsc{centpy} до двух порядков
+    (в $90$--$100$ раз) и превосходит специализированный фреймворк JAX-FLUIDS в
+    $2.5$--$6$ раз, достигая при этом разрешений сетки ($1024 \times 1024$),
+    недостижимых для реализаций на CPU за разумное время. Установлено, что
+    наблюдаемое время счёта в режиме, ограниченном производительностью вычислителя,
+    согласуется с теоретическими законами масштабирования $T \propto J^2$ для
+    одномерных и $T \propto J^3$ для двумерных задач.
+
+    \item На примере модифицированной задачи с локальным энерговложением
+    продемонстрированы возможности разработанного комплекса: получена детальная
+    картина динамики параметров газа~--- плотности, скорости и давления~--- при
+    прохождении ударной волны через область пониженной плотности в одномерной и
+    двумерной постановках.
+\end{enumerate}
+
+Полученные результаты подтверждают, что применение инструментов дифференцируемого
+программирования и аппаратного ускорения позволяет эффективно переносить
+классические разностные схемы высокого разрешения на современные массивно-параллельные
+архитектуры, обеспечивая значительный выигрыш в производительности без потери
+точности. Это делает разработанный программный комплекс практически пригодным
+инструментом для проведения серийных ресурсоёмких расчётов задач газовой динамики
+на широкодоступном оборудовании, в том числе на облачных платформах.
+
+Дальнейшее развитие работы может быть связано с обобщением комплекса на трёхмерные
+постановки, учётом вязких эффектов (переход к уравнениям Навье--Стокса), внедрением
+адаптивного измельчения сетки, а также с использованием свойства автоматического
+дифференцирования библиотеки JAX для решения обратных задач и задач оптимального
+управления параметрами зоны энерговложения.
 
 
 
-\newpage
-\begin{thebibliography}{29}
 
-\bibitem{ref1}
-Богомолов, С. В. Разностные схемы для решения уравнений газовой динамики / С. В. Богомолов. --- Москва : Изд-во МГУ, 2011. --- 184 с.
+\begin{thebibliography}{99}
 
-\bibitem{ref2}
-Годунов, С. К. Численное решение многомерных задач газовой динамики / С. К. Годунов, А. В. Забродин, М. Я. Иванов [и др.]. --- Москва : Наука, 1976. --- 400 с.
+% ====================================================================
+%  АКТИВНЫЕ ИСТОЧНИКИ  ---  порядок по первому упоминанию в тексте
+% ====================================================================
 
-\bibitem{ref3}
-Куликовский, А. Г. Математические вопросы численного решения гиперболических систем уравнений / А. Г. Куликовский, Н. В. Погорелов, А. Ю. Семенов. --- Москва : Физматлит, 2012. --- 656 с.
+\bibitem{knight2008}
+Knight, D. Survey of aerodynamic drag reduction at high speed by energy deposition / D. Knight // Journal of Propulsion and Power. --- 2008. --- Vol. 24, no. 6. --- P. 1153--1167.
 
-\bibitem{ref4}
+\bibitem{landau}
 Ландау, Л. Д. Гидродинамика. Теоретическая физика: учебное пособие / Л. Д. Ландау, Е. М. Лифшиц. --- Изд. 6-е, испр. --- Москва : Физматлит, 2015. --- Т. 6. --- 736 с.
 
-\bibitem{ref5}
-Самарский, А. А. Теория разностных схем / А. А. Самарский. --- Москва : Наука, 1989. --- 616 с.
+\bibitem{toro}
+Toro, E. F. Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical Introduction / E. F. Toro. --- 3rd ed. --- Berlin : Springer, 2009. --- 724 p.
 
-\bibitem{ref6}
-Торн, К. Гравитация / К. Торн, Дж. Уилер, Ч. Мизнер. --- Москва : Мир, 1977. --- Т. 3. --- 510 с.
+\bibitem{kulikovsky}
+Куликовский, А. Г. Математические вопросы численного решения гиперболических систем уравнений / А. Г. Куликовский, Н. В. Погорелов, А. Ю. Семенов. --- Москва : Физматлит, 2012. --- 656 с.
 
-\bibitem{ref7}
-Abadi, M. TensorFlow: Large-scale machine learning on heterogeneous systems / M. Abadi, A. Agarwal, P. Barham [et al.]. --- 2015. --- URL: https://www.tensorflow.org.
+\bibitem{jax}
+Bradbury, J. JAX: composable transformations of Python+NumPy programs [Электронный ресурс] / J. Bradbury, R. Frostig, P. Hawkins [et al.]. --- 2018. --- URL: http://github.com/google/jax (дата обращения: 30.05.2026).
 
-\bibitem{ref8}
-Batchelor, G. K. An Introduction to Fluid Dynamics / G. K. Batchelor. --- Cambridge : Cambridge University Press, 2000. --- 635 p.
+\bibitem{matplotlib}
+Hunter, J. D. Matplotlib: A 2D graphics environment / J. D. Hunter // Computing in Science \& Engineering. --- 2007. --- Vol. 9, no. 3. --- P. 90--95.
 
-\bibitem{ref9}
+\bibitem{nessyahu1990}
+Nessyahu, H. Non-oscillatory central differencing for hyperbolic conservation laws / H. Nessyahu, E. Tadmor // Journal of Computational Physics. --- 1990. --- Vol. 87, no. 2. --- P. 408--463.
+
+\bibitem{kurganov2000}
+Kurganov, A. New high-resolution central schemes for nonlinear conservation laws and convection--diffusion equations / A. Kurganov, E. Tadmor // Journal of Computational Physics. --- 2000. --- Vol. 160, no. 1. --- P. 241--282.
+
+\bibitem{centpy}
+Zenginoglu, A. centpy: Central schemes for conservation laws in Python [Электронный ресурс] / A. Zenginoglu. --- 2020. --- URL: https://github.com/AnilZen/centpy (дата обращения: 30.05.2026).
+
+\bibitem{jaxfluids}
 Bezgin, D. A. JAX-Fluids: A fully-differentiable high-order computational fluid dynamics solver for compressible two-phase flows / D. A. Bezgin, A. B. Buhendwa, N. A. Adams // Computer Physics Communications. --- 2023. --- Vol. 282. --- P. 108527.
 
-\bibitem{ref10}
-Bradbury, J. JAX: composable machine learning and neural network research / J. Bradbury, R. Frostig, P. Hawkins [et al.]. --- 2018. --- URL: http://github.com/google/jax.
+\bibitem{godunov}
+Годунов, С. К. Численное решение многомерных задач газовой динамики / С. К. Годунов, А. В. Забродин, М. Я. Иванов [и др.]. --- Москва : Наука, 1976. --- 400 с.
 
-\bibitem{ref11}
-Chorin, A. J. Computational Fluid Mechanics / A. J. Chorin. --- New York : Academic Press, 1978. --- 410 p.
+\bibitem{leveque1992}
+LeVeque, R. J. Numerical Methods for Conservation Laws / R. J. LeVeque. --- 2nd ed. --- Basel : Birkh\"auser, 1992. --- 214 p.
 
-\bibitem{ref12}
-Courant, R. On the partial difference equations of mathematical physics / R. Courant, K. Friedrichs, H. Lewy // IBM Journal of Research and Development. --- 1967. --- Vol. 11, no. 2. --- P. 215–234.
+\bibitem{harten1983}
+Harten, A. High resolution schemes for hyperbolic conservation laws / A. Harten // Journal of Computational Physics. --- 1983. --- Vol. 49, no. 3. --- P. 357--393.
 
-\bibitem{ref13}
-Godunov, S. K. A difference method for numerical calculation of discontinuous solutions of the equations of hydrodynamics / S. K. Godunov // Matematicheskii Sbornik. --- 1959. --- Vol. 47(89), no. 3. --- P. 271–306.
+\bibitem{gottlieb1998}
+Gottlieb, S. Total variation diminishing Runge--Kutta schemes / S. Gottlieb, C.-W. Shu // Mathematics of Computation. --- 1998. --- Vol. 67, no. 221. --- P. 73--85.
 
-\bibitem{ref14}
-Harris, C. R. Array programming with NumPy / C. R. Harris, K. J. Millman, S. J. van der Walt [et al.] // Nature. --- 2020. --- Vol. 585, no. 7825. --- P. 357–362.
+\bibitem{hu1999}
+Hu, C. Weighted essentially non-oscillatory schemes on triangular meshes / C. Hu, C.-W. Shu // Journal of Computational Physics. --- 1999. --- Vol. 144, no. 1. --- P. 210--227.
 
-\bibitem{ref15}
-Harten, A. High resolution schemes for hyperbolic conservation laws / A. Harten // Journal of Computational Physics. --- 1983. --- Vol. 49, no. 3. --- P. 357–393.
+\bibitem{goodman1985}
+Goodman, J. B. On the accuracy of stable schemes for 2D scalar conservation laws / J. B. Goodman, R. J. LeVeque // Mathematics of Computation. --- 1985. --- Vol. 45, no. 171. --- P. 15--21.
 
-\bibitem{ref16}
-Hunter, J. D. Matplotlib: A 2D graphics environment / J. D. Hunter // Computing in Science \& Engineering. --- 2007. --- Vol. 9, no. 3. --- P. 90–95.
-
-\bibitem{ref17}
-Ketcheson, D. I. PyClaw: Accessible, Extensible, Scalable Tools for Wave Propagation Problems / D. I. Ketcheson, K. T. Mandli, A. J. Ahmadia [et al.] // SIAM Journal on Scientific Computing. --- 2012. --- Vol. 34, no. 4. --- P. C210–C231.
-
-\bibitem{ref18}
-Klöckner, A. PyCUDA and PyOpenCL: A visionary computing interface / A. Klöckner // GPU Computing Gems. --- 2011. --- P. 241–255.
-
-\bibitem{ref19}
-Kurganov, A. New high-resolution central schemes for nonlinear conservation laws and convection-diffusion equations / A. Kurganov, E. Tadmor // Journal of Computational Physics. --- 2000. --- Vol. 160, no. 1. --- P. 241–282.
-
-\bibitem{ref20}
-Kurganov, A. Central-upwind schemes for the Euler equations with real gases / A. Kurganov, S. Noelle, G. Petrova // SIAM Journal on Scientific Computing. --- 2001. --- Vol. 23, no. 3. --- P. 707–740.
-
-\bibitem{ref21}
-Lax, P. D. Hyperbolic Systems of Conservation Laws and the Mathematical Theory of Shock Waves / P. D. Lax. --- Philadelphia : SIAM, 1973. --- 48 p.
-
-\bibitem{ref22}
-LeVeque, R. J. Finite Volume Methods for Hyperbolic Problems / R. J. LeVeque. --- Cambridge : Cambridge University Press, 2002. --- 558 p.
-
-\bibitem{ref23}
-Liska, R. Comparison of several difference schemes on 1D and 2D test problems for the Euler equations / R. Liska, B. Wendroff // SIAM Journal on Scientific Computing. --- 2003. --- Vol. 25, no. 3. --- P. 995–1017.
-
-\bibitem{ref24}
-MacCormack, R. W. The effect of viscosity in hypervelocity impact cratering / R. W. MacCormack // AIAA Paper. --- 1969. --- P. 69–354.
-
-\bibitem{ref25}
-Osher, S. Upwind difference schemes for hyperbolic systems of conservation laws / S. Osher, F. Solomon // Mathematics of Computation. --- 1982. --- Vol. 38, no. 158. --- P. 339–374.
-
-\bibitem{ref26}
-Roe, P. L. Approximate Riemann solvers, parameter vectors, and difference schemes / P. L. Roe // Journal of Computational Physics. --- 1981. --- Vol. 43, no. 2. --- P. 357–372.
-
-\bibitem{ref27}
-Sedov, L. I. Similarity and Dimensional Methods in Mechanics / L. I. Sedov. --- Boca Raton : CRC Press, 1993. --- 526 p.
-
-\bibitem{ref28}
-Sweby, P. K. High resolution schemes using flux limiters for hyperbolic conservation laws / P. K. Sweby // SIAM Journal on Numerical Analysis. --- 1984. --- Vol. 21, no. 5. --- P. 995–1011.
-
-\bibitem{ref29}
-Zenginoglu, A. Centpy: Central schemes for conservation laws in python / A. Zenginoglu. --- 2020. --- URL: https://github.com/AnilZen/centpy.
+% ====================================================================
+%  РЕЗЕРВНЫЙ ПУЛ  ---  ещё не процитированы; раскомментировать и
+%  переместить вверх по мере появления ссылок в следующих главах
+% ====================================================================
+% \bibitem{bogomolov}
+% Богомолов, С. В. Разностные схемы для решения уравнений газовой динамики / С. В. Богомолов. --- Москва : Изд-во МГУ, 2011. --- 184 с.
+%
+% \bibitem{samarsky}
+% Самарский, А. А. Теория разностных схем / А. А. Самарский. --- Москва : Наука, 1989. --- 616 с.
+%
+% \bibitem{tensorflow}
+% Abadi, M. TensorFlow: Large-scale machine learning on heterogeneous systems / M. Abadi, A. Agarwal, P. Barham [et al.]. --- 2015. --- URL: https://www.tensorflow.org.
+%
+% \bibitem{batchelor}
+% Batchelor, G. K. An Introduction to Fluid Dynamics / G. K. Batchelor. --- Cambridge : Cambridge University Press, 2000. --- 635 p.
+%
+% \bibitem{chorin}
+% Chorin, A. J. Computational Fluid Mechanics / A. J. Chorin. --- New York : Academic Press, 1978. --- 410 p.
+%
+% \bibitem{cfl1967}
+% Courant, R. On the partial difference equations of mathematical physics / R. Courant, K. Friedrichs, H. Lewy // IBM Journal of Research and Development. --- 1967. --- Vol. 11, no. 2. --- P. 215--234.
+%
+% \bibitem{godunov1959}
+% Godunov, S. K. A difference method for numerical calculation of discontinuous solutions of the equations of hydrodynamics / S. K. Godunov // Matematicheskii Sbornik. --- 1959. --- Vol. 47(89), no. 3. --- P. 271--306.
+%
+% \bibitem{numpy}
+% Harris, C. R. Array programming with NumPy / C. R. Harris, K. J. Millman, S. J. van der Walt [et al.] // Nature. --- 2020. --- Vol. 585, no. 7825. --- P. 357--362.
+%
+% \bibitem{pyclaw}
+% Ketcheson, D. I. PyClaw: Accessible, Extensible, Scalable Tools for Wave Propagation Problems / D. I. Ketcheson, K. T. Mandli, A. J. Ahmadia [et al.] // SIAM Journal on Scientific Computing. --- 2012. --- Vol. 34, no. 4. --- P. C210--C231.
+%
+% \bibitem{pycuda}
+% Kl\"ockner, A. PyCUDA and PyOpenCL: A visionary computing interface / A. Kl\"ockner // GPU Computing Gems. --- 2011. --- P. 241--255.
+%
+% \bibitem{kurganov2001}
+% Kurganov, A. Central-upwind schemes for the Euler equations with real gases / A. Kurganov, S. Noelle, G. Petrova // SIAM Journal on Scientific Computing. --- 2001. --- Vol. 23, no. 3. --- P. 707--740.
+%
+% \bibitem{lax1973}
+% Lax, P. D. Hyperbolic Systems of Conservation Laws and the Mathematical Theory of Shock Waves / P. D. Lax. --- Philadelphia : SIAM, 1973. --- 48 p.
+%
+% \bibitem{leveque2002}
+% LeVeque, R. J. Finite Volume Methods for Hyperbolic Problems / R. J. LeVeque. --- Cambridge : Cambridge University Press, 2002. --- 558 p.
+%
+% \bibitem{liska2003}
+% Liska, R. Comparison of several difference schemes on 1D and 2D test problems for the Euler equations / R. Liska, B. Wendroff // SIAM Journal on Scientific Computing. --- 2003. --- Vol. 25, no. 3. --- P. 995--1017.
+%
+% \bibitem{maccormack1969}
+% MacCormack, R. W. The effect of viscosity in hypervelocity impact cratering / R. W. MacCormack // AIAA Paper. --- 1969. --- P. 69--354.
+%
+% \bibitem{osher1982}
+% Osher, S. Upwind difference schemes for hyperbolic systems of conservation laws / S. Osher, F. Solomon // Mathematics of Computation. --- 1982. --- Vol. 38, no. 158. --- P. 339--374.
+%
+% \bibitem{roe1981}
+% Roe, P. L. Approximate Riemann solvers, parameter vectors, and difference schemes / P. L. Roe // Journal of Computational Physics. --- 1981. --- Vol. 43, no. 2. --- P. 357--372.
+%
+% \bibitem{saurel1999}
+% Saurel, R. A multiphase Godunov method for compressible multifluid and multiphase flows / R. Saurel, R. Abgrall // Journal of Computational Physics. --- 1999. --- Vol. 150, no. 2. --- P. 425--467.
+%
+% \bibitem{shu1988}
+% Shu, C.-W. Efficient implementation of essentially non-oscillatory shock-capturing schemes / C.-W. Shu, S. Osher // Journal of Computational Physics. --- 1988. --- Vol. 77, no. 2. --- P. 439--471.
+%
+% \bibitem{vanleer1979}
+% van Leer, B. Towards the ultimate conservative difference scheme. V. A second-order sequel to Godunov's method / B. van Leer // Journal of Computational Physics. --- 1979. --- Vol. 32, no. 1. --- P. 101--136.
+%
+% \bibitem{sweby1984}
+% Sweby, P. K. High resolution schemes using flux limiters for hyperbolic conservation laws / P. K. Sweby // SIAM Journal on Numerical Analysis. --- 1984. --- Vol. 21, no. 5. --- P. 995--1011.
+%
+% \bibitem{sedov1993}
+% Sedov, L. I. Similarity and Dimensional Methods in Mechanics / L. I. Sedov. --- Boca Raton : CRC Press, 1993. --- 526 p.
 
 \end{thebibliography}
-
-%     \newpage
-
-%     Черновик "аналитического" решения
-
-%     Классическая задача о распаде произвольного разрыва (задача Сода) описывает эволюцию идеального газа после мгновенного удаления перегородки. В результате образуются пять характерных зон, разделенных волной разрежения, контактным разрывом и ударной волной.
-
-% \subsection*{1. Поиск давления в зоне контакта}
-% Главным этапом аналитического решения является нахождение давления $P^*$ в промежуточной области (между волной разрежения и ударной волной). Так как скорость потока слева и справа от контактного разрыва должна быть одинакова ($u_3 = u_4 = u^*$), мы приравниваем скорости, полученные из инвариантов Римана для волны разрежения и из соотношений Ренкина-Гюгонио для ударной волны.
-
-% Это приводит к нелинейному алгебраическому уравнению относительно $P^*$:
-% \begin{equation}
-%     f(P^*) = u_L + \frac{2 c_L}{\gamma - 1} \left[ 1 - \left( \frac{P^*}{P_L} \right)^{\frac{\gamma - 1}{2\gamma}} \right] - \left( u_R + (P^* - P_R) \sqrt{\frac{2}{\rho_R ((\gamma + 1) P^* + (\gamma - 1) P_R)}} \right) = 0
-% \end{equation}
-% Для условий Сода ($P_L=1, P_R=0.1, \dots$) данное уравнение решается итерационным методом Ньютона. Точное значение давления составляет $P^* \approx 0.30313$.
-
-% \subsection*{2. Расчет параметров во всех 5 зонах}
-% Зная $P^*$, мы находим скорость контактного разрыва:
-% \begin{equation}
-%     u^* = u_R + (P^* - P_R) \sqrt{\frac{2}{\rho_R ((\gamma + 1) P^* + (\gamma - 1) P_R)}} \approx 0.92745
-% \end{equation}
-
-% Далее пространство делится на 5 зон в зависимости от координаты $x$ и времени $t$. Скорости звука обозначаются как $c = \sqrt{\gamma P / \rho}$.
-
-% \textbf{Зона 1 (Левое невозмущенное состояние):} Для $x/t < u_L - c_L$
-% \begin{equation}
-%     \rho_1 = \rho_L, \quad u_1 = u_L, \quad P_1 = P_L
-% \end{equation}
-
-% \textbf{Зона 2 (Веер волны разрежения):} Для $u_L - c_L \le x/t \le u^* - c_3$
-% \begin{align}
-%     u_2 &= \frac{2}{\gamma + 1} \left( c_L + \frac{x}{t} + \frac{\gamma - 1}{2} u_L \right) \\
-%     c_2 &= u_2 - \frac{x}{t} \\
-%     \rho_2 &= \rho_L \left( \frac{c_2}{c_L} \right)^{\frac{2}{\gamma - 1}} \\
-%     P_2 &= P_L \left( \frac{c_2}{c_L} \right)^{\frac{2\gamma}{\gamma - 1}}
-% \end{align}
-
-% \textbf{Зона 3 (За волной разрежения):} Для $u^* - c_3 < x/t \le u^*$
-% \begin{equation}
-%     P_3 = P^*, \quad u_3 = u^*, \quad \rho_3 = \rho_L \left( \frac{P^*}{P_L} \right)^{1/\gamma}
-% \end{equation}
-% Здесь плотность рассчитывается из условия изэнтропичности волны разрежения. Скорость звука $c_3 = \sqrt{\gamma P_3 / \rho_3}$.
-
-% \textbf{Зона 4 (За ударной волной):} Для $u^* < x/t \le W$
-% \begin{equation}
-%     P_4 = P^*, \quad u_4 = u^*, \quad \rho_4 = \rho_R \frac{(\gamma + 1) P^* + (\gamma - 1) P_R}{(\gamma - 1) P^* + (\gamma + 1) P_R}
-% \end{equation}
-% Здесь плотность рассчитывается из соотношений Ренкина-Гюгонио для ударной волны. Скорость фронта ударной волны $W$ равна:
-% \begin{equation}
-%     W = u_R + c_R \sqrt{\frac{\gamma + 1}{2\gamma} \frac{P^*}{P_R} + \frac{\gamma - 1}{2\gamma}} \approx 1.75216
-% \end{equation}
-
-% \textbf{Зона 5 (Правое невозмущенное состояние):} Для $x/t > W$
-% \begin{equation}
-%     \rho_5 = \rho_R, \quad u_5 = u_R, \quad P_5 = P_R
-% \end{equation}
 	
 \end{document}
