@@ -21,8 +21,14 @@ max_principle_analysis.py
 
 import numpy as np
 import matplotlib.pyplot as plt
+import scienceplots  # noqa: F401  (регистрирует стиль 'science')
 from pathlib import Path
 from typing import Dict, Tuple, Optional
+
+# Единый стиль оформления графиков (как у остальных рисунков работы)
+_SCIENCE_STYLE = ['science', 'no-latex']
+_MAX_COLOR = '#0C5DA5'  # u_max(t) — синий
+_MIN_COLOR = '#C62828'  # u_min(t) — красный
 
 
 def compute_minmax_evolution_2d(
@@ -130,18 +136,19 @@ def _get_verdict(is_ok, undershoot, overshoot):
 def plot_max_principle_evolution_2d(
     solution: Dict,
     variable_idx: int = 0,
-    figsize: Tuple = (10, 6),
+    figsize: Tuple = (6, 6),
     show: bool = True,
     save_path: Optional[str] = None,
-    dpi: int = 150,
+    dpi: int = 300,
 ):
     """
-    График эволюции u_min(t) и u_max(t) для проверки принципа максимума.
+    График эволюции u_min(t) и u_max(t) для проверки принципа максимума
+    в стиле scienceplots (единообразно с остальными рисунками работы).
 
     На графике:
-      - синяя линия  : u_max(t)
-      - оранжевая    : u_min(t)
-      - пунктиры     : начальные значения u_max(0) и u_min(0)
+      - синяя линия   : u_max(t)
+      - красная линия : u_min(t)
+      - пунктиры      : начальные значения u_max(0) и u_min(0)
 
     Параметры
     ----------
@@ -154,35 +161,35 @@ def plot_max_principle_evolution_2d(
     """
     times, u_min, u_max = compute_minmax_evolution_2d(solution, variable_idx)
 
-    fig, ax = plt.subplots(figsize=figsize)
+    with plt.style.context(_SCIENCE_STYLE):
+        fig, ax = plt.subplots(figsize=figsize)
 
-    ax.plot(times, u_max, "b-o", linewidth=2, markersize=4, label=r"$u_{\max}(t)$")
-    ax.plot(times, u_min, "o-",  linewidth=2, markersize=4,
-            color="darkorange", label=r"$u_{\min}(t)$")
+        ax.plot(times, u_max, color=_MAX_COLOR, linewidth=1.8, label=r"$u_{\max}(t)$")
+        ax.plot(times, u_min, color=_MIN_COLOR, linewidth=1.8, label=r"$u_{\min}(t)$")
 
-    # Пунктиры — начальные значения
-    ax.axhline(u_max[0], color="blue",       linestyle="--", linewidth=1.5,
-               label=rf"$u_{{\max}}(0) = {u_max[0]:.4f}$")
-    ax.axhline(u_min[0], color="darkorange", linestyle="--", linewidth=1.5,
-               label=rf"$u_{{\min}}(0) = {u_min[0]:.4f}$")
+        # Пунктиры — начальные значения
+        ax.axhline(u_max[0], color=_MAX_COLOR, linestyle="--", linewidth=1.2,
+                   label=rf"$u_{{\max}}(0) = {u_max[0]:.4f}$")
+        ax.axhline(u_min[0], color=_MIN_COLOR, linestyle="--", linewidth=1.2,
+                   label=rf"$u_{{\min}}(0) = {u_min[0]:.4f}$")
 
-    ax.set_xlabel("Время t", fontsize=14)
-    ax.set_ylabel("u", fontsize=14)
-    ax.legend(fontsize=12, loc="center right")
-    ax.grid(True, alpha=0.3)
+        ax.set_xlabel(r"Время $t$", fontsize=18)
+        ax.set_ylabel(r"$u$", fontsize=18)
+        ax.tick_params(axis='both', labelsize=15)
+        ax.legend(fontsize=12, loc="center right")
 
-    plt.tight_layout()
+        fig.tight_layout()
 
-    if save_path is not None:
-        out = Path(save_path)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(out, dpi=dpi, bbox_inches="tight")
-        print(f"✓ Сохранено: {out}")
+        if save_path is not None:
+            out = Path(save_path)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(out, dpi=dpi, bbox_inches="tight")
+            print(f"✓ Сохранено: {out}")
 
-    if show:
-        plt.show()
-    else:
-        plt.close(fig)
+        if show:
+            plt.show()
+        else:
+            plt.close(fig)
 
 
 def print_max_principle_diagnostics(diag: Dict):

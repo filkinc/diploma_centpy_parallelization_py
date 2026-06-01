@@ -6,8 +6,14 @@ tvd_analysis.py
 import jax.numpy as jnp
 import numpy as np
 import matplotlib.pyplot as plt
+import scienceplots  # noqa: F401  (регистрирует стиль 'science')
 from typing import Dict, Tuple, Optional
 from pathlib import Path
+
+# Единый стиль оформления графиков (как у остальных рисунков работы)
+_SCIENCE_STYLE = ['science', 'no-latex']
+_PRIMARY_COLOR = '#C62828'   # основная линия (красный)
+_SECONDARY_COLOR = '#0C5DA5' # вспомогательная линия (синий)
 
 
 def compute_tv_1d(u: jnp.ndarray, variable_idx: int = 0) -> float:
@@ -177,13 +183,14 @@ def _get_verdict(relative_change, violations, strict_mode):
 def plot_tv_evolution_only(
     solution: Dict,
     variable_idx: int = 0,
-    figsize: Tuple = (10, 6),
+    figsize: Tuple = (6, 6),
     show: bool = True,
     save_path: Optional[str] = None,
-    dpi: int = 150
+    dpi: int = 300
 ):
     """
-    Отрисовка ТОЛЬКО графика эволюции TV(t) - упрощённая версия.
+    Отрисовка графика эволюции TV(t) в стиле scienceplots
+    (единообразно с остальными рисунками работы).
 
     Args:
         solution: результат solver.solve()
@@ -199,36 +206,36 @@ def plot_tv_evolution_only(
     # Вычисляем TV эволюцию
     tv_times, tv_values = compute_tv_evolution_1d(solution, variable_idx)
 
-    # Создаём график
-    fig, ax = plt.subplots(figsize=figsize)
+    with plt.style.context(_SCIENCE_STYLE):
+        fig, ax = plt.subplots(figsize=figsize)
 
-    # Основная линия TV(t) - ВСЕ ТОЧКИ
-    ax.plot(tv_times, tv_values, 'b-o', linewidth=2, markersize=4)
+        # Эволюция полной вариации
+        ax.plot(tv_times, tv_values, color=_PRIMARY_COLOR, linewidth=1.8,
+                label=r'$\mathrm{TV}(t)$')
 
-    # Референсная линия TV(t=0)
-    ax.axhline(tv_values[0], color='r', linestyle='--', linewidth=2,
-               label=f'TV(t=0) = {tv_values[0]:.4f}')
+        # Референсная линия TV(t=0)
+        ax.axhline(tv_values[0], color='black', linestyle='--', linewidth=1.2,
+                   label=rf'$\mathrm{{TV}}(t=0) = {tv_values[0]:.4f}$')
 
-    # Оформление (БЕЗ заголовка и БЕЗ текстовой плашки)
-    ax.set_xlabel('Время t', fontsize=14)
-    ax.set_ylabel('TV(u)', fontsize=14)
-    ax.legend(fontsize=12, loc='best')
-    ax.grid(True, alpha=0.3)
+        ax.set_xlabel(r'Время $t$', fontsize=18)
+        ax.set_ylabel(r'$\mathrm{TV}(u)$', fontsize=18)
+        ax.tick_params(axis='both', labelsize=15)
+        ax.legend(fontsize=14, loc='best')
 
-    plt.tight_layout()
+        fig.tight_layout()
 
-    # Сохранение (если указан путь)
-    if save_path is not None:
-        output_file = Path(save_path)
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(output_file, dpi=dpi, bbox_inches='tight')
-        print(f"✓ Сохранено: {output_file}")
+        # Сохранение (если указан путь)
+        if save_path is not None:
+            output_file = Path(save_path)
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(output_file, dpi=dpi, bbox_inches='tight')
+            print(f"✓ Сохранено: {output_file}")
 
-    # Отображение (если show=True)
-    if show:
-        plt.show()
-    else:
-        plt.close(fig)
+        # Отображение (если show=True)
+        if show:
+            plt.show()
+        else:
+            plt.close(fig)
 
 
 # ============================================================================
@@ -403,13 +410,14 @@ def plot_tvd_analysis_1d_separate(
 def plot_tv_evolution_only_2d(
         solution: Dict,
         variable_idx: int = 0,
-        figsize: Tuple = (10, 6),
+        figsize: Tuple = (6, 6),
         show: bool = True,
         save_path: Optional[str] = None,
-        dpi: int = 150
+        dpi: int = 300
 ):
     """
-    Отрисовка ТОЛЬКО графика эволюции TV(t) для 2D - упрощённая версия.
+    Отрисовка графика эволюции TV(t) для 2D в стиле scienceplots
+    (единообразно с остальными рисунками работы).
 
     Args:
         solution: результат solver.solve() для 2D
@@ -425,36 +433,36 @@ def plot_tv_evolution_only_2d(
     # Вычисляем TV эволюцию
     tv_times, tv_values = compute_tv_evolution_2d(solution, variable_idx)
 
-    # Создаём график
-    fig, ax = plt.subplots(figsize=figsize)
+    with plt.style.context(_SCIENCE_STYLE):
+        fig, ax = plt.subplots(figsize=figsize)
 
-    # Основная линия TV(t) - ВСЕ ТОЧКИ
-    ax.plot(tv_times, tv_values, 'b-o', linewidth=2, markersize=4)
+        # Эволюция полной вариации
+        ax.plot(tv_times, tv_values, color=_PRIMARY_COLOR, linewidth=1.8,
+                label=r'$\mathrm{TV}(t)$')
 
-    # Референсная линия TV(t=0)
-    ax.axhline(tv_values[0], color='r', linestyle='--', linewidth=2,
-               label=f'TV(t=0) = {tv_values[0]:.4f}')
+        # Референсная линия TV(t=0)
+        ax.axhline(tv_values[0], color='black', linestyle='--', linewidth=1.2,
+                   label=rf'$\mathrm{{TV}}(t=0) = {tv_values[0]:.4f}$')
 
-    # Оформление (БЕЗ заголовка и БЕЗ текстовой плашки)
-    ax.set_xlabel('Время t', fontsize=14)
-    ax.set_ylabel('TV(u)', fontsize=14)
-    ax.legend(fontsize=12, loc='best')
-    ax.grid(True, alpha=0.3)
+        ax.set_xlabel(r'Время $t$', fontsize=18)
+        ax.set_ylabel(r'$\mathrm{TV}(u)$', fontsize=18)
+        ax.tick_params(axis='both', labelsize=15)
+        ax.legend(fontsize=14, loc='best')
 
-    plt.tight_layout()
+        fig.tight_layout()
 
-    # Сохранение (если указан путь)
-    if save_path is not None:
-        output_file = Path(save_path)
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(output_file, dpi=dpi, bbox_inches='tight')
-        print(f"✓ Сохранено: {output_file}")
+        # Сохранение (если указан путь)
+        if save_path is not None:
+            output_file = Path(save_path)
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(output_file, dpi=dpi, bbox_inches='tight')
+            print(f"✓ Сохранено: {output_file}")
 
-    # Отображение (если show=True)
-    if show:
-        plt.show()
-    else:
-        plt.close(fig)
+        # Отображение (если show=True)
+        if show:
+            plt.show()
+        else:
+            plt.close(fig)
 
 
 # Пример использования 1D
