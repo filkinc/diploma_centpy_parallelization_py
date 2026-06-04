@@ -116,7 +116,7 @@ def plot_trajectories_v2(coords_jax, coords_centpy):
 
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import ScalarFormatter, FuncFormatter
+from matplotlib.ticker import ScalarFormatter, FuncFormatter, LogLocator
 
 
 def plot_trajectories_v3(coords1, coords2, coords3, coords4, coords5,
@@ -375,6 +375,102 @@ def plot_trajectories_v5(coords1, coords2, coords3, coords4, coords5,
         plt.show()
 
 
+def plot_trajectories_for_presentation(coords1, coords2, coords3, coords4, coords5, coords6, coords7, coords8,
+                         labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy SD2', 'centpy FD2', 'JAX-FLUIDS (GPU)', 'JAX-FLUIDS (CPU)']):
+    """
+    Отрисовывает графики с приглушенной цветовой палитрой (muted)
+    и увеличенными размерами шрифтов для дипломной работы.
+    """
+    # Задаем стиль. 'muted' - приглушенные, не раздражающие цвета.
+    # Если 'russian-font' выдает ошибку, оставьте ['science', 'muted', 'grid']
+    with plt.style.context(['science', 'muted', 'grid', 'russian-font']):
+
+        # --- НАСТРОЙКА РАЗМЕРА ШРИФТОВ ---
+        # Переопределяем параметры поверх стиля science
+        plt.rcParams.update({
+            'axes.labelsize': 26,  # Размер подписей осей (Плотность сетки, Время работы)
+            'xtick.labelsize': 26,  # Размер цифр на оси X
+            'ytick.labelsize': 26,  # Размер цифр на оси Y
+            'legend.fontsize': 16,  # Размер текста в легенде
+        })
+
+        # Размер графика можно сделать чуть больше (например, 8x6)
+        fig, ax = plt.subplots(figsize=(10, 8))
+
+        x1, y1 = zip(*coords1)
+        x2, y2 = zip(*coords2)
+        x3, y3 = zip(*coords3)
+        x4, y4 = zip(*coords4)
+        x5, y5 = zip(*coords5)
+        x6, y6 = zip(*coords6)
+        x7, y7 = zip(*coords7)
+        x8, y8 = zip(*coords8)
+
+        all_x = sorted(list(set(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8)))
+        all_y = sorted(list(set(y1 + y2 + y3 + y4 + y5 + y6 + y7 + y8)))
+
+        x_min_limit = min(all_x) * 0.8
+        y_min_limit = min(all_y) * 0.8
+
+        datasets = [
+            (x1, y1, labels[0]),
+            (x2, y2, labels[1]),
+            (x3, y3, labels[2]),
+            (x4, y4, labels[3]),
+            (x5, y5, labels[4]),
+            (x6, y6, labels[5]),
+            (x7, y7, labels[6]),
+            (x8, y8, labels[7]),
+        ]
+
+        markers = ['o', 's', '^', 'D', 'v', '*', '+', 'p']
+
+        # Отрисовка
+        for i, (x, y, label) in enumerate(datasets):
+            line = ax.plot(x, y, marker=markers[i], markersize=7, linestyle='-',
+                           linewidth=2, label=label, zorder=5)
+
+            # Автоматически берется цвет из палитры 'muted'
+            color = line[0].get_color()
+
+            # Пунктирные проекции (делаем их чуть тоньше и прозрачнее)
+            for xi, yi in zip(x, y):
+                ax.plot([xi, xi], [y_min_limit, yi], color=color, linestyle='--', linewidth=1, alpha=0.5)
+                ax.plot([x_min_limit, xi], [yi, yi], color=color, linestyle='--', linewidth=1, alpha=0.5)
+
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+
+        # Форматер для оси X (Плотность сетки): убираем нули после запятой (1024)
+        formatter_x = FuncFormatter(lambda x, _: '{:g}'.format(x))
+
+        # Форматер для оси Y (Время): строго 2 знака после запятой (0.01, 1.50, 12.00)
+        formatter_y = FuncFormatter(lambda y, _: '{:.2f}'.format(y))
+
+        ax.xaxis.set_major_formatter(formatter_x)
+        ax.yaxis.set_major_formatter(formatter_y)
+
+        # Цифры на осях (теперь они будут 14-го размера, как мы задали в rcParams)
+        ax.set_xticks(all_x)
+        ax.yaxis.set_major_locator(LogLocator(base=3.0, numticks=15))  # ~8 основных делений
+        ax.yaxis.set_minor_locator(LogLocator(base=3.0, subs='auto', numticks=15))
+        ax.yaxis.set_minor_formatter(plt.NullFormatter())
+
+        ax.set_xlim(left=x_min_limit, right=max(all_x) * 1.2)
+        ax.set_ylim(bottom=y_min_limit, top=max(all_y) * 1.2)
+
+        # Подписи осей (теперь они 16-го размера)
+        ax.set_xlabel('Плотность сетки')
+        ax.set_ylabel('Время работы solver, сек.')
+
+        # Легенда
+        ax.legend(loc='upper left', frameon=True, framealpha=0.9, edgecolor='black')
+
+        plt.tight_layout()
+        plt.show()
+
+
 if __name__ == "__main__":
     #compare_all_slices('centpy_data.npz', 'gpu_data.npz')
 
@@ -546,21 +642,31 @@ if __name__ == "__main__":
     ]
 
     # SD2 1d
-    plot_trajectories_v5(jax_cpu_sd2_1d, jax_gpu_sd2_1d, centpy_sd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d,
-                         labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'centpy SD2', 'JAX-FLUIDS (GPU)',
-                                 'JAX-FLUIDS (CPU)'])
+    #plot_trajectories_v5(jax_cpu_sd2_1d, jax_gpu_sd2_1d, centpy_sd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d,
+                         # labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'centpy SD2', 'JAX-FLUIDS (GPU)',
+                         #         'JAX-FLUIDS (CPU)'])
 
     # FD2 1d
-    plot_trajectories_v5(jax_cpu_fd2_1d, jax_gpu_fd2_1d, centpy_fd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d,
-                         labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
-                                 'JAX-FLUIDS (CPU)'])
+    #plot_trajectories_v5(jax_cpu_fd2_1d, jax_gpu_fd2_1d, centpy_fd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d,
+                         # labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
+                         #         'JAX-FLUIDS (CPU)'])
 
     # SD2 2d
-    plot_trajectories_v5(jax_cpu_sd2_2d, jax_gpu_sd2_2d, centpy_sd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
-                         labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'centpy SD2', 'JAX-FLUIDS (GPU)',
-                                 'JAX-FLUIDS (CPU)'])
+    #plot_trajectories_v5(jax_cpu_sd2_2d, jax_gpu_sd2_2d, centpy_sd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
+                         # labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'centpy SD2', 'JAX-FLUIDS (GPU)',
+                         #         'JAX-FLUIDS (CPU)'])
 
     # FD2 2d
-    plot_trajectories_v5(jax_cpu_fd2_2d, jax_gpu_fd2_2d, centpy_fd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
-                         labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
-                                 'JAX-FLUIDS (CPU)'])
+    #plot_trajectories_v5(jax_cpu_fd2_2d, jax_gpu_fd2_2d, centpy_fd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
+                         # labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
+                         #         'JAX-FLUIDS (CPU)'])
+
+    # plot_trajectories_for_presentation(jax_cpu_sd2_1d, jax_gpu_sd2_1d,
+    #                                    jax_cpu_fd2_1d, jax_gpu_fd2_1d,
+    #                                    centpy_sd2_1d, centpy_fd2_1d,
+    #                                    jax_fluids_gpu_1d, jax_fluids_cpu_1d)
+
+    plot_trajectories_for_presentation(jax_cpu_sd2_2d, jax_gpu_sd2_2d,
+                                       jax_cpu_fd2_2d, jax_gpu_fd2_2d,
+                                       centpy_sd2_2d, centpy_fd2_2d,
+                                       jax_fluids_gpu_2d, jax_fluids_cpu_2d)
