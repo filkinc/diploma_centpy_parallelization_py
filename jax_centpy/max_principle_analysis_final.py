@@ -176,7 +176,7 @@ def plot_max_principle_evolution_2d(
         ax.set_xlabel(r"Время $t$", fontsize=18)
         ax.set_ylabel(r"$u$", fontsize=18)
         ax.tick_params(axis='both', labelsize=15)
-        ax.legend(fontsize=12, loc="center right")
+        ax.legend(fontsize=18, loc="center right")
 
         fig.tight_layout()
 
