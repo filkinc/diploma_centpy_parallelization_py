@@ -114,7 +114,7 @@
 			\begin{column}{0.5\textwidth}
 				\centering\textbf{SD2 --- полудискретная}\par
 				\vspace{0.1 cm}
-				\footnotesize
+				\small
 				\begin{block}{Реконструкция:}
 					\[
 					\begin{aligned}
@@ -144,8 +144,8 @@
 			\begin{column}{0.5\textwidth}
 				\centering\textbf{FD2 --- полностью дискретная}\par
 				\vspace{0.1 cm}
-				\footnotesize
-				\begin{block}{Наклоны (minmod):}
+				\small
+				\begin{block}{Наклоны:}
 					\[
 					\begin{aligned}
 						u'_i &= \text{minmod}(u_i-u_{i-1},\,u_{i+1}-u_i)\\[-3pt]
@@ -202,7 +202,7 @@
 		\]
 
 		\vspace{-0.2 cm}
-		Зона пониженной плотности ($\alpha = 0.1$) моделирует энерговложение; Справа --- ГУ Неймана, слева --- ГУ непротекания.
+		Зона пониженной плотности при $\alpha = 0.1$ моделирует энерговложение; \\ Слева --- ГУ Неймана, справа --- ГУ непротекания.
 	\end{frame}
 
 	%==================================================================
@@ -249,7 +249,7 @@
 
 	%==================================================================
 	% Слайд: 1D результаты + кросс-верификация
-	\begin{frame}{Численное решение: одномерная постановка (линию жирнее)}
+	\begin{frame}{Численное решение: одномерная постановка}
 
 		\begin{figure}[!h]
 			\begin{minipage}[t]{0.27\textwidth}
@@ -282,46 +282,110 @@
 
 	\end{frame}
 
+%	%==================================================================
+%	% Слайд: Производительность (числа из диплома, 2D)
+%	\begin{frame}{Сравнительный анализ аппаратного ускорения: одномерная постановка}
+%
+%		\begin{columns}[c]
+%			\begin{column}{0.5\textwidth}
+%				\begin{figure}[h]
+%					\centering
+%					\vspace{-0.3 cm}
+%					\includegraphics[width=\textwidth]{compare_time_plot_1d.png}
+%					\caption{\smaller{Время счёта (с) от размера сетки $J$, 1D}}
+%				\end{figure}
+%			\end{column}
+%			\begin{column}{0.5\textwidth}
+%				\begin{table}[h]
+%					\centering
+%					\caption{\smaller{Время счёта (с), 1D}}
+%					\vspace{-0.3 cm}
+%					\resizebox{\textwidth}{!}{%
+%						\begin{tabular}{lccccc}
+%							\hline
+%							$J$ & \texttt{centpy} & Разраб. CPU & Разраб. GPU & JAX-FL. CPU & JAX-FL. GPU \\
+%							\hline
+%							$\mathbf{256}$   & 1.138   & 0.096   & \textbf{0.143}  & 0.954   & 3.894 \\
+%							$\mathbf{512}$   & 4.244   & 0.394   & \textbf{0.179}  & 2.857   & 7.545 \\
+%							$\mathbf{1024}$  & 5.577   & 2.499   & \textbf{0.370}  & 4.893   & 16.403 \\
+%							$\mathbf{2048}$  & 16.175  & 7.255   & \textbf{0.720}  & 13.040  & 33.451 \\
+%							$\mathbf{4096}$  & 41.613  & 29.928  & \textbf{1.500}  & 44.688  & 70.443 \\
+%							$\mathbf{8192}$  & 152.440 & 86.862  & \textbf{3.931}  & 161.556 & 153.630 \\
+%							$\mathbf{16384}$ & 612.826 & 349.892 & \textbf{12.805} & 633.204 & 404.548 \\
+%							\hline
+%						\end{tabular}
+%					}
+%				\end{table}
+%%				\vspace{-0.2cm}
+%%				\begin{alertblock}{}
+%%					\small GPU (1D, $J=16384$): до $\mathbf{47.9\times}$ быстрее \texttt{centpy} и $\mathbf{27.3\times}$ быстрее собственной CPU-версии. На малых 1D-сетках выигрыш GPU невелик из-за накладных расходов (закон $T\propto J^2$); полное преимущество раскрывается в 2D.
+%%				\end{alertblock}
+%			\end{column}
+%		\end{columns}
+%	\end{frame}
+	
 	%==================================================================
-	% Слайд: Производительность (числа из диплома, 2D)
+	% Слайд: Производительность (1D, схемы SD2 и FD2)
 	\begin{frame}{Сравнительный анализ аппаратного ускорения: одномерная постановка}
-
+		
 		\begin{columns}[c]
-			\begin{column}{0.5\textwidth}
+			\begin{column}{0.42\textwidth}
 				\begin{figure}[h]
 					\centering
 					\vspace{-0.3 cm}
-					\includegraphics[width=\textwidth]{compare_plot_sd2_1d.png}
-					\caption{\smaller{Время счёта (с) от размера сетки $J$ (1D, SD2), лог-лог.}}
+					\hspace*{-0.5cm}% <-- сдвиг графика влево
+					\includegraphics[width=1.12\textwidth]{compare_time_plot_1d.png}
+					\caption{\smaller{Время счёта (с) от размера сетки $J$, 1D}}
 				\end{figure}
 			\end{column}
-			\begin{column}{0.5\textwidth}
+			\begin{column}{0.58\textwidth}
+				% ===== Основная таблица: SD2 + FD2 =====
 				\begin{table}[h]
 					\centering
-					\caption{\smaller{Время счёта (с), 1D, схема SD2}}
+					\caption{\smaller{Время счёта (с), 1D, схемы SD2 и FD2}}
 					\vspace{-0.3 cm}
 					\resizebox{\textwidth}{!}{%
-						\begin{tabular}{lccccc}
+						\begin{tabular}{lcccccccc}
 							\hline
-							$J$ & \texttt{centpy} & Разраб. CPU & Разраб. GPU & JAX-FL. CPU & JAX-FL. GPU \\
+							& \multicolumn{2}{c}{\texttt{centpy}}
+							& \multicolumn{2}{c}{JAX CPU}
+							& \multicolumn{2}{c}{JAX GPU}
+							& \multicolumn{2}{c}{JAX-FL.} \\
+							$J$ & SD2 & FD2 & SD2 & FD2 & SD2 & FD2 & CPU & GPU \\
 							\hline
-							$\mathbf{256}$   & 1.138   & 0.096   & \textbf{0.143}  & 0.954   & 3.894 \\
-							$\mathbf{512}$   & 4.244   & 0.394   & \textbf{0.179}  & 2.857   & 7.545 \\
-							$\mathbf{1024}$  & 5.577   & 2.499   & \textbf{0.370}  & 4.893   & 16.403 \\
-							$\mathbf{2048}$  & 16.175  & 7.255   & \textbf{0.720}  & 13.040  & 33.451 \\
-							$\mathbf{4096}$  & 41.613  & 29.928  & \textbf{1.500}  & 44.688  & 70.443 \\
-							$\mathbf{8192}$  & 152.440 & 86.862  & \textbf{3.931}  & 161.556 & 153.630 \\
-							$\mathbf{16384}$ & 612.826 & 349.892 & \textbf{12.805} & 633.204 & 404.548 \\
+							$\mathbf{256}$   & 1.138   & 0.218   & 0.096   & 0.023  & \textbf{0.143}  & \textbf{0.131} & 0.954   & 3.894   \\
+							$\mathbf{512}$   & 4.244   & 0.662   & 0.394   & 0.057  & \textbf{0.179}  & \textbf{0.189} & 2.857   & 7.545   \\
+							$\mathbf{1024}$  & 5.577   & 1.972   & 2.499   & 0.207  & \textbf{0.370}  & \textbf{0.280} & 4.893   & 16.403  \\
+							$\mathbf{2048}$  & 16.175  & 3.875   & 7.255   & 0.785  & \textbf{0.720}  & \textbf{0.588} & 13.040  & 33.451  \\
+							$\mathbf{4096}$  & 41.613  & 13.218  & 29.928  & 4.067  & \textbf{1.500}  & \textbf{1.217} & 44.688  & 70.443  \\
+							$\mathbf{8192}$  & 152.440 & 46.947  & 86.862  & 14.377 & \textbf{3.931}  & \textbf{3.082} & 161.556 & 153.630 \\
+							$\mathbf{16384}$ & 612.826 & 186.817 & 349.892 & 60.462 & \textbf{12.805} & \textbf{8.819} & 633.204 & 404.548 \\
 							\hline
 						\end{tabular}
 					}
 				\end{table}
+				
 				\vspace{-0.2cm}
-				\begin{alertblock}{}
-					\small GPU (1D, $J=16384$): до $\mathbf{47.9\times}$ быстрее \texttt{centpy} и $\mathbf{27.3\times}$ быстрее собственной CPU-версии. На малых 1D-сетках выигрыш GPU невелик из-за накладных расходов (закон $T\propto J^2$); полное преимущество раскрывается в 2D.
-				\end{alertblock}
+				% ===== Вторая таблица: ускорение Разраб. GPU =====
+				\begin{table}[h]
+					\centering
+					\caption{\smaller{Ускорение Разраб. GPU (1D, $J=16384$)}}
+					\vspace{-0.3 cm}
+					\resizebox{0.85\textwidth}{!}{%
+						\begin{tabular}{lcc}
+							\hline
+							Сравнение & SD2 & FD2 \\
+							\hline
+							\texttt{JAX} CPU        & 27.3$\times$          & 6.9$\times$  \\
+							\texttt{centpy}        & \textbf{47.9$\times$} & 21.2$\times$ \\
+							\texttt{JAX-FLUIDS} GPU & 31.6$\times$          & 45.9$\times$ \\
+							\hline
+						\end{tabular}
+					}
+				\end{table}
 			\end{column}
 		\end{columns}
+		
 	\end{frame}
 
 	%==================================================================
@@ -349,7 +413,7 @@
 		\]
 
 		\vspace{-0.2 cm}
-		Две зоны пониженной плотности ($\alpha = 0.1$) --- круговая (центр $(0.45, 0.65)$, радиус $0.08$) и прямоугольная --- моделируют локальное энерговложение; УВ ($M_s = 2$) движется справа налево.
+		Две зоны пониженной плотности при $\alpha = 0.1$ --- круговая (центр $(0.45, 0.65)$, радиус $0.08$) и прямоугольная ; Слева  --- ГУ Неймана, Справа --- ГУ непротекания.
 
 	\end{frame}
 	
@@ -395,81 +459,250 @@
 		
 	\end{frame}
 	
-		%==================================================================
-	% Слайд: 1D результаты + кросс-верификация
-	\begin{frame}{Численное решение: двумерная постановка}
+%		%==================================================================
+%	% Слайд: 1D результаты + кросс-верификация
+%	\begin{frame}{Численное решение: двумерная постановка}
+%		
+%		\begin{figure}[!h]
+%			\begin{minipage}[t]{0.27\textwidth}
+%				\centering
+%				\includegraphics[width=1.06\textwidth]{rho_for_presentation_sd2_1d.png}
+%				
+%				\vspace{-0.25 cm}
+%				
+%				\caption*{\smaller{(a)}}
+%			\end{minipage}\hfill
+%			\begin{minipage}[t]{0.30\textwidth}
+%				\centering
+%				\includegraphics[width=\textwidth]{v_for_presentation_sd2_1d.png}
+%				
+%				\vspace{-0.25 cm}
+%				
+%				\caption*{\smaller{(b)}}
+%			\end{minipage}\hfill
+%			\begin{minipage}[t]{0.29\textwidth}
+%				\centering
+%				\includegraphics[width=\textwidth]{p_for_presentation_sd2_1d.png}
+%				
+%				\vspace{-0.25 cm}
+%				
+%				\caption*{\smaller{(c)}}
+%			\end{minipage}
+%			\vspace{-0.5 cm}
+%			\caption{ \smaller{Эволюция примитивных переменных в модифицированной 1D задаче Римана: (a) Плотность; (b) Скорость; (c) Давление с наложением на эталон \texttt{JAX-FLUIDS}}}
+%		\end{figure}
+%		
+%	\end{frame}
+%	
+%	%==================================================================
+%	% Слайд: 2D плотность — начальное слева, сравнение методов справа
+%	\begin{frame}{Двумерная постановка: эволюция плотности}
+%		
+%		% Удобная длина для размера одной ячейки сетки справа
+%		\newlength{\cellw}\setlength{\cellw}{0.205\textwidth}
+%		
+%		\begin{columns}[c]
+%			%--- ЛЕВО: начальное условие на всю высоту ---
+%			\begin{column}{0.30\textwidth}
+%				\centering
+%				\textbf{Начальное условие}\par
+%				\vspace{0.2cm}
+%				\includegraphics[width=\textwidth]{rieman_modify_2d_init_jax-fluids.png}\par
+%				\vspace{0.2cm}
+%				{\small $t = 0$}
+%			\end{column}
+%			
+%			%--- ПРАВО: сетка 2x3 (время x метод) ---
+%			\begin{column}{0.68\textwidth}
+%				\centering
+%				\setlength{\tabcolsep}{2pt}%
+%				\renewcommand{\arraystretch}{0.6}%
+%				\begin{tabular}{c ccc}
+%					% --- заголовки столбцов: методы ---
+%					& \textbf{SD2} & \textbf{FD2} & \textbf{JAX-FLUIDS} \\[2pt]
+%					% --- строка 1: t = T/2 ---
+%					\rotatebox{90}{\small $t = T/2$} &
+%					\includegraphics[width=\cellw]{rieman_modify_2d_half_jax_sd2.png} &
+%					\includegraphics[width=\cellw]{rieman_modify_2d_half_jax_fd2.png} &
+%					\includegraphics[width=\cellw]{rieman_modify_2d_half_jax-fluids.png} \\[2pt]
+%					% --- строка 2: t = T ---
+%					\rotatebox{90}{\small $t = T$} &
+%					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax_sd2.png} &
+%					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax_fd2.png} &
+%					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax-fluids.png} \\
+%				\end{tabular}
+%			\end{column}
+%		\end{columns}
+%		
+%	\end{frame}
+	
+	
+	%==================================================================
+	% Слайд: 2D плотность — начальное слева, сравнение методов справа
+	\begin{frame}{Двумерная постановка: эволюция плотности}
 		
-		\begin{figure}[!h]
-			\begin{minipage}[t]{0.27\textwidth}
-				\centering
-				\includegraphics[width=1.06\textwidth]{rho_for_presentation_sd2_1d.png}
-				
-				\vspace{-0.25 cm}
-				
-				\caption*{\smaller{(a)}}
-			\end{minipage}\hfill
-			\begin{minipage}[t]{0.30\textwidth}
-				\centering
-				\includegraphics[width=\textwidth]{v_for_presentation_sd2_1d.png}
-				
-				\vspace{-0.25 cm}
-				
-				\caption*{\smaller{(b)}}
-			\end{minipage}\hfill
-			\begin{minipage}[t]{0.29\textwidth}
-				\centering
-				\includegraphics[width=\textwidth]{p_for_presentation_sd2_1d.png}
-				
-				\vspace{-0.25 cm}
-				
-				\caption*{\smaller{(c)}}
-			\end{minipage}
-			\vspace{-0.5 cm}
-			\caption{ \smaller{Эволюция примитивных переменных в модифицированной 1D задаче Римана: (a) Плотность; (b) Скорость; (c) Давление с наложением на эталон \texttt{JAX-FLUIDS}}}
-		\end{figure}
+		% Удобная длина для размера одной ячейки сетки справа
+		\newlength{\cellw}\setlength{\cellw}{0.26\textwidth}
 		
+		\begin{columns}[c]
+			%--- ЛЕВО: начальное условие (меньше) ---
+			\begin{column}{0.22\textwidth}
+				\centering
+				\hspace*{-0.4cm}% <-- сдвиг графика влево
+				\textbf{\small Начальное условие}\par
+				\vspace{0.2cm}
+				\hspace*{-0.4cm}% <-- сдвиг графика влево
+				\includegraphics[width=1.2\textwidth]{rieman_modify_2d_init_jax-fluids.png}
+			\end{column}
+			
+			%--- ПРАВО: сетка 2x3 (время x метод), крупнее ---
+			\begin{column}{0.76\textwidth}
+				\centering
+				\setlength{\tabcolsep}{1pt}%
+				\renewcommand{\arraystretch}{0.5}%
+				\begin{tabular}{ccc}
+					% --- заголовки столбцов: методы ---
+					\textbf{SD2} & \textbf{FD2} & \textbf{JAX-FLUIDS} \\[2pt]
+					% --- строка 1: t = T/2 ---
+					\includegraphics[width=\cellw]{rieman_modify_2d_half_jax_sd2.png} &
+					\includegraphics[width=\cellw]{rieman_modify_2d_half_jax_fd2.png} &
+					\includegraphics[width=\cellw]{rieman_modify_2d_half_jax-fluids.png} \\[2pt]
+					% --- строка 2: t = T ---
+					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax_sd2.png} &
+					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax_fd2.png} &
+					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax-fluids.png} \\
+				\end{tabular}
+			\end{column}
+		\end{columns}
+	
 	\end{frame}
 
 	%==================================================================
-	% Слайд: Производительность (числа из диплома, 2D)
+	% Слайд: Производительность (2D, схемы SD2 и FD2)
 	\begin{frame}{Сравнительный анализ аппаратного ускорения: двумерная постановка}
-
+		
 		\begin{columns}[c]
-			\begin{column}{0.5\textwidth}
+			\begin{column}{0.42\textwidth}
 				\begin{figure}[h]
 					\centering
 					\vspace{-0.3 cm}
-					\includegraphics[width=\textwidth]{compare_plot_sd2_2d.png}
-					\caption{\smaller{Время счёта (с) от размера сетки $J\times J$ (2D, SD2), лог-лог.}}
+					\hspace*{-0.5cm}% <-- сдвиг графика влево
+					\includegraphics[width=1.12\textwidth]{compare_time_plot_2d.png}
+					\caption{\smaller{Время счёта (с) от размера сетки $J\times J$, 2D}}
 				\end{figure}
 			\end{column}
-			\begin{column}{0.5\textwidth}
+			\begin{column}{0.58\textwidth}
+				% ===== Основная таблица: SD2 + FD2 =====
 				\begin{table}[h]
 					\centering
-					\caption{\smaller{Время счёта (с), 2D, схема SD2}}
+					\caption{\smaller{Время счёта (с), 2D, схемы SD2 и FD2}}
 					\vspace{-0.3 cm}
 					\resizebox{\textwidth}{!}{%
-						\begin{tabular}{lccccc}
+						\begin{tabular}{lcccccccc}
 							\hline
-							$J\times J$ & \texttt{centpy} & Разраб. CPU & Разраб. GPU & JAX-FL. CPU & JAX-FL. GPU \\
+							& \multicolumn{2}{c}{\texttt{centpy}}
+							& \multicolumn{2}{c}{JAX CPU}
+							& \multicolumn{2}{c}{JAX GPU}
+							& \multicolumn{2}{c}{JAX-FL.} \\
+							$J\times J$ & SD2 & FD2 & SD2 & FD2 & SD2 & FD2 & CPU & GPU \\
 							\hline
-							$\mathbf{64}$   & 2.456    & 1.348    & \textbf{0.108}  & 1.322    & 1.753 \\
-							$\mathbf{128}$  & 27.274   & 12.988   & \textbf{0.344}  & 11.709   & 5.191 \\
-							$\mathbf{256}$  & 293.400  & 119.955  & \textbf{3.036}  & 131.803  & 13.530 \\
-							$\mathbf{512}$  & 2888.498 & 1047.884 & \textbf{31.572} & 1294.979 & 78.417 \\
-							$\mathbf{1024}$ & ---      & ---      & \textbf{271.457}& ---      & 577.726 \\
+							$\mathbf{64}$   & 2.456    & 0.930    & 1.348    & 0.885   & \textbf{0.108}  & \textbf{0.133} & 1.322    & 1.753   \\
+							$\mathbf{128}$  & 27.274   & 9.865    & 12.988   & 9.233   & \textbf{0.344}  & \textbf{0.232} & 11.709   & 5.191   \\
+							$\mathbf{256}$  & 293.400  & 132.367  & 119.955  & 85.072  & \textbf{3.036}  & \textbf{1.458} & 131.803  & 13.530  \\
+							$\mathbf{512}$  & 2888.498 & 1357.738 & 1047.884 & 793.620 & \textbf{31.572} & \textbf{13.316}& 1294.979 & 78.417  \\
+							$\mathbf{1024}$ & ---      & ---      & ---      & ---     & \textbf{271.457}& \textbf{95.325}& ---      & 577.726 \\
 							\hline
 						\end{tabular}
 					}
 				\end{table}
+				
 				\vspace{-0.2cm}
-				\begin{alertblock}{}
-					\small GPU (2D, $512\times512$): до $\mathbf{91.5\times}$ быстрее \texttt{centpy} и $\mathbf{33.2\times}$ быстрее собственной CPU-версии. Законы $T\propto J^2$ (1D), $T\propto J^3$ (2D).
-				\end{alertblock}
+				% ===== Вторая таблица: ускорение Разраб. GPU =====
+				\begin{table}[h]
+					\centering
+					\caption{\smaller{Ускорение \texttt{JAX}. GPU (2D, $512\times512$)}}
+					\vspace{-0.3 cm}
+					\resizebox{0.85\textwidth}{!}{%
+						\begin{tabular}{lcc}
+							\hline
+							Сравнение & SD2 & FD2 \\
+							\hline
+							\texttt{JAX} CPU        & 33.2$\times$          & \textbf{59.6$\times$}  \\
+							\texttt{centpy}        & 91.5$\times$          & \textbf{102.0$\times$} \\
+							\texttt{JAX-FLUIDS} GPU & 2.5$\times$           & 5.9$\times$            \\
+							\hline
+						\end{tabular}
+					}
+				\end{table}
 			\end{column}
 		\end{columns}
-
+		
 	\end{frame}
+	
+	
+%		%==================================================================
+%	% Слайд: Производительность (2D, схемы SD2 и FD2)
+%	\begin{frame}{Сравнительный анализ аппаратного ускорения: двумерная постановка}
+%		
+%				\begin{columns}[c]
+%			\begin{column}{0.36\textwidth}
+%				\begin{figure}[h]
+%					\centering
+%					\vspace{-0.3 cm}
+%					\hspace*{-0.8cm}% <-- сдвиг графика влево
+%					\includegraphics[width=1.22\textwidth]{compare_time_plot_2d.png}
+%					\caption{\smaller{Время счёта (с) от размера сетки $J\times J$ (2D), лог-лог.}}
+%				\end{figure}
+%			\end{column}
+%			\begin{column}{0.64\textwidth}
+%				% ===== Основная таблица: SD2 + FD2 =====
+%				\begin{table}[h]
+%					\centering
+%					\caption{\smaller{Время счёта (с), 2D, схемы SD2 и FD2}}
+%					\vspace{-0.3 cm}
+%					\setlength{\tabcolsep}{3pt}% <-- плотнее колонки => крупнее шрифт после resizebox
+%					\resizebox{\textwidth}{!}{%
+%						\begin{tabular}{lcccccccc}
+%							\hline
+%							& \multicolumn{2}{c}{\texttt{centpy}}
+%							& \multicolumn{2}{c}{Разраб. CPU}
+%							& \multicolumn{2}{c}{Разраб. GPU}
+%							& \multicolumn{2}{c}{JAX-FL.} \\
+%							$J\times J$ & SD2 & FD2 & SD2 & FD2 & SD2 & FD2 & CPU & GPU \\
+%							\hline
+%							$\mathbf{64}$   & 2.456    & 0.930    & 1.348    & 0.885   & \textbf{0.108}  & \textbf{0.133} & 1.322    & 1.753   \\
+%							$\mathbf{128}$  & 27.274   & 9.865    & 12.988   & 9.233   & \textbf{0.344}  & \textbf{0.232} & 11.709   & 5.191   \\
+%							$\mathbf{256}$  & 293.400  & 132.367  & 119.955  & 85.072  & \textbf{3.036}  & \textbf{1.458} & 131.803  & 13.530  \\
+%							$\mathbf{512}$  & 2888.498 & 1357.738 & 1047.884 & 793.620 & \textbf{31.572} & \textbf{13.316}& 1294.979 & 78.417  \\
+%							$\mathbf{1024}$ & ---      & ---      & ---      & ---     & \textbf{271.457}& \textbf{95.325}& ---      & 577.726 \\
+%							\hline
+%						\end{tabular}
+%					}
+%				\end{table}
+%				
+%				\vspace{-0.2cm}
+%				% ===== Вторая таблица: ускорение Разраб. GPU =====
+%				\begin{table}[h]
+%					\centering
+%					\caption{\smaller{Ускорение \texttt{JAX}. GPU (2D, $512\times512$)}}
+%					\vspace{-0.3 cm}
+%					\resizebox{0.85\textwidth}{!}{%
+%						\begin{tabular}{lcc}
+%							\hline
+%							Сравнение & SD2 & FD2 \\
+%							\hline
+%							vs \texttt{JAX} CPU        & 33.2$\times$          & \textbf{59.6$\times$}  \\
+%							vs \texttt{centpy}        & 91.5$\times$          & \textbf{102.0$\times$} \\
+%							vs \texttt{JAX-FLUIDS} GPU & 2.5$\times$           & 5.9$\times$            \\
+%							\hline
+%						\end{tabular}
+%					}
+%				\end{table}
+%			\end{column}
+%		\end{columns}
+%		
+%	\end{frame}
+	
 
 	%==================================================================
 	% Слайд: Заключение (синхронно с дипломом, верные числа, смягчено)
