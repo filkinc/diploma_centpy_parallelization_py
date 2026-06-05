@@ -41,7 +41,7 @@
 \graphicspath{{animation/}{./}}
 
 % Название приведено к теме ВКР
-\title[Моделирование УВ с локальным энерговложением (JAX)]{Моделирование распространения ударной волны в газе с локальным энерговложением средствами библиотеки JAX}
+\title[Моделирование УВ с локальным энерговложением JAX]{Моделирование распространения ударной волны в газе с локальным энерговложением средствами библиотеки JAX}
 \author[Филькин Д.\,С.]{Докладчик: Филькин Д.\,С.\and\\[0.5mm] Научный руководитель: Кравченко О.\,В.}
 \institute[каф. Прикладная математика ФН-1]{группа ФН1-81Б}
 \date{\today}
@@ -248,8 +248,45 @@
 %
 %	\end{frame}
 	
+
 	%==================================================================
-	\begin{frame}{Анализ сходимости относительно точного решения}
+	% Слайд: 1D результаты + кросс-верификация
+	\begin{frame}{Численное решение: одномерная постановка}
+
+		\begin{figure}[!h]
+			\begin{minipage}[t]{0.27\textwidth}
+				\centering
+				\includegraphics[width=1.06\textwidth]{rho_for_presentation_sd2_1d.png}
+				
+				\vspace{-0.25 cm}
+				
+				\caption*{\smaller{(a)}}
+			\end{minipage}\hfill
+			\begin{minipage}[t]{0.30\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{v_for_presentation_sd2_1d.png}
+				
+				\vspace{-0.25 cm}
+				
+				\caption*{\smaller{(b)}}
+			\end{minipage}\hfill
+			\begin{minipage}[t]{0.29\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{p_for_presentation_sd2_1d.png}
+				
+				\vspace{-0.25 cm}
+				
+				\caption*{\smaller{(c)}}
+			\end{minipage}
+			\vspace{-0.5 cm}
+			\caption{ \smaller{Эволюция примитивных переменных в модифицированной 1D задаче Римана: (a) Плотность; (b) Скорость; (c) Давление с наложением на эталон \texttt{JAX-FLUIDS}}}
+		\end{figure}
+
+	\end{frame}
+	
+	
+	%==================================================================
+	\begin{frame}{Анализ сходимость в одномерной постановке}
 		
 		\begin{columns}[c]
 			%--- ЛЕВО: log-log график ---
@@ -288,51 +325,16 @@
 						\end{tabular}
 					}
 				\end{table}
-%				\vspace{-0.3cm}
-%				\begin{alertblock}{}
-%					\smaller Обе схемы сходятся \textbf{близко ко 2-му порядку}.
-%					Снижение $p_{L_2}$ у SD2 --- особенность центральных схем
-%					(диссипация потока Лакса--Фридрихса), а не ошибка реализации.
-%					Формальный 2-й порядок подтверждён на 2D-вихре ($p\approx2$).
-%				\end{alertblock}
+				%				\vspace{-0.3cm}
+				%				\begin{alertblock}{}
+					%					\smaller Обе схемы сходятся \textbf{близко ко 2-му порядку}.
+					%					Снижение $p_{L_2}$ у SD2 --- особенность центральных схем
+					%					(диссипация потока Лакса--Фридрихса), а не ошибка реализации.
+					%					Формальный 2-й порядок подтверждён на 2D-вихре ($p\approx2$).
+					%				\end{alertblock}
 			\end{column}
 		\end{columns}
 		
-	\end{frame}
-
-	%==================================================================
-	% Слайд: 1D результаты + кросс-верификация
-	\begin{frame}{Сходимость в 1D}
-
-		\begin{figure}[!h]
-			\begin{minipage}[t]{0.27\textwidth}
-				\centering
-				\includegraphics[width=1.06\textwidth]{rho_for_presentation_sd2_1d.png}
-				
-				\vspace{-0.25 cm}
-				
-				\caption*{\smaller{(a)}}
-			\end{minipage}\hfill
-			\begin{minipage}[t]{0.30\textwidth}
-				\centering
-				\includegraphics[width=\textwidth]{v_for_presentation_sd2_1d.png}
-				
-				\vspace{-0.25 cm}
-				
-				\caption*{\smaller{(b)}}
-			\end{minipage}\hfill
-			\begin{minipage}[t]{0.29\textwidth}
-				\centering
-				\includegraphics[width=\textwidth]{p_for_presentation_sd2_1d.png}
-				
-				\vspace{-0.25 cm}
-				
-				\caption*{\smaller{(c)}}
-			\end{minipage}
-			\vspace{-0.5 cm}
-			\caption{ \smaller{Эволюция примитивных переменных в модифицированной 1D задаче Римана: (a) Плотность; (b) Скорость; (c) Давление с наложением на эталон \texttt{JAX-FLUIDS}}}
-		\end{figure}
-
 	\end{frame}
 
 %	%==================================================================
@@ -379,7 +381,7 @@
 	
 	%==================================================================
 	% Слайд: Производительность (1D, схемы SD2 и FD2)
-	\begin{frame}{Сравнительный анализ аппаратного ускорения: одномерная постановка}
+	\begin{frame}{Анализ аппаратного ускорения: одномерная постановка}
 		
 		\begin{columns}[c]
 			\begin{column}{0.42\textwidth}
@@ -564,64 +566,6 @@
 %	\end{frame}
 	
 	
-	%==================================================================
-	\begin{frame}{Сходимость в 2D: изоэнтропийный вихрь Ху--Шу}
-		
-		%--- ВЕРХ: два горизонтальных графика на всю ширину ---
-		\begin{figure}[h]
-			\centering
-			\includegraphics[width=0.65\textwidth]{convergence_2d_L1.png}
-			\vspace*{-0.2cm}
-			\caption{\smaller{Ошибка по p,u,v,$rho$, L1, 2D}}
-		\end{figure}
-		
-		\vspace{-0.2cm}
-		
-		%--- НИЗ: слева Тест, справа Таблица порядков ---
-		\begin{columns}[t]
-			%--- ЛЕВО: описание теста ---
-			\begin{column}{0.46\textwidth}
-				\centering
-				\footnotesize
-				
-%				\vspace{0.5cm}
-				\textbf{Тест:} перенос гладкого изоэнтропийного вихря Ху--Шу
-				($\varepsilon = 5$) на области $[0,10]^2$ с периодическими ГУ;
-				неограниченная реконструкция, $t = 1$.
-%				\vspace{0.15cm}
-%				\begin{alertblock}{}
-%					\smaller \textbf{2-й порядок по всем переменным} и по обеим
-%					нормам. В отличие от 1D, $L_2$ \emph{не проседает} --- гладкий
-%					вихрь и неогранич. реконструкция.
-%				\end{alertblock}
-			\end{column}
-			
-			%--- ПРАВО: таблица порядков ---
-			\begin{column}{0.50\textwidth}
-				\centering
-				\vspace{-1cm}
-				\begin{table}[h]
-					\caption{\smaller{Эмпирический порядок $p$ ($N{:}\,200{\to}400$)}}
-					\vspace{-0.2cm}
-					\resizebox{0.6\textwidth}{!}{%
-						\begin{tabular}{lcccc}
-							\toprule
-							\multirow{2}{*}{Перем.} & \multicolumn{2}{c}{SD2} & \multicolumn{2}{c}{FD2} \\
-							\cmidrule(lr){2-3}\cmidrule(lr){4-5}
-							& $p_{L_1}$ & $p_{L_2}$ & $p_{L_1}$ & $p_{L_2}$ \\
-							\midrule
-							$\rho$ & 2.07 & 2.06 & 2.28 & 2.29 \\
-							$u$    & 2.06 & 2.08 & 2.21 & 2.26 \\
-							$v$    & 2.08 & 2.09 & 2.33 & 2.38 \\
-							$p$    & 2.05 & 2.07 & 2.22 & 2.30 \\
-							\bottomrule
-						\end{tabular}
-					}
-				\end{table}
-			\end{column}
-		\end{columns}
-		
-	\end{frame}
 	
 %		%==================================================================
 %	% Слайд: 1D результаты + кросс-верификация
@@ -740,10 +684,70 @@
 		\end{columns}
 	
 	\end{frame}
+	
+	
+		%==================================================================
+	\begin{frame}{Анализ сходимости в двумерной постановке}
+		
+		%--- ВЕРХ: два горизонтальных графика на всю ширину ---
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.65\textwidth]{convergence_2d_L1.png}
+			\vspace*{-0.2cm}
+			\caption{\smaller{Ошибка по p,u,v,$\rho$, L1, 2D}}
+		\end{figure}
+		
+		\vspace{-0.2cm}
+		
+		%--- НИЗ: слева Тест, справа Таблица порядков ---
+		\begin{columns}[t]
+			%--- ЛЕВО: описание теста ---
+			\begin{column}{0.46\textwidth}
+				\centering
+				\footnotesize
+				
+				%				\vspace{0.5cm}
+				\textbf{Тест:} перенос гладкого изоэнтропийного вихря Ху--Шу
+				($\varepsilon = 5$) на области $[0,10]^2$ с периодическими ГУ;
+				неограниченная реконструкция, $t = 1$.
+				%				\vspace{0.15cm}
+				%				\begin{alertblock}{}
+					%					\smaller \textbf{2-й порядок по всем переменным} и по обеим
+					%					нормам. В отличие от 1D, $L_2$ \emph{не проседает} --- гладкий
+					%					вихрь и неогранич. реконструкция.
+					%				\end{alertblock}
+			\end{column}
+			
+			%--- ПРАВО: таблица порядков ---
+			\begin{column}{0.50\textwidth}
+				\centering
+				\vspace{-1cm}
+				\begin{table}[h]
+					\caption{\smaller{Эмпирический порядок $p$ ($N{:}\,200{\to}400$)}}
+					\vspace{-0.2cm}
+					\resizebox{0.6\textwidth}{!}{%
+						\begin{tabular}{lcccc}
+							\toprule
+							\multirow{2}{*}{Перем.} & \multicolumn{2}{c}{SD2} & \multicolumn{2}{c}{FD2} \\
+							\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+							& $p_{L_1}$ & $p_{L_2}$ & $p_{L_1}$ & $p_{L_2}$ \\
+							\midrule
+							$\rho$ & 2.07 & 2.06 & 2.28 & 2.29 \\
+							$u$    & 2.06 & 2.08 & 2.21 & 2.26 \\
+							$v$    & 2.08 & 2.09 & 2.33 & 2.38 \\
+							$p$    & 2.05 & 2.07 & 2.22 & 2.30 \\
+							\bottomrule
+						\end{tabular}
+					}
+				\end{table}
+			\end{column}
+		\end{columns}
+		
+	\end{frame}
 
 	%==================================================================
 	% Слайд: Производительность (2D, схемы SD2 и FD2)
-	\begin{frame}{Сравнительный анализ аппаратного ускорения: двумерная постановка}
+	\begin{frame}{Анализ аппаратного ускорения: двумерная постановка}
 		
 		\begin{columns}[c]
 			\begin{column}{0.42\textwidth}
@@ -888,43 +892,41 @@
 	% ВСПОМОГАТЕЛЬНЫЕ СЛАЙДЫ
 	\appendix
 	
-	%==================================================================
-	% Appendix: определения норм погрешности
-	\begin{frame}{Нормы погрешности $L_1$ и $L_2$}
-		
-		Погрешность численного решения: $e_i = u_i^{\,h} - u_i^{\,\text{exact}}$,
-		где $u^h$ --- численное, $u^{\text{exact}}$ --- точное решение.
-		
-		\vspace{0.3cm}
-		\begin{block}{Непрерывные нормы на области $\Omega$}
-			\[
-			\|e\|_{L_1} = \int_\Omega |e|\,d\Omega,
-			\qquad
-			\|e\|_{L_2} = \left( \int_\Omega |e|^2\,d\Omega \right)^{1/2}
-			\]
-		\end{block}
-		
-		\begin{block}{Дискретные (сеточные) аналоги}
-			Для равномерной сетки из $N$ ячеек (1D, мера ячейки $\Delta x$):
-			\[
-			\|e\|_{L_1} = \Delta x \sum_{i=1}^{N} |e_i|,
-			\qquad
-			\|e\|_{L_2} = \left( \Delta x \sum_{i=1}^{N} |e_i|^2 \right)^{1/2}
-			\]
-			Для двумерной сетки $N\times N$ (мера ячейки $\Delta x\,\Delta y$):
-			\[
-			\|e\|_{L_1} = \Delta x\,\Delta y \!\sum_{i,j} |e_{ij}|,
-			\qquad
-			\|e\|_{L_2} = \Big( \Delta x\,\Delta y \!\sum_{i,j} |e_{ij}|^2 \Big)^{1/2}
-			\]
-		\end{block}
-		
-		\begin{itemize}
-			\item[$\bullet$] {\small $L_1$ --- средняя по модулю погрешность; \enspace
-				$L_2$ --- среднеквадратичная, \emph{сильнее} штрафует крупные локальные ошибки.}
-		\end{itemize}
-		
-	\end{frame}
+%==================================================================
+%==================================================================
+% Appendix: нормы погрешности и порядок сходимости
+\begin{frame}{Нормы погрешности $L_1$, $L_2$ и порядок сходимости}
+	
+	Для количественной оценки точности используются нормы $L_1$ и $L_2$.
+	
+	\vspace{0.2cm}
+	\begin{block}{Норма $L_1$ --- погрешность интегрального характера}
+		\[
+		\|e\|_{L_1} = \frac{1}{N} \sum_{i=1}^{N}
+		\left| u_i^h - u_i^{\mathrm{ref}} \right|
+		\]
+	\end{block}
+	
+	\begin{block}{Норма $L_2$ --- среднеквадратическая (равномерность погрешности)}
+		\[
+		\|e\|_{L_2} = \sqrt{\frac{1}{N} \sum_{i=1}^{N}
+			\left( u_i^h - u_i^{\mathrm{ref}} \right)^2}
+		\]
+	\end{block}
+	
+	{\small где $u_i^h$ --- численное решение в центре $i$-й ячейки сетки
+		из $N$ ячеек, $u_i^{\mathrm{ref}}$ --- точное аналитическое решение.}
+	
+	\vspace{0.2cm}
+	\begin{block}{Эмпирический порядок сходимости (формула Ричардсона)}
+		\[
+		p = \log_2 \frac{\|e^{(N)}\|}{\|e^{(2N)}\|}
+		\]
+		\centering{\small при удвоении числа ячеек; теоретически для SD2 и FD2
+			$p \approx 2$.}
+	\end{block}
+	
+\end{frame}
 
 	\begin{frame}{Аппаратное ускорение вычислений: фреймворк JAX}
 		Для преодоления вычислительных ограничений языка Python в качестве основы решателя выбран высокопроизводительный фреймворк JAX.
