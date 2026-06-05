@@ -15,6 +15,7 @@
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{appendixnumberbeamer}
+\usepackage{booktabs}
 
 \usetheme{Warsaw}
 
@@ -43,7 +44,7 @@
 \title[Моделирование УВ с локальным энерговложением (JAX)]{Моделирование распространения ударной волны в газе с локальным энерговложением средствами библиотеки JAX}
 \author[Филькин Д.\,С.]{Докладчик: Филькин Д.\,С.\and\\[0.5mm] Научный руководитель: Кравченко О.\,В.}
 \institute[каф. Прикладная математика ФН-1]{группа ФН1-81Б}
-\date{\today} % TODO: поставить дату защиты
+\date{\today}
 \titlegraphic{\includegraphics[width=2 cm]{logo.png}}
 
 \begin{document}
@@ -205,51 +206,103 @@
 		Зона пониженной плотности при $\alpha = 0.1$ моделирует энерговложение; \\ Слева --- ГУ Неймана, справа --- ГУ непротекания.
 	\end{frame}
 
+%	%==================================================================
+%	% Слайд: Верификация (порядок точности)
+%	\begin{frame}{Анализ сходимости: гладкое решение (поправить)}
+%		\begin{block}{}
+%			Для верификации теоретического второго порядка точности схемы SD2 проведено моделирование эволюции уравнения линейного переноса.
+%			Порядок $p$ вычислялся методом экстраполяции Ричардсона с шагом измельчения $r=2$.
+%		\end{block}
+%
+%		\begin{table}[h]
+%			\centering
+%			\footnotesize
+%			\renewcommand{\arraystretch}{1.3}
+%			\begin{tabular}{lccc}
+%				\hline
+%				\textbf{Переменная} & \textbf{Ошибка (100$\to$200)} & \textbf{Ошибка (200$\to$400)} & \textbf{Порядок $p$} \\
+%				\hline
+%				$u(x, t)$ & $8.92 \times 10^{-4}$ & $2.09 \times 10^{-4}$ & \textbf{2.09} \\
+%				\hline
+%			\end{tabular}
+%		\end{table}
+%
+%		\begin{columns}[c]
+%			\begin{column}{0.55\textwidth}
+%				\[
+%				E = \|\mathbf{u}^{2h} - \mathbf{u}^{h}\|_{L_1} = \frac{1}{L} \sum_i |u_i^{2h} - u_i^h| \cdot \Delta x
+%				\]
+%				\[
+%				p = \log_2 \left( \frac{|| \mathbf{u}^{4h} - \mathbf{u}^{2h} ||_{L_1}}{|| \mathbf{u}^{2h} - \mathbf{u}^{h} ||_{L_1}} \right)
+%				\]
+%			\end{column}
+%			\begin{column}{0.45\textwidth}
+%				\footnotesize
+%				Неосцилляторность дополнительно подтверждена:
+%				\begin{itemize}
+%					\item контролем полной вариации $\mathrm{TV}(t)$ (1D);
+%					\item выполнением принципа максимума (2D).
+%				\end{itemize}
+%			\end{column}
+%		\end{columns}
+%
+%	\end{frame}
+	
 	%==================================================================
-	% Слайд: Верификация (порядок точности)
-	\begin{frame}{Анализ сходимости: гладкое решение (поправить)}
-		\begin{block}{}
-			Для верификации теоретического второго порядка точности схемы SD2 проведено моделирование эволюции уравнения линейного переноса.
-			Порядок $p$ вычислялся методом экстраполяции Ричардсона с шагом измельчения $r=2$.
-		\end{block}
-
-		\begin{table}[h]
-			\centering
-			\footnotesize
-			\renewcommand{\arraystretch}{1.3}
-			\begin{tabular}{lccc}
-				\hline
-				\textbf{Переменная} & \textbf{Ошибка (100$\to$200)} & \textbf{Ошибка (200$\to$400)} & \textbf{Порядок $p$} \\
-				\hline
-				$u(x, t)$ & $8.92 \times 10^{-4}$ & $2.09 \times 10^{-4}$ & \textbf{2.09} \\
-				\hline
-			\end{tabular}
-		\end{table}
-
+	\begin{frame}{Анализ сходимости относительно точного решения}
+		
 		\begin{columns}[c]
-			\begin{column}{0.55\textwidth}
-				\[
-				E = \|\mathbf{u}^{2h} - \mathbf{u}^{h}\|_{L_1} = \frac{1}{L} \sum_i |u_i^{2h} - u_i^h| \cdot \Delta x
-				\]
-				\[
-				p = \log_2 \left( \frac{|| \mathbf{u}^{4h} - \mathbf{u}^{2h} ||_{L_1}}{|| \mathbf{u}^{2h} - \mathbf{u}^{h} ||_{L_1}} \right)
-				\]
+			%--- ЛЕВО: log-log график ---
+			\begin{column}{0.52\textwidth}
+				\begin{figure}[h]
+					\centering
+					\includegraphics[width=\textwidth]{convergence_1d.png}
+					\caption{\smaller{Ошибка по плотности $\rho$. Гладкая
+							задача, $t=1$, ограничитель mc.}}
+				\end{figure}
 			\end{column}
-			\begin{column}{0.45\textwidth}
+			
+			%--- ПРАВО: задача + таблица + вывод ---
+			\begin{column}{0.48\textwidth}
 				\footnotesize
-				Неосцилляторность дополнительно подтверждена:
-				\begin{itemize}
-					\item контролем полной вариации $\mathrm{TV}(t)$ (1D);
-					\item выполнением принципа максимума (2D).
-				\end{itemize}
+				\textbf{Тест:} перенос гладкого профиля плотности
+				\[
+				\rho(x,0)=1+0.2\sin(2\pi x),\quad u=1,\ p=1
+				\]
+				\[
+				\rho(x,t)=1+0.2\sin\!\big(2\pi(x-t)\big)
+				\]
+				\vspace{-0.5cm}
+				\begin{table}[h]
+					\centering
+					\caption{\smaller{Эмпирический порядок $p$ ($N{:}\,200{\to}400$)}}
+					\vspace{-0.2cm}
+					\resizebox{0.7\textwidth}{!}{%
+						\begin{tabular}{lcc}
+							\toprule
+							Схема & $p_{L_1}$ & $p_{L_2}$ \\
+							\midrule
+							SD2 & 1.98 & 1.70 \\
+							FD2 & 2.08 & 1.83 \\
+							\bottomrule
+						\end{tabular}
+					}
+				\end{table}
+%				\vspace{-0.3cm}
+%				\begin{alertblock}{}
+%					\smaller Обе схемы сходятся \textbf{близко ко 2-му порядку}.
+%					Снижение $p_{L_2}$ у SD2 --- особенность центральных схем
+%					(диссипация потока Лакса--Фридрихса), а не ошибка реализации.
+%					Формальный 2-й порядок подтверждён на 2D-вихре ($p\approx2$).
+%				\end{alertblock}
 			\end{column}
 		\end{columns}
-
+		
 	\end{frame}
 
 	%==================================================================
 	% Слайд: 1D результаты + кросс-верификация
-	\begin{frame}{Численное решение: одномерная постановка}
+	\begin{frame}{Сходимость в 1D}
 
 		\begin{figure}[!h]
 			\begin{minipage}[t]{0.27\textwidth}
@@ -369,7 +422,7 @@
 				% ===== Вторая таблица: ускорение Разраб. GPU =====
 				\begin{table}[h]
 					\centering
-					\caption{\smaller{Ускорение Разраб. GPU (1D, $J=16384$)}}
+					\caption{\smaller{Ускорение JAX GPU (1D, $J=16384$)}}
 					\vspace{-0.3 cm}
 					\resizebox{0.85\textwidth}{!}{%
 						\begin{tabular}{lcc}
@@ -408,52 +461,163 @@
 		\begin{cases}
 			(2.667, -1.479, 0, 4.5) & \text{ударная волна: } x \in [0.8, 1], \\
 			(\alpha \cdot 1, 0, 0, 1) & \text{зоны энерговложения,} \\
-			(1, 0, 0, 1) & \text{фон (иначе).}
+			(1, 0, 0, 1) & \text{невозмущенный газ.}
 		\end{cases}
 		\]
 
 		\vspace{-0.2 cm}
-		Две зоны пониженной плотности при $\alpha = 0.1$ --- круговая (центр $(0.45, 0.65)$, радиус $0.08$) и прямоугольная ; Слева  --- ГУ Неймана, Справа --- ГУ непротекания.
+		Зоны пониженной плотности при $\alpha = 0.1$ --- круговая (центр $(0.45, 0.65)$, радиус $0.08$) и прямоугольная ; Слева  --- ГУ Неймана, Остальные --- ГУ непротекания.
 
 	\end{frame}
 	
+%	%==================================================================
+%	% Слайд: Верификация (порядок точности)
+%	\begin{frame}{Анализ сходимости: гладкое решение (поправить для 2D)}
+%		\begin{block}{}
+%			Для верификации теоретического второго порядка точности схемы SD2 проведено моделирование эволюции уравнения линейного переноса.
+%			Порядок $p$ вычислялся методом экстраполяции Ричардсона с шагом измельчения $r=2$.
+%		\end{block}
+%		
+%		\begin{table}[h]
+%			\centering
+%			\footnotesize
+%			\renewcommand{\arraystretch}{1.3}
+%			\begin{tabular}{lccc}
+%				\hline
+%				\textbf{Переменная} & \textbf{Ошибка (100$\to$200)} & \textbf{Ошибка (200$\to$400)} & \textbf{Порядок $p$} \\
+%				\hline
+%				$u(x, t)$ & $8.92 \times 10^{-4}$ & $2.09 \times 10^{-4}$ & \textbf{2.09} \\
+%				\hline
+%			\end{tabular}
+%		\end{table}
+%		
+%		\begin{columns}[c]
+%			\begin{column}{0.55\textwidth}
+%				\[
+%				E = \|\mathbf{u}^{2h} - \mathbf{u}^{h}\|_{L_1} = \frac{1}{L} \sum_i |u_i^{2h} - u_i^h| \cdot \Delta x
+%				\]
+%				\[
+%				p = \log_2 \left( \frac{|| \mathbf{u}^{4h} - \mathbf{u}^{2h} ||_{L_1}}{|| \mathbf{u}^{2h} - \mathbf{u}^{h} ||_{L_1}} \right)
+%				\]
+%			\end{column}
+%			\begin{column}{0.45\textwidth}
+%				\footnotesize
+%				Неосцилляторность дополнительно подтверждена:
+%				\begin{itemize}
+%					\item контролем полной вариации $\mathrm{TV}(t)$ (1D);
+%					\item выполнением принципа максимума (2D).
+%				\end{itemize}
+%			\end{column}
+%		\end{columns}
+%		
+%	\end{frame}
+	
+	
+%	%==================================================================
+%	\begin{frame}{Сходимость в 2D: изоэнтропийный вихрь Ху--Шу}
+%		
+%		\begin{columns}[c]
+%			%--- ЛЕВО: парный log-log график ---
+%			%\hspace*{-1.5cm}% <-- сдвиг графика влево
+%			\begin{column}{0.5\textwidth}
+%				\begin{figure}[h]
+%					\centering
+%					\includegraphics[width=0.7\textwidth]{convergence_2d_L1.png}
+%					\caption{\smaller{Ошибка по $L_1$ для $\rho,u,v,p$, $t=1$.}}
+%				\end{figure}
+%			\end{column}
+%			
+%			%--- ПРАВО: задача + таблица + вывод ---
+%			\begin{column}{0.5\textwidth}
+%				\footnotesize
+%				\textbf{Тест:} перенос гладкого изоэнтропийного вихря
+%				($\varepsilon=5$) на $[0,10]^2$, периодич. ГУ.
+%				\vspace{0.1cm}
+%				\begin{table}[h]
+%					\centering
+%					\caption{\smaller{Порядок $p$ ($N{:}\,200{\to}400$)}}
+%					\vspace{-0.2cm}
+%					\resizebox{0.7\textwidth}{!}{%
+%						\begin{tabular}{lcccc}
+%							\toprule
+%							\multirow{2}{*}{Перем.} & \multicolumn{2}{c}{SD2} & \multicolumn{2}{c}{FD2} \\
+%							\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+%							& $p_{L_1}$ & $p_{L_2}$ & $p_{L_1}$ & $p_{L_2}$ \\
+%							\midrule
+%							$\rho$ & 2.07 & 2.06 & 2.28 & 2.29 \\
+%							$u$    & 2.06 & 2.08 & 2.21 & 2.26 \\
+%							$v$    & 2.08 & 2.09 & 2.33 & 2.38 \\
+%							$p$    & 2.05 & 2.07 & 2.22 & 2.30 \\
+%							\bottomrule
+%						\end{tabular}
+%					}
+%				\end{table}
+%%				\begin{alertblock}{}
+%%					\smaller \textbf{2-й порядок по всем переменным} и по обеим
+%%					нормам. В отличие от 1D, $L_2$ \emph{не проседает} — гладкий
+%%					вихрь и неогранич. реконструкция. Расщепление по направлениям
+%%					(\texttt{jax.numpy}) сохраняет точность схемы.
+%%				\end{alertblock}
+%			\end{column}
+%		\end{columns}
+%		
+%	\end{frame}
+	
+	
 	%==================================================================
-	% Слайд: Верификация (порядок точности)
-	\begin{frame}{Анализ сходимости: гладкое решение (поправить для 2D)}
-		\begin{block}{}
-			Для верификации теоретического второго порядка точности схемы SD2 проведено моделирование эволюции уравнения линейного переноса.
-			Порядок $p$ вычислялся методом экстраполяции Ричардсона с шагом измельчения $r=2$.
-		\end{block}
+	\begin{frame}{Сходимость в 2D: изоэнтропийный вихрь Ху--Шу}
 		
-		\begin{table}[h]
+		%--- ВЕРХ: два горизонтальных графика на всю ширину ---
+		\begin{figure}[h]
 			\centering
-			\footnotesize
-			\renewcommand{\arraystretch}{1.3}
-			\begin{tabular}{lccc}
-				\hline
-				\textbf{Переменная} & \textbf{Ошибка (100$\to$200)} & \textbf{Ошибка (200$\to$400)} & \textbf{Порядок $p$} \\
-				\hline
-				$u(x, t)$ & $8.92 \times 10^{-4}$ & $2.09 \times 10^{-4}$ & \textbf{2.09} \\
-				\hline
-			\end{tabular}
-		\end{table}
+			\includegraphics[width=0.65\textwidth]{convergence_2d_L1.png}
+			\vspace*{-0.2cm}
+			\caption{\smaller{Ошибка по p,u,v,$rho$, L1, 2D}}
+		\end{figure}
 		
-		\begin{columns}[c]
-			\begin{column}{0.55\textwidth}
-				\[
-				E = \|\mathbf{u}^{2h} - \mathbf{u}^{h}\|_{L_1} = \frac{1}{L} \sum_i |u_i^{2h} - u_i^h| \cdot \Delta x
-				\]
-				\[
-				p = \log_2 \left( \frac{|| \mathbf{u}^{4h} - \mathbf{u}^{2h} ||_{L_1}}{|| \mathbf{u}^{2h} - \mathbf{u}^{h} ||_{L_1}} \right)
-				\]
-			\end{column}
-			\begin{column}{0.45\textwidth}
+		\vspace{-0.2cm}
+		
+		%--- НИЗ: слева Тест, справа Таблица порядков ---
+		\begin{columns}[t]
+			%--- ЛЕВО: описание теста ---
+			\begin{column}{0.46\textwidth}
+				\centering
 				\footnotesize
-				Неосцилляторность дополнительно подтверждена:
-				\begin{itemize}
-					\item контролем полной вариации $\mathrm{TV}(t)$ (1D);
-					\item выполнением принципа максимума (2D).
-				\end{itemize}
+				
+%				\vspace{0.5cm}
+				\textbf{Тест:} перенос гладкого изоэнтропийного вихря Ху--Шу
+				($\varepsilon = 5$) на области $[0,10]^2$ с периодическими ГУ;
+				неограниченная реконструкция, $t = 1$.
+%				\vspace{0.15cm}
+%				\begin{alertblock}{}
+%					\smaller \textbf{2-й порядок по всем переменным} и по обеим
+%					нормам. В отличие от 1D, $L_2$ \emph{не проседает} --- гладкий
+%					вихрь и неогранич. реконструкция.
+%				\end{alertblock}
+			\end{column}
+			
+			%--- ПРАВО: таблица порядков ---
+			\begin{column}{0.50\textwidth}
+				\centering
+				\vspace{-1cm}
+				\begin{table}[h]
+					\caption{\smaller{Эмпирический порядок $p$ ($N{:}\,200{\to}400$)}}
+					\vspace{-0.2cm}
+					\resizebox{0.6\textwidth}{!}{%
+						\begin{tabular}{lcccc}
+							\toprule
+							\multirow{2}{*}{Перем.} & \multicolumn{2}{c}{SD2} & \multicolumn{2}{c}{FD2} \\
+							\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+							& $p_{L_1}$ & $p_{L_2}$ & $p_{L_1}$ & $p_{L_2}$ \\
+							\midrule
+							$\rho$ & 2.07 & 2.06 & 2.28 & 2.29 \\
+							$u$    & 2.06 & 2.08 & 2.21 & 2.26 \\
+							$v$    & 2.08 & 2.09 & 2.33 & 2.38 \\
+							$p$    & 2.05 & 2.07 & 2.22 & 2.30 \\
+							\bottomrule
+						\end{tabular}
+					}
+				\end{table}
 			\end{column}
 		\end{columns}
 		
@@ -723,6 +887,44 @@
 	%==================================================================
 	% ВСПОМОГАТЕЛЬНЫЕ СЛАЙДЫ
 	\appendix
+	
+	%==================================================================
+	% Appendix: определения норм погрешности
+	\begin{frame}{Нормы погрешности $L_1$ и $L_2$}
+		
+		Погрешность численного решения: $e_i = u_i^{\,h} - u_i^{\,\text{exact}}$,
+		где $u^h$ --- численное, $u^{\text{exact}}$ --- точное решение.
+		
+		\vspace{0.3cm}
+		\begin{block}{Непрерывные нормы на области $\Omega$}
+			\[
+			\|e\|_{L_1} = \int_\Omega |e|\,d\Omega,
+			\qquad
+			\|e\|_{L_2} = \left( \int_\Omega |e|^2\,d\Omega \right)^{1/2}
+			\]
+		\end{block}
+		
+		\begin{block}{Дискретные (сеточные) аналоги}
+			Для равномерной сетки из $N$ ячеек (1D, мера ячейки $\Delta x$):
+			\[
+			\|e\|_{L_1} = \Delta x \sum_{i=1}^{N} |e_i|,
+			\qquad
+			\|e\|_{L_2} = \left( \Delta x \sum_{i=1}^{N} |e_i|^2 \right)^{1/2}
+			\]
+			Для двумерной сетки $N\times N$ (мера ячейки $\Delta x\,\Delta y$):
+			\[
+			\|e\|_{L_1} = \Delta x\,\Delta y \!\sum_{i,j} |e_{ij}|,
+			\qquad
+			\|e\|_{L_2} = \Big( \Delta x\,\Delta y \!\sum_{i,j} |e_{ij}|^2 \Big)^{1/2}
+			\]
+		\end{block}
+		
+		\begin{itemize}
+			\item[$\bullet$] {\small $L_1$ --- средняя по модулю погрешность; \enspace
+				$L_2$ --- среднеквадратичная, \emph{сильнее} штрафует крупные локальные ошибки.}
+		\end{itemize}
+		
+	\end{frame}
 
 	\begin{frame}{Аппаратное ускорение вычислений: фреймворк JAX}
 		Для преодоления вычислительных ограничений языка Python в качестве основы решателя выбран высокопроизводительный фреймворк JAX.
