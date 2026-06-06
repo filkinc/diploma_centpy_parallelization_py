@@ -52,19 +52,19 @@
 
 \begin{document}
 
-	//TODO старый логотип
-	
-	//TODO должность науч рук указать ст. преп.
-	
-	множественные и быстрые исследования, низкий порог входа
-	быстро качественно и дешево, мы берем JAX
-	но есть и другие библиотеки их можно добавить
-	
-	и почему выбрали centpy: отсылка к деятельности 
-	там возникла эта задача 
-	возник интерес к быстрым и множественным исследованиям
-	
-	как реализованы граничные условия в коде и формулы.
+%	//TODO старый логотип
+%	
+%	//TODO должность науч рук указать ст. преп.
+%	
+%	множественные и быстрые исследования, низкий порог входа
+%	быстро качественно и дешево, мы берем JAX
+%	но есть и другие библиотеки их можно добавить
+%	
+%	и почему выбрали centpy: отсылка к деятельности 
+%	там возникла эта задача 
+%	возник интерес к быстрым и множественным исследованиям
+%	
+%	как реализованы граничные условия в коде и формулы.
 	
 	
 	\begin{frame}[plain]
@@ -137,7 +137,7 @@
 				JAX --- \textbf{современная библиотека} Google для высокопроизводительных вычислений и машинного обучения; NumPy-совместимый, JIT-компиляция.
 			\end{block}
 			\begin{block}{Почему именно JAX}
-				Параметрическое исследование по $\alpha$ требует \textbf{множества быстрых расчётов}. JAX даёт скорость компилируемого кода при простоте Python, а также \textbf{единый код} CPU/GPU.
+				Параметрическое исследование по $\alpha$ требует \textbf{множества быстрых расчетов}. JAX дает скорость компилируемого кода при простоте Python, а также \textbf{единый код} CPU/GPU.
 			\end{block}
 		\end{column}
 		\begin{column}{0.56\textwidth}
@@ -244,7 +244,7 @@
 			p = (\gamma - 1)\left( \rho E - \tfrac{1}{2}\rho u^2 \right), \quad \gamma = 1.4
 			\]
 		\end{block}
-		в расчётной области $x \in [0, 1]$, с кусочно-постоянными НУ
+		в расчетной области $x \in [0, 1]$, с кусочно-постоянными НУ
 		\vspace{-0.15 cm}
 		\[
 		(\rho, u, p)|_{t=0} =
@@ -340,7 +340,7 @@
 	
 	
 	%==================================================================
-	\begin{frame}{Анализ сходимость в одномерной постановке}
+	\begin{frame}{Анализ сходимости в одномерной постановке}
 		
 		\begin{columns}[c]
 			%--- ЛЕВО: log-log график ---
@@ -446,14 +446,14 @@
 					\vspace{-0.3 cm}
 					\hspace*{-0.5cm}% <-- сдвиг графика влево
 					\includegraphics[width=1.12\textwidth]{compare_time_plot_1d.png}
-					\caption{\smaller{Время счёта (с) от размера сетки $J$, 1D}}
+					\caption{\smaller{Время счета (с) от размера сетки $J$, 1D}}
 				\end{figure}
 			\end{column}
 			\begin{column}{0.58\textwidth}
 				% ===== Основная таблица: SD2 + FD2 =====
 				\begin{table}[h]
 					\centering
-					\caption{\smaller{Время счёта (с), 1D, схемы SD2 и FD2}}
+					\caption{\smaller{Время счета (с), 1D, схемы SD2 и FD2}}
 					\vspace{-0.3 cm}
 					\resizebox{\textwidth}{!}{%
 						\begin{tabular}{lcccccccc}
@@ -519,20 +519,22 @@
 			\]
 			с тем же уравнением состояния идеального газа $p = (\gamma - 1)\big(\rho E - \tfrac{1}{2}\rho (u^2 + v^2)\big)$, $\gamma = 1.4$.
 		\end{block}
+		
+		\vspace{-0.1 cm}
 
-		в расчётной области $(x, y) \in [0, 1]^2$, с кусочно-постоянными НУ
+		в расчетной области $(x, y) \in [0, 1]^2$, с кусочно-постоянными НУ
 		\vspace{-0.15 cm}
 		\[
 		(\rho, u, v, p)|_{t=0} =
 		\begin{cases}
-			(2.667, -1.479, 0, 4.5) & \text{ударная волна: } x \in [0.8, 1], \\
-			(\alpha \cdot 1, 0, 0, 1) & \text{зоны энерговложения,} \\
-			(1, 0, 0, 1) & \text{невозмущенный газ.}
+			(1, 0, 0, 1), & \text{невозмущенный газ,} \\
+			(\alpha \cdot 1, 0, 0, 1), & \text{зоны энерговложения,} \\
+			(2.667, -1.479, 0, 4.5), & \text{ударная волна: } x \in [0.8, 1].
 		\end{cases}
 		\]
 
 		\vspace{-0.2 cm}
-		Зоны пониженной плотности при $\alpha = 0.1$ --- круговая (центр $(0.45, 0.65)$, радиус $0.08$) и прямоугольная ; Слева  --- ГУ Неймана, Остальные --- ГУ непротекания.
+		Зоны энерговложения при $\alpha = 0.1$ --- круговая (центр $(0.45, 0.65)$, радиус $0.08$) и прямоугольная ($x \in [0.25, 0.41]$, $y \in [0.20, 0.44]$); слева  --- ГУ Неймана, остальные --- ГУ непротекания.
 
 	\end{frame}
 	
@@ -721,10 +723,11 @@
 			\begin{column}{0.22\textwidth}
 				\centering
 				\hspace*{-0.4cm}% <-- сдвиг графика влево
-				\textbf{\small Начальное условие}\par
 				\vspace{0.2cm}
-				\hspace*{-0.4cm}% <-- сдвиг графика влево
+%				\hspace*{-0.4cm}% <-- сдвиг графика влево
 				\includegraphics[width=1.2\textwidth]{rieman_modify_2d_init_jax-fluids.png}
+				\hspace*{0.4cm}
+				\text{\smaller{Начальное условие}}
 			\end{column}
 			
 			%--- ПРАВО: сетка 2x3 (время x метод), крупнее ---
@@ -733,8 +736,6 @@
 				\setlength{\tabcolsep}{1pt}%
 				\renewcommand{\arraystretch}{0.5}%
 				\begin{tabular}{ccc}
-					% --- заголовки столбцов: методы ---
-					\textbf{SD2} & \textbf{FD2} & \textbf{JAX-FLUIDS} \\[2pt]
 					% --- строка 1: t = T/2 ---
 					\includegraphics[width=\cellw]{rieman_modify_2d_half_jax_sd2.png} &
 					\includegraphics[width=\cellw]{rieman_modify_2d_half_jax_fd2.png} &
@@ -742,7 +743,9 @@
 					% --- строка 2: t = T ---
 					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax_sd2.png} &
 					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax_fd2.png} &
-					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax-fluids.png} \\
+					\includegraphics[width=\cellw]{rieman_modify_2d_final_jax-fluids.png} \\[2pt]
+					% --- заголовки столбцов: методы ---
+					SD2 & FD2 & JAX-FLUIDS \\
 				\end{tabular}
 			\end{column}
 		\end{columns}
@@ -759,7 +762,7 @@
 			\includegraphics[width=0.65\textwidth]{convergence_2d_L1.png}
 			\vspace*{-0.2cm}
 			%
-			\caption{\smaller{Ошибка по p,u,v,$\rho$, норма L1, 2D}}
+			\caption{\smaller{Ошибка по $\rho,p,u,v$ в норме $L_1$, 2D}}
 		\end{figure}
 		
 		\vspace{-0.2cm}
@@ -821,14 +824,14 @@
 					\vspace{-0.3 cm}
 					\hspace*{-0.5cm}% <-- сдвиг графика влево
 					\includegraphics[width=1.12\textwidth]{compare_time_plot_2d.png}
-					\caption{\smaller{Время счёта (с) от размера сетки $J\times J$, 2D}}
+					\caption{\smaller{Время счета (с) от размера сетки $J\times J$, 2D}}
 				\end{figure}
 			\end{column}
 			\begin{column}{0.58\textwidth}
 				% ===== Основная таблица: SD2 + FD2 =====
 				\begin{table}[h]
 					\centering
-					\caption{\smaller{Время счёта (с), 2D, схемы SD2 и FD2}}
+					\caption{\smaller{Время счета (с), 2D, схемы SD2 и FD2}}
 					\vspace{-0.2 cm}
 					\resizebox{\textwidth}{!}{%
 						\begin{tabular}{lcccccccc}
@@ -953,7 +956,7 @@
 			\begin{enumerate}
 				\item Поставлена и решена модифицированная задача Римана о прохождении УВ через зону энерговложения для уравнений Эйлера (1D и 2D).
 				\item Реализован высокопроизводительный комплекс на базе \texttt{JAX} (схемы SD2 и FD2): JIT-компиляция, векторизация, единый код для CPU и GPU без модификации.
-				\item Подтверждён второй порядок точности (экстраполяция Ричардсона); неосцилляторность --- через контроль $\mathrm{TV}$ и принцип максимума.
+				\item Подтвержден второй порядок точности на гладких решениях.
 				\item Проведена кросс-верификация с точным решением, \texttt{centpy} и \texttt{JAX-FLUIDS}: достигнуто хорошее согласие профилей решений.
 				\item В двумерных задачах решатель на GPU быстрее собственной CPU-реализации до $33\times$ (SD2) и $60\times$ (FD2), быстрее \texttt{centpy} в $90$--$100\times$, быстрее \texttt{JAX-FLUIDS} в $2.5$--$6\times$; достигнута сетка $1024\times1024$.
 			\end{enumerate}
@@ -1039,7 +1042,7 @@
 
 		\begin{block}{Подходы к дискретизации:}
 			\begin{itemize}
-				\item \textbf{Fully-Discrete (FD):} пространственный и временной шаги жёстко связаны единым вычислительным шаблоном.
+				\item \textbf{Fully-Discrete (FD):} пространственный и временной шаги жестко связаны единым вычислительным шаблоном.
 				\item \textbf{Semi-Discrete (SD):} пространственная дискретизация сводит УЧП к системе ОДУ (метод прямых). Интегрирование по времени выполняется независимыми TVD-схемами Рунге--Кутты. Различают схемы 2-го (SD2) и 3-го (SD3) порядка точности.
 			\end{itemize}
 		\end{block}
@@ -1069,7 +1072,7 @@
 		\begin{table}[h]
 			\centering
 			\footnotesize
-			\caption{\smaller{Время счёта (с), 1D, схема SD2}}
+			\caption{\smaller{Время счета (с), 1D, схема SD2}}
 			\vspace{-0.2 cm}
 			\resizebox{\textwidth}{!}{%
 				\begin{tabular}{lccccc}
