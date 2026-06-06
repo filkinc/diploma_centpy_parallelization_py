@@ -16,6 +16,9 @@
 \usepackage{listings}
 \usepackage{appendixnumberbeamer}
 \usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{tikz}
+\usetikzlibrary{tikzmark}
 
 \usetheme{Warsaw}
 
@@ -41,7 +44,7 @@
 \graphicspath{{animation/}{./}}
 
 % Название приведено к теме ВКР
-\title[Моделирование УВ с локальным энерговложением JAX]{Моделирование распространения ударной волны в газе с локальным энерговложением средствами библиотеки JAX}
+\title[Моделирование УВ с локальным энерговложением на JAX]{Моделирование распространения ударной волны в газе с локальным энерговложением средствами библиотеки JAX}
 \author[Филькин Д.\,С.]{Докладчик: Филькин Д.\,С.\and\\[0.5mm] Научный руководитель: Кравченко О.\,В.}
 \institute[каф. Прикладная математика ФН-1]{группа ФН1-81Б}
 \date{\today}
@@ -49,6 +52,21 @@
 
 \begin{document}
 
+	//TODO старый логотип
+	
+	//TODO должность науч рук указать ст. преп.
+	
+	множественные и быстрые исследования, низкий порог входа
+	быстро качественно и дешево, мы берем JAX
+	но есть и другие библиотеки их можно добавить
+	
+	и почему выбрали centpy: отсылка к деятельности 
+	там возникла эта задача 
+	возник интерес к быстрым и множественным исследованиям
+	
+	как реализованы граничные условия в коде и формулы.
+	
+	
 	\begin{frame}[plain]
 		\maketitle
 	\end{frame}
@@ -83,29 +101,66 @@
 
 	\end{frame}
 	
-	%==================================================================
-	% Слайд: Библиотека JAX
-	\begin{frame}{Библиотека JAX --- инструмент реализации}
-		\begin{columns}[t]
-			\begin{column}{0.46\textwidth}
-				\begin{block}{Что такое JAX}
-					\texttt{JAX} --- библиотека для высокопроизводительных численных вычислений: NumPy-совместимый API (\texttt{jax.numpy}) с компиляцией под CPU, GPU и TPU \textbf{из единого кода}.
-				\end{block}
-				\begin{block}{Почему именно она}
-					Один и тот же решатель без изменения кода исполняется и на CPU, и на GPU --- это даёт серийные расчёты, необходимые для параметрического исследования по $\alpha$.
-				\end{block}
-			\end{column}
-			\begin{column}{0.54\textwidth}
-				\begin{block}{Возможности, использованные в комплексе}
-					\begin{itemize}
-						\item \textbf{JIT-компиляция} (\texttt{jax.jit}\,$\to$\,XLA): шаг по времени компилируется в слитное ядро --- основной источник ускорения;
-						\item \textbf{функциональный стиль}: чистые функции и неизменяемые массивы; обновление через \texttt{x.at[i].set(...)};
-						\item \textbf{\texttt{lax.while\_loop}}: компилируемый цикл интегрирования с динамическим числом шагов;
-						\item \textbf{двойная точность} (\texttt{x64}) --- для корректной аппроксимации.
-					\end{itemize}
-				\end{block}
-			\end{column}
-		\end{columns}
+%	%==================================================================
+%	% Слайд: Библиотека JAX
+%	\begin{frame}{Библиотека JAX --- инструмент реализации}
+%		\begin{columns}[t]
+%			\begin{column}{0.46\textwidth}
+%				\begin{block}{Что такое JAX}
+%					\texttt{JAX} --- библиотека для высокопроизводительных численных вычислений: NumPy-совместимый API (\texttt{jax.numpy}) с компиляцией под CPU, GPU и TPU \textbf{из единого кода}.
+%				\end{block}
+%				\begin{block}{Почему именно она}
+%					Один и тот же решатель без изменения кода исполняется и на CPU, и на GPU --- это даёт серийные расчёты, необходимые для параметрического исследования по $\alpha$.
+%				\end{block}
+%			\end{column}
+%			\begin{column}{0.54\textwidth}
+%				\begin{block}{Возможности, использованные в комплексе}
+%					\begin{itemize}
+%						\item \textbf{JIT-компиляция} (\texttt{jax.jit}\,$\to$\,XLA): шаг по времени компилируется в слитное ядро --- основной источник ускорения;
+%						\item \textbf{функциональный стиль}: чистые функции и неизменяемые массивы; обновление через \texttt{x.at[i].set(...)};
+%						\item \textbf{\texttt{lax.while\_loop}}: компилируемый цикл интегрирования с динамическим числом шагов;
+%						\item \textbf{двойная точность} (\texttt{x64}) --- для корректной аппроксимации.
+%					\end{itemize}
+%				\end{block}
+%			\end{column}
+%		\end{columns}
+%\end{frame}
+
+
+%==================================================================
+% Слайд: Библиотека JAX
+\begin{frame}{Библиотека JAX --- инструмент реализации}
+	\vspace{-0.5cm}
+	\begin{columns}[t]
+		\begin{column}{0.44\textwidth}
+			\begin{block}{Что такое JAX}
+				JAX --- \textbf{современная библиотека} Google для высокопроизводительных вычислений и машинного обучения; NumPy-совместимый, JIT-компиляция.
+			\end{block}
+			\begin{block}{Почему именно JAX}
+				Параметрическое исследование по $\alpha$ требует \textbf{множества быстрых расчётов}. JAX даёт скорость компилируемого кода при простоте Python, а также \textbf{единый код} CPU/GPU.
+			\end{block}
+		\end{column}
+		\begin{column}{0.56\textwidth}
+			\begin{block}{Альтернативы и их ограничения}
+				\centering
+				\resizebox{\textwidth}{!}{%
+					\begin{tabular}{lccc}
+						\toprule
+						Инструмент & CPU/GPU & \makecell{Единый\\код} & \makecell{Порог\\входа} \\
+						\midrule
+						NumPy / SciPy        & CPU      & ---       & низкий  \\
+						Fortran, C++/CUDA    & CPU+GPU  & нет       & высокий \\
+						Numba, CuPy          & CPU\,/\,GPU & частично & средний \\
+						PyTorch, TensorFlow  & CPU+GPU  & да        & средний \\
+						\textbf{JAX}         & \textbf{CPU+GPU} & \textbf{да} & \textbf{низкий} \\
+						\bottomrule
+					\end{tabular}
+				}
+				\vspace{0.15cm}
+				{\footnotesize JAX объединяет производительность GPU с простотой NumPy.}
+			\end{block}
+		\end{column}
+	\end{columns}
 \end{frame}
 	
 	
@@ -189,16 +244,15 @@
 			p = (\gamma - 1)\left( \rho E - \tfrac{1}{2}\rho u^2 \right), \quad \gamma = 1.4
 			\]
 		\end{block}
-
-		в расчётной области $x \in [0, 1]$, с кусочно-постоянными НУ:
+		в расчётной области $x \in [0, 1]$, с кусочно-постоянными НУ
 		\vspace{-0.15 cm}
 		\[
 		(\rho, u, p)|_{t=0} =
 		\begin{cases}
-			(1, 0, 1) & \text{при } x \in [0, 0.3) \\
-			(\alpha \cdot 1, 0, 1) & \text{при } x \in [0.3, 0.5] \\
-			(1, 0, 1) & \text{при } x \in (0.5, 0.8) \\
-			(2.667, -1.479, 4.5) & \text{при } x \in [0.8, 1.0]
+			(1, 0, 1), & \text{при } x \in [0, 0.3), \\
+			(\alpha \cdot 1, 0, 1), & \text{при } x \in [0.3, 0.5], \\
+			(1, 0, 1), & \text{при } x \in (0.5, 0.8), \\
+			(2.667, -1.479, 4.5), & \text{при } x \in [0.8, 1.0].
 		\end{cases}
 		\]
 
@@ -279,7 +333,7 @@
 				\caption*{\smaller{(c)}}
 			\end{minipage}
 			\vspace{-0.5 cm}
-			\caption{ \smaller{Эволюция примитивных переменных в модифицированной 1D задаче Римана: (a) Плотность; (b) Скорость; (c) Давление с наложением на эталон \texttt{JAX-FLUIDS}}}
+			\caption{ \smaller{Эволюция примитивных переменных в модифицированной 1D задаче Римана: (a) Плотность; (b) Скорость; (c) Давление с наложением на эталон JAX-FLUIDS}}
 		\end{figure}
 
 	\end{frame}
@@ -383,6 +437,8 @@
 	% Слайд: Производительность (1D, схемы SD2 и FD2)
 	\begin{frame}{Анализ аппаратного ускорения: одномерная постановка}
 		
+		% TODO отделить наш результат от остальных
+		
 		\begin{columns}[c]
 			\begin{column}{0.42\textwidth}
 				\begin{figure}[h]
@@ -403,21 +459,25 @@
 						\begin{tabular}{lcccccccc}
 							\hline
 							& \multicolumn{2}{c}{\texttt{centpy}}
-							& \multicolumn{2}{c}{JAX CPU}
-							& \multicolumn{2}{c}{JAX GPU}
+							& \multicolumn{2}{c}{\tikzmark{tl}\textbf{JAX CPU}}
+							& \multicolumn{2}{c}{\textbf{JAX GPU}}
 							& \multicolumn{2}{c}{JAX-FL.} \\
-							$J$ & SD2 & FD2 & SD2 & FD2 & SD2 & FD2 & CPU & GPU \\
+							$J$ & SD2 & FD2 & \textbf{SD2} & \textbf{FD2} & \textbf{SD2} & \textbf{FD2} & CPU & GPU \\
 							\hline
-							$\mathbf{256}$   & 1.138   & 0.218   & 0.096   & 0.023  & \textbf{0.143}  & \textbf{0.131} & 0.954   & 3.894   \\
-							$\mathbf{512}$   & 4.244   & 0.662   & 0.394   & 0.057  & \textbf{0.179}  & \textbf{0.189} & 2.857   & 7.545   \\
-							$\mathbf{1024}$  & 5.577   & 1.972   & 2.499   & 0.207  & \textbf{0.370}  & \textbf{0.280} & 4.893   & 16.403  \\
-							$\mathbf{2048}$  & 16.175  & 3.875   & 7.255   & 0.785  & \textbf{0.720}  & \textbf{0.588} & 13.040  & 33.451  \\
-							$\mathbf{4096}$  & 41.613  & 13.218  & 29.928  & 4.067  & \textbf{1.500}  & \textbf{1.217} & 44.688  & 70.443  \\
-							$\mathbf{8192}$  & 152.440 & 46.947  & 86.862  & 14.377 & \textbf{3.931}  & \textbf{3.082} & 161.556 & 153.630 \\
-							$\mathbf{16384}$ & 612.826 & 186.817 & 349.892 & 60.462 & \textbf{12.805} & \textbf{8.819} & 633.204 & 404.548 \\
+							$\mathbf{256}$   & 1.138   & 0.218   & \textbf{0.096}   & \textbf{0.023}  & \textbf{0.143}  & \textbf{0.131} & 0.954   & 3.894   \\
+							$\mathbf{512}$   & 4.244   & 0.662   & \textbf{0.394}   & \textbf{0.057}  & \textbf{0.179}  & \textbf{0.189} & 2.857   & 7.545   \\
+							$\mathbf{1024}$  & 5.577   & 1.972   & \textbf{2.499}   & \textbf{0.207}  & \textbf{0.370}  & \textbf{0.280} & 4.893   & 16.403  \\
+							$\mathbf{2048}$  & 16.175  & 3.875   & \textbf{7.255}   & \textbf{0.785}  & \textbf{0.720}  & \textbf{0.588} & 13.040  & 33.451  \\
+							$\mathbf{4096}$  & 41.613  & 13.218  & \textbf{29.928}  & \textbf{4.067}  & \textbf{1.500}  & \textbf{1.217} & 44.688  & 70.443  \\
+							$\mathbf{8192}$\tikzmark{br}  & 152.440 & 46.947  & \textbf{86.862}  & 14.377 & \textbf{3.931}  & \textbf{3.082} & 161.556 & 153.630 \\
+							$\mathbf{16384}$ & 612.826 & 186.817 & \textbf{349.892} & \textbf{60.462} & \textbf{12.805} & \textbf{8.819} & 633.204 & 404.548 \\
 							\hline
 						\end{tabular}
 					}
+					\begin{tikzpicture}[remember picture, overlay]
+						\draw[red, very thick, rounded corners=2pt]
+						([xshift=18pt, yshift=-18pt]pic cs:tl) rectangle ([xshift=48pt, yshift=8pt]pic cs:br);
+					\end{tikzpicture}
 				\end{table}
 				
 				\vspace{-0.2cm}
@@ -425,18 +485,22 @@
 				\begin{table}[h]
 					\centering
 					\caption{\smaller{Ускорение JAX GPU (1D, $J=16384$)}}
-					\vspace{-0.3 cm}
+%					\vspace{-0.3 cm}
 					\resizebox{0.85\textwidth}{!}{%
 						\begin{tabular}{lcc}
 							\hline
 							Сравнение & SD2 & FD2 \\
 							\hline
 							\texttt{JAX} CPU        & 27.3$\times$          & 6.9$\times$  \\
-							\texttt{centpy}        & \textbf{47.9$\times$} & 21.2$\times$ \\
+							\tikzmark{tlc} \texttt{centpy} & \textbf{47.9$\times$} & \textbf{21.2$\times$} \tikzmark{brc} \\
 							\texttt{JAX-FLUIDS} GPU & 31.6$\times$          & 45.9$\times$ \\
 							\hline
 						\end{tabular}
 					}
+					\begin{tikzpicture}[remember picture, overlay]
+						\draw[red, very thick, rounded corners=2pt]
+						([xshift=-7pt, yshift=10pt]pic cs:tlc) rectangle ([xshift=20pt, yshift=-4pt]pic cs:brc);
+					\end{tikzpicture}
 				\end{table}
 			\end{column}
 		\end{columns}
@@ -456,7 +520,7 @@
 			с тем же уравнением состояния идеального газа $p = (\gamma - 1)\big(\rho E - \tfrac{1}{2}\rho (u^2 + v^2)\big)$, $\gamma = 1.4$.
 		\end{block}
 
-		в расчётной области $(x, y) \in [0, 1]^2$, с начальными условиями:
+		в расчётной области $(x, y) \in [0, 1]^2$, с кусочно-постоянными НУ
 		\vspace{-0.15 cm}
 		\[
 		(\rho, u, v, p)|_{t=0} =
@@ -694,7 +758,8 @@
 			\centering
 			\includegraphics[width=0.65\textwidth]{convergence_2d_L1.png}
 			\vspace*{-0.2cm}
-			\caption{\smaller{Ошибка по p,u,v,$\rho$, L1, 2D}}
+			%
+			\caption{\smaller{Ошибка по p,u,v,$\rho$, норма L1, 2D}}
 		\end{figure}
 		
 		\vspace{-0.2cm}
@@ -764,43 +829,51 @@
 				\begin{table}[h]
 					\centering
 					\caption{\smaller{Время счёта (с), 2D, схемы SD2 и FD2}}
-					\vspace{-0.3 cm}
+					\vspace{-0.2 cm}
 					\resizebox{\textwidth}{!}{%
 						\begin{tabular}{lcccccccc}
 							\hline
 							& \multicolumn{2}{c}{\texttt{centpy}}
-							& \multicolumn{2}{c}{JAX CPU}
-							& \multicolumn{2}{c}{JAX GPU}
+							& \multicolumn{2}{c}{\tikzmark{tl2} \textbf{JAX CPU}}
+							& \multicolumn{2}{c}{\textbf{JAX GPU}}
 							& \multicolumn{2}{c}{JAX-FL.} \\
-							$J\times J$ & SD2 & FD2 & SD2 & FD2 & SD2 & FD2 & CPU & GPU \\
+							$J\times J$ & SD2 & FD2 & \textbf{SD2} & \textbf{FD2} & \textbf{SD2} & \textbf{FD2} & CPU & GPU \\
 							\hline
-							$\mathbf{64}$   & 2.456    & 0.930    & 1.348    & 0.885   & \textbf{0.108}  & \textbf{0.133} & 1.322    & 1.753   \\
-							$\mathbf{128}$  & 27.274   & 9.865    & 12.988   & 9.233   & \textbf{0.344}  & \textbf{0.232} & 11.709   & 5.191   \\
-							$\mathbf{256}$  & 293.400  & 132.367  & 119.955  & 85.072  & \textbf{3.036}  & \textbf{1.458} & 131.803  & 13.530  \\
-							$\mathbf{512}$  & 2888.498 & 1357.738 & 1047.884 & 793.620 & \textbf{31.572} & \textbf{13.316}& 1294.979 & 78.417  \\
+							$\mathbf{64}$   & 2.456    & 0.930    & \textbf{1.348}    & \textbf{0.885}   & \textbf{0.108}  & \textbf{0.133} & 1.322    & 1.753   \\
+							$\mathbf{128}$  & 27.274   & 9.865    & \textbf{12.988}   & \textbf{9.233}   & \textbf{0.344}  & \textbf{0.232} & 11.709   & 5.191   \\
+							$\mathbf{256}$  & 293.400  & 132.367  & \textbf{119.955}  & \textbf{85.072}  & \textbf{3.036}  & \textbf{1.458} & 131.803  & 13.530  \\
+							$\mathbf{512}$ \tikzmark{br2} & 2888.498 & 1357.738 & \textbf{1047.884} & \textbf{793.620} & \textbf{31.572} & \textbf{13.316}& 1294.979 & 78.417  \\
 							$\mathbf{1024}$ & ---      & ---      & ---      & ---     & \textbf{271.457}& \textbf{95.325}& ---      & 577.726 \\
 							\hline
 						\end{tabular}
 					}
+					\begin{tikzpicture}[remember picture, overlay]
+						\draw[red, very thick, rounded corners=2pt]
+						([xshift=7pt, yshift=-14pt]pic cs:tl2) rectangle ([xshift=48pt, yshift=4pt]pic cs:br2);
+					\end{tikzpicture}
 				\end{table}
 				
 				\vspace{-0.2cm}
 				% ===== Вторая таблица: ускорение Разраб. GPU =====
 				\begin{table}[h]
 					\centering
-					\caption{\smaller{Ускорение \texttt{JAX}. GPU (2D, $512\times512$)}}
-					\vspace{-0.3 cm}
+					\caption{\smaller{Ускорение JAX GPU (2D, $512\times512$)}}
+					\vspace{-0.2 cm}
 					\resizebox{0.85\textwidth}{!}{%
 						\begin{tabular}{lcc}
 							\hline
 							Сравнение & SD2 & FD2 \\
 							\hline
-							\texttt{JAX} CPU        & 33.2$\times$          & \textbf{59.6$\times$}  \\
-							\texttt{centpy}        & 91.5$\times$          & \textbf{102.0$\times$} \\
+							\texttt{JAX} CPU        & 33.2$\times$          & 59.6$\times$  \\
+							\tikzmark{tlc2} \texttt{centpy}  & \textbf{91.5$\times$ }         & \textbf{102.0$\times$} \tikzmark{brc2} \\
 							\texttt{JAX-FLUIDS} GPU & 2.5$\times$           & 5.9$\times$            \\
 							\hline
 						\end{tabular}
 					}
+					\begin{tikzpicture}[remember picture, overlay]
+						\draw[red, very thick, rounded corners=2pt]
+						([xshift=-7pt, yshift=10pt]pic cs:tlc2) rectangle ([xshift=8pt, yshift=-4pt]pic cs:brc2);
+					\end{tikzpicture}
 				\end{table}
 			\end{column}
 		\end{columns}
@@ -926,6 +999,22 @@
 			$p \approx 2$.}
 	\end{block}
 	
+\end{frame}
+
+
+\begin{frame}
+	\begin{block}{Как работает JAX (JIT-конвейер)}
+		\small
+		\begin{enumerate}\itemsep2pt
+			\item \textbf{Трассировка:} JAX проходит по Python-функции с абстрактными аргументами и записывает все операции.
+			\item \textbf{Граф (\texttt{jaxpr}):} из трассы строится промежуточное представление --- граф вычислений.
+			\item \textbf{Компиляция XLA:} граф транслируется в оптимизированное машинное ядро под устройство (CPU/GPU/TPU).
+			\item \textbf{Исполнение и кэш:} ядро запускается; повторные вызовы берут готовую компиляцию из кэша.
+		\end{enumerate}
+		%				\vspace{0.1cm}
+		%				{\centering\footnotesize
+			%					\texttt{f(x)} $\to$ трасса $\to$ \texttt{jaxpr} $\to$ XLA $\to$ ядро\par}
+	\end{block}
 \end{frame}
 
 	\begin{frame}{Аппаратное ускорение вычислений: фреймворк JAX}
