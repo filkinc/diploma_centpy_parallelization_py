@@ -217,10 +217,10 @@ def plot_tv_evolution_only(
         ax.axhline(tv_values[0], color='black', linestyle='--', linewidth=1.2,
                    label=rf'$\mathrm{{TV}}(t=0) = {tv_values[0]:.4f}$')
 
-        ax.set_xlabel(r'Время $t$', fontsize=18)
-        ax.set_ylabel(r'$\mathrm{TV}(u)$', fontsize=18)
-        ax.tick_params(axis='both', labelsize=15)
-        ax.legend(fontsize=14, loc='best')
+        ax.set_xlabel(r'Время $t$', fontsize=24)
+        ax.set_ylabel(r'$\mathrm{TV}(u)$', fontsize=24)
+        ax.tick_params(axis='both', labelsize=24)
+        ax.legend(fontsize=22, loc='best')
 
         fig.tight_layout()
 
@@ -342,10 +342,10 @@ def plot_tvd_analysis_1d_separate(
             verticalalignment='top', fontsize=12,
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
-    ax2.set_xlabel('Время t', fontsize=14)
-    ax2.set_ylabel('TV(u)', fontsize=14)
-    ax2.set_title('Эволюция полной вариации', fontsize=16, fontweight='bold')
-    ax2.legend(fontsize=12)
+    ax2.set_xlabel('Время t', fontsize=24)
+    ax2.set_ylabel('TV(u)', fontsize=24)
+    ax2.set_title('Эволюция полной вариации', fontsize=24, fontweight='bold')
+    ax2.legend(fontsize=22)
     ax2.grid(True, alpha=0.3)
 
     # Сохраняем
@@ -444,10 +444,10 @@ def plot_tv_evolution_only_2d(
         ax.axhline(tv_values[0], color='black', linestyle='--', linewidth=1.2,
                    label=rf'$\mathrm{{TV}}(t=0) = {tv_values[0]:.4f}$')
 
-        ax.set_xlabel(r'Время $t$', fontsize=18)
-        ax.set_ylabel(r'$\mathrm{TV}(u)$', fontsize=18)
-        ax.tick_params(axis='both', labelsize=15)
-        ax.legend(fontsize=14, loc='best')
+        ax.set_xlabel(r'Время $t$', fontsize=24)
+        ax.set_ylabel(r'$\mathrm{TV}(u)$', fontsize=24)
+        ax.tick_params(axis='both', labelsize=24)
+        ax.legend(fontsize=22, loc='best')
 
         fig.tight_layout()
 
