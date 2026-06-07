@@ -173,10 +173,10 @@ def plot_max_principle_evolution_2d(
         ax.axhline(u_min[0], color=_MIN_COLOR, linestyle="--", linewidth=1.2,
                    label=rf"$u_{{\min}}(0) = {u_min[0]:.4f}$")
 
-        ax.set_xlabel(r"Время $t$", fontsize=18)
-        ax.set_ylabel(r"$u$", fontsize=18)
-        ax.tick_params(axis='both', labelsize=15)
-        ax.legend(fontsize=18, loc="center right")
+        ax.set_xlabel(r"Время $t$", fontsize=24)
+        ax.set_ylabel(r"$u$", fontsize=24)
+        ax.tick_params(axis='both', labelsize=24)
+        ax.legend(fontsize=24, loc="center right")
 
         fig.tight_layout()
 
