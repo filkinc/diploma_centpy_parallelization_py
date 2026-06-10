@@ -513,7 +513,7 @@ def plot_trajectories_for_presentation_v2(coords1, coords2, coords3, coords4, co
 
     # Подписи и оформление осей — как в графиках сходимости
     ax.set_xlabel('Плотность сетки', fontsize=24)
-    ax.set_ylabel('Время работы solver, с', fontsize=24)
+    ax.set_ylabel('Время работы, с.', fontsize=24)
     ax.tick_params(labelsize=24)
     ax.grid(True, which='both', ls=':', alpha=0.5)
 
@@ -709,27 +709,27 @@ if __name__ == "__main__":
     #                      labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'centpy SD2', 'JAX-FLUIDS (GPU)',
     #                              'JAX-FLUIDS (CPU)'])
 
-    # FD2 1d
-    plot_trajectories_v5(jax_cpu_fd2_1d, jax_gpu_fd2_1d, centpy_fd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d,
-                         labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
-                                 'JAX-FLUIDS (CPU)'])
-
-    # SD2 2d
-    plot_trajectories_v5(jax_cpu_sd2_2d, jax_gpu_sd2_2d, centpy_sd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
-                         labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'centpy SD2', 'JAX-FLUIDS (GPU)',
-                                 'JAX-FLUIDS (CPU)'])
-
-    # FD2 2d
-    plot_trajectories_v5(jax_cpu_fd2_2d, jax_gpu_fd2_2d, centpy_fd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
-                         labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
-                                 'JAX-FLUIDS (CPU)'])
-
-    # plot_trajectories_for_presentation_v2(jax_cpu_sd2_1d, jax_gpu_sd2_1d,
-    #                                    jax_cpu_fd2_1d, jax_gpu_fd2_1d,
-    #                                    centpy_sd2_1d, centpy_fd2_1d,
-    #                                    jax_fluids_gpu_1d, jax_fluids_cpu_1d)
+    # # FD2 1d
+    # plot_trajectories_v5(jax_cpu_fd2_1d, jax_gpu_fd2_1d, centpy_fd2_1d, jax_fluids_gpu_1d, jax_fluids_cpu_1d,
+    #                      labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
+    #                              'JAX-FLUIDS (CPU)'])
     #
-    # plot_trajectories_for_presentation_v2(jax_cpu_sd2_2d, jax_gpu_sd2_2d,
-    #                                    jax_cpu_fd2_2d, jax_gpu_fd2_2d,
-    #                                    centpy_sd2_2d, centpy_fd2_2d,
-    #                                    jax_fluids_gpu_2d, jax_fluids_cpu_2d)
+    # # SD2 2d
+    # plot_trajectories_v5(jax_cpu_sd2_2d, jax_gpu_sd2_2d, centpy_sd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
+    #                      labels=['JAX SD2 (CPU)', 'JAX SD2 (GPU)', 'centpy SD2', 'JAX-FLUIDS (GPU)',
+    #                              'JAX-FLUIDS (CPU)'])
+    #
+    # # FD2 2d
+    # plot_trajectories_v5(jax_cpu_fd2_2d, jax_gpu_fd2_2d, centpy_fd2_2d, jax_fluids_gpu_2d, jax_fluids_cpu_2d,
+    #                      labels=['JAX FD2 (CPU)', 'JAX FD2 (GPU)', 'centpy FD2', 'JAX-FLUIDS (GPU)',
+    #                              'JAX-FLUIDS (CPU)'])
+
+    plot_trajectories_for_presentation_v2(jax_cpu_sd2_1d, jax_gpu_sd2_1d,
+                                       jax_cpu_fd2_1d, jax_gpu_fd2_1d,
+                                       centpy_sd2_1d, centpy_fd2_1d,
+                                       jax_fluids_gpu_1d, jax_fluids_cpu_1d)
+
+    plot_trajectories_for_presentation_v2(jax_cpu_sd2_2d, jax_gpu_sd2_2d,
+                                       jax_cpu_fd2_2d, jax_gpu_fd2_2d,
+                                       centpy_sd2_2d, centpy_fd2_2d,
+                                       jax_fluids_gpu_2d, jax_fluids_cpu_2d)
