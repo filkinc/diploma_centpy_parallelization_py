@@ -24,6 +24,11 @@
 
 \setbeamertemplate{caption}[numbered]
 
+\setbeamertemplate{navigation symbols}{}
+
+\definecolor{strucblue}{rgb}{0.2,0.2,0.7}
+
+
 \useinnertheme{circles}
 \usecolortheme{rose}
 
@@ -45,10 +50,10 @@
 
 % Название приведено к теме ВКР
 \title[Моделирование УВ с локальным энерговложением на JAX]{Моделирование распространения ударной волны в газе с локальным энерговложением средствами библиотеки JAX}
-\author[Филькин Д.\,С.]{Докладчик: Филькин Д.\,С.\and\\[0.5mm] Научный руководитель: Кравченко О.\,В.}
-\institute[каф. Прикладная математика ФН-1]{группа ФН1-81Б}
-\date{\today}
-\titlegraphic{\includegraphics[width=2 cm]{logo.png}}
+\author[Филькин Д.\,С.]{Студент: Филькин Д.\,С. группы ФН1-81Б\and\\[0.5mm] Научный руководитель: ст. преп.,  Кравченко О.\,В.}
+\institute[каф. Прикладная математика ФН-1]{}
+\date{11 июня 2026 г.}
+\titlegraphic{\includegraphics[width=3.25 cm]{Logo_Blue_No-BG.pdf}}
 
 \begin{document}
 
@@ -82,8 +87,9 @@
 %		\end{block}
 
 		\begin{alertblock}{Мотивация}
-			Для выявления физических закономерностей динамики ударной волны требуется проведение параметрического исследования с    параметром разрежения $\alpha$
+			Для выявления физических закономерностей динамики ударной волны при локальном энерговложении требуется проведение параметрического исследования.
 		\end{alertblock}
+%		 
 		
 		\begin{block}{Цель работы}
 			Численное моделирование распространения ударной волны в газе с локальным энерговложением средствами разработанного высокопроизводительного программного комплекса на базе библиотеки JAX.
@@ -93,9 +99,9 @@
 		
 		\textbf{Основные задачи:}
 		\begin{itemize}
-			\item Высокопроизводительная реализация центральных схем высокого разрешения SD2 и FD2 средствами JAX,
-			\item кросс-верификация решения относительно библиотек \texttt{centpy} и \texttt{JAX-FLUIDS},
-			\item анализ аппаратного ускорения на CPU и GPU,
+			\item Высокопроизводительная реализация центральных разностные схем SD2 и FD2 средствами JAX,
+			\item кросс-верификация решения относительно эталонного решателя JAX-FLUIDS,
+			\item анализ ускорения на CPU/GPU; сравнение по времени с centpy и JAX-FLUIDS,
 			\item демонстрация возможностей комплекса на задаче о прохождении УВ через зону энерговложения в 1D и 2D.
 		\end{itemize}
 
@@ -134,13 +140,14 @@
 	\begin{columns}[t]
 		\begin{column}{0.44\textwidth}
 			\begin{block}{Что такое JAX}
-				JAX --- \textbf{современная библиотека} Google для высокопроизводительных вычислений и машинного обучения; NumPy-совместимый интерфейс, JIT-компиляция.
+				JAX --- \textbf{современная библиотека} для высокопроизводительных вычислений и машинного обучения; NumPy-совместимый интерфейс, JIT-компиляция.
 			\end{block}
 			\begin{block}{Почему именно JAX}
-				Параметрическое исследование по $\alpha$ требует \textbf{множества быстрых расчетов}. JAX дает скорость компилируемого кода при простоте Python, а также \textbf{единый код} CPU/GPU.
+				Параметрическое исследование требует \textbf{множества быстрых расчетов}. JAX дает скорость компилируемого кода при простоте Python, а также \textbf{единый код} CPU/GPU.
 			\end{block}
 		\end{column}
 		\begin{column}{0.56\textwidth}
+			\vspace{1cm}
 			\begin{block}{Альтернативы и их ограничения}
 				\centering
 				\resizebox{\textwidth}{!}{%
@@ -175,7 +182,7 @@
 					\[
 					\begin{aligned}
 						u^\mp_{i\pm1/2} = u_i \pm \tfrac12\,\text{minmod}\big(&u_i-u_{i-1},\\[-3pt]
-						&u_{i+1}-u_i\big)
+						&u_{i+1}-u_i\big).
 					\end{aligned}
 					\]
 				\end{block}
@@ -184,7 +191,7 @@
 					\[
 					\begin{aligned}
 						H_{i+1/2}=\tfrac12\big(&f(u^+_{i+1/2})+f(u^-_{i+1/2})\\[-3pt]
-						&-\,a_{i+1/2}(u^+_{i+1/2}-u^-_{i+1/2})\big)
+						&-\,a_{i+1/2}(u^+_{i+1/2}-u^-_{i+1/2})\big).
 					\end{aligned}
 					\]
 				\end{block}
@@ -193,7 +200,7 @@
 					\[
 					\frac{d u_i}{dt}=-\frac{H_{i+1/2}-H_{i-1/2}}{\Delta x}
 					\]
-					\centering{\scriptsize интегрирование по времени --- SSP-RK2}
+					\centering{\scriptsize интегрирование по времени --- SSP-RK2.}
 				\end{block}
 			\end{column}
 			%--- FD2 (полностью дискретная, Несьяху--Тадмора) ---
@@ -204,23 +211,23 @@
 				\begin{block}{Наклоны:}
 					\[
 					\begin{aligned}
-						u'_i &= \text{minmod}(u_i-u_{i-1},\,u_{i+1}-u_i)\\[-3pt]
-						f'_i &= \text{minmod}(f_i-f_{i-1},\,f_{i+1}-f_i)
+						u'_i &= \text{minmod}(u_i-u_{i-1},\,u_{i+1}-u_i).\\[-3pt]
+						f'_i &= \text{minmod}(f_i-f_{i-1},\,f_{i+1}-f_i).
 					\end{aligned}
 					\]
 				\end{block}
 				\vspace{-0.2 cm}
 				\begin{block}{Предиктор:}
 					\[
-					u_i^{\,n+1/2}=u_i^{\,n}-\frac{\Delta t}{2\Delta x}\,f'_i
+					u_i^{\,n+1/2}=u_i^{\,n}-\frac{\Delta t}{2\Delta x}\,f'_i.
 					\]
 				\end{block}
 				\vspace{-0.2 cm}
 				\begin{block}{Корректор (шахматная сетка):}
 					\[
 					\begin{aligned}
-						u_{i+1/2}^{\,n+1}=&\tfrac12\big(u_i^{\,n}+u_{i+1}^{\,n}\big)+\tfrac18\big(u'_i-u'_{i+1}\big)\\[-3pt]
-						&-\frac{\Delta t}{\Delta x}\big(f(u_{i+1}^{\,n+1/2})-f(u_i^{\,n+1/2})\big)
+						u_{i+1/2}^{\,n+1}=&\tfrac12\big(u_i^{\,n}+u_{i+1}^{\,n}\big)+\tfrac18\big(u'_i-u'_{i+1}\big).\\[-3pt]
+						&-\frac{\Delta t}{\Delta x}\big(f(u_{i+1}^{\,n+1/2})-f(u_i^{\,n+1/2})\big).
 					\end{aligned}
 					\]
 				\end{block}
@@ -241,7 +248,7 @@
 			с уравнением состояния идеального газа
 			\vspace{-0.3 cm}
 			\[
-			p = (\gamma - 1)\left( \rho E - \tfrac{1}{2}\rho u^2 \right), \quad \gamma = 1.4
+			p = (\gamma - 1)\left( \rho E - \tfrac{1}{2}\rho u^2 \right), \quad \gamma = 1.4,
 			\]
 		\end{block}
 		в расчетной области $x \in [0, 1]$, с кусочно-постоянными НУ
@@ -257,7 +264,7 @@
 		\]
 
 		\vspace{-0.2 cm}
-		Зона пониженной плотности при $\alpha = 0.1$ моделирует энерговложение; \\ Слева --- ГУ Неймана, справа --- ГУ непротекания.
+		Зона пониженной плотности при $\alpha = 0.1$ (параметр разрежения $0<\alpha< 1$) моделирует энерговложение; слева --- ГУ Неймана, справа --- ГУ непротекания.
 	\end{frame}
 
 %	%==================================================================
@@ -314,7 +321,7 @@
 				
 				\vspace{-0.25 cm}
 				
-				\caption*{\smaller{(a)}}
+				\caption*{\smaller{а)}}
 			\end{minipage}\hfill
 			\begin{minipage}[t]{0.30\textwidth}
 				\centering
@@ -322,7 +329,7 @@
 				
 				\vspace{-0.25 cm}
 				
-				\caption*{\smaller{(b)}}
+				\caption*{\smaller{б)}}
 			\end{minipage}\hfill
 			\begin{minipage}[t]{0.29\textwidth}
 				\centering
@@ -330,10 +337,10 @@
 				
 				\vspace{-0.25 cm}
 				
-				\caption*{\smaller{(c)}}
+				\caption*{\smaller{в)}}
 			\end{minipage}
 			\vspace{-0.5 cm}
-			\caption{ \smaller{Эволюция примитивных переменных в модифицированной 1D задаче Римана: (a) Плотность; (b) Скорость; (c) Давление с наложением на эталон JAX-FLUIDS}}
+			\caption{ \smaller{Эволюция примитивных переменных в модифицированной 1D задач Римана: а) плотность; б) скорость; в) давление (эталон JAX-FLUIDS)}}
 		\end{figure}
 
 	\end{frame}
@@ -349,7 +356,7 @@
 					\centering
 					\includegraphics[width=\textwidth]{convergence_1d.png}
 					\caption{\smaller{Ошибка по плотности $\rho$. Гладкая
-							задача, $t=1$, ограничитель mc.}}
+							задача, $t=1$.}}
 				\end{figure}
 			\end{column}
 			
@@ -358,20 +365,20 @@
 				\footnotesize
 				\textbf{Тест:} перенос гладкого профиля плотности
 				\[
-				\rho(x,0)=1+0.2\sin(2\pi x),\quad u=1,\ p=1
+				\rho(x,0)=1+0.2\sin(2\pi x),\quad u=1,\ p=1,
 				\]
 				\[
-				\rho(x,t)=1+0.2\sin\!\big(2\pi(x-t)\big)
+				\rho(x,t)=1+0.2\sin\!\big(2\pi(x-t)\big).
 				\]
 				\vspace{-0.5cm}
 				\begin{table}[h]
 					\centering
-					\caption{\smaller{Эмпирический порядок $p$ ($N{:}\,200{\to}400$)}}
+					\caption{\smaller{Эмпирический порядок сходимости $r$ ($N{:}\,200{\to}400$)}}
 					\vspace{-0.2cm}
 					\resizebox{0.7\textwidth}{!}{%
 						\begin{tabular}{lcc}
 							\toprule
-							Схема & $p_{L_1}$ & $p_{L_2}$ \\
+							Схема & $r_{L_1}$ & $r_{L_2}$ \\
 							\midrule
 							SD2 & 1.98 & 1.70 \\
 							FD2 & 2.08 & 1.83 \\
@@ -437,8 +444,6 @@
 	% Слайд: Производительность (1D, схемы SD2 и FD2)
 	\begin{frame}{Анализ аппаратного ускорения: одномерная постановка}
 		
-		% TODO отделить наш результат от остальных
-		
 		\begin{columns}[c]
 			\begin{column}{0.42\textwidth}
 				\begin{figure}[h]
@@ -446,7 +451,7 @@
 					\vspace{-0.3 cm}
 					\hspace*{-0.5cm}% <-- сдвиг графика влево
 					\includegraphics[width=1.12\textwidth]{compare_time_plot_1d.png}
-					\caption{\smaller{Время счета (с) от размера сетки $J$, 1D}}
+					\caption{\smaller{Время счета (с), 1D}}
 				\end{figure}
 			\end{column}
 			\begin{column}{0.58\textwidth}
@@ -458,7 +463,7 @@
 					\resizebox{\textwidth}{!}{%
 						\begin{tabular}{lcccccccc}
 							\hline
-							& \multicolumn{2}{c}{\texttt{centpy}}
+							& \multicolumn{2}{c}{centpy}
 							& \multicolumn{2}{c}{\tikzmark{tl}\textbf{JAX CPU}}
 							& \multicolumn{2}{c}{\textbf{JAX GPU}}
 							& \multicolumn{2}{c}{JAX-FL.} \\
@@ -469,13 +474,13 @@
 							$\mathbf{1024}$  & 5.577   & 1.972   & \textbf{2.499}   & \textbf{0.207}  & \textbf{0.370}  & \textbf{0.280} & 4.893   & 16.403  \\
 							$\mathbf{2048}$  & 16.175  & 3.875   & \textbf{7.255}   & \textbf{0.785}  & \textbf{0.720}  & \textbf{0.588} & 13.040  & 33.451  \\
 							$\mathbf{4096}$  & 41.613  & 13.218  & \textbf{29.928}  & \textbf{4.067}  & \textbf{1.500}  & \textbf{1.217} & 44.688  & 70.443  \\
-							$\mathbf{8192}$\tikzmark{br}  & 152.440 & 46.947  & \textbf{86.862}  & 14.377 & \textbf{3.931}  & \textbf{3.082} & 161.556 & 153.630 \\
+							$\mathbf{8192}$\tikzmark{br}  & 152.440 & 46.947  & \textbf{86.862}  & \textbf{14.377} & \textbf{3.931}  & \textbf{3.082} & 161.556 & 153.630 \\
 							$\mathbf{16384}$ & 612.826 & 186.817 & \textbf{349.892} & \textbf{60.462} & \textbf{12.805} & \textbf{8.819} & 633.204 & 404.548 \\
 							\hline
 						\end{tabular}
 					}
 					\begin{tikzpicture}[remember picture, overlay]
-						\draw[red, very thick, rounded corners=2pt]
+						\draw[teal, very thick, rounded corners=2pt]
 						([xshift=18pt, yshift=-18pt]pic cs:tl) rectangle ([xshift=48pt, yshift=8pt]pic cs:br);
 					\end{tikzpicture}
 				\end{table}
@@ -491,14 +496,14 @@
 							\hline
 							Сравнение & SD2 & FD2 \\
 							\hline
-							\texttt{JAX} CPU        & 27.3$\times$          & 6.9$\times$  \\
-							\tikzmark{tlc} \texttt{centpy} & \textbf{47.9$\times$} & \textbf{21.2$\times$} \tikzmark{brc} \\
-							\texttt{JAX-FLUIDS} GPU & 31.6$\times$          & 45.9$\times$ \\
+							JAX CPU        & 27.3$\times$          & 6.9$\times$  \\
+							\tikzmark{tlc} centpy & \textbf{47.9$\times$} & \textbf{21.2$\times$} \tikzmark{brc} \\
+							JAX-FLUIDS GPU & 31.6$\times$          & 45.9$\times$ \\
 							\hline
 						\end{tabular}
 					}
 					\begin{tikzpicture}[remember picture, overlay]
-						\draw[red, very thick, rounded corners=2pt]
+						\draw[teal, very thick, rounded corners=2pt]
 						([xshift=-7pt, yshift=10pt]pic cs:tlc) rectangle ([xshift=20pt, yshift=-4pt]pic cs:brc);
 					\end{tikzpicture}
 				\end{table}
@@ -517,7 +522,7 @@
 			\partial_x \begin{pmatrix} \rho u \\ \rho u^2 + p \\ \rho u v \\ (\rho E + p)u \end{pmatrix} +
 			\partial_y \begin{pmatrix} \rho v \\ \rho u v \\ \rho v^2 + p \\ (\rho E + p)v \end{pmatrix} = 0
 			\]
-			с тем же уравнением состояния идеального газа $p = (\gamma - 1)\big(\rho E - \tfrac{1}{2}\rho (u^2 + v^2)\big)$, $\gamma = 1.4$.
+			с тем же уравнением состояния идеального газа $p = (\gamma - 1)\big(\rho E - \tfrac{1}{2}\rho (u^2 + v^2)\big)$, $\gamma = 1.4$,
 		\end{block}
 		
 		\vspace{-0.1 cm}
@@ -749,6 +754,10 @@
 				\end{tabular}
 			\end{column}
 		\end{columns}
+		
+		\begin{center}
+			{\smaller \textcolor{strucblue}{Рис.}~Эволюция плотности (эталон JAX-FLUIDS)}
+		\end{center}
 	
 	\end{frame}
 	
@@ -757,6 +766,7 @@
 	\begin{frame}{Анализ сходимости в двумерной постановке}
 		
 		%--- ВЕРХ: два горизонтальных графика на всю ширину ---
+		\vspace{-0.1cm}
 		\begin{figure}[h]
 			\centering
 			\includegraphics[width=0.65\textwidth]{convergence_2d_L1.png}
@@ -775,9 +785,8 @@
 				\footnotesize
 				
 				%				\vspace{0.5cm}
-				\textbf{Тест:} перенос гладкого изоэнтропийного вихря Ху--Шу
-				($\varepsilon = 5$) на области $[0,10]^2$ с периодическими ГУ;
-				неограниченная реконструкция, $t = 1$.
+				\textbf{Тест:} перенос гладкого изоэнтропического вихря
+				($\varepsilon = 5$) на области $[0,10]^2$ с периодическими ГУ.
 				%				\vspace{0.15cm}
 				%				\begin{alertblock}{}
 					%					\smaller \textbf{2-й порядок по всем переменным} и по обеим
@@ -791,14 +800,14 @@
 				\centering
 				\vspace{-1cm}
 				\begin{table}[h]
-					\caption{\smaller{Эмпирический порядок $p$ ($N{:}\,200{\to}400$)}}
-					\vspace{-0.2cm}
+					\caption{\smaller{Эмпирический порядок сходимости $r$ ($N{:}\,200{\to}400$)}}
+					\vspace{-0.3cm}
 					\resizebox{0.6\textwidth}{!}{%
 						\begin{tabular}{lcccc}
 							\toprule
 							\multirow{2}{*}{Перем.} & \multicolumn{2}{c}{SD2} & \multicolumn{2}{c}{FD2} \\
 							\cmidrule(lr){2-3}\cmidrule(lr){4-5}
-							& $p_{L_1}$ & $p_{L_2}$ & $p_{L_1}$ & $p_{L_2}$ \\
+							& $r_{L_1}$ & $r_{L_2}$ & $r_{L_1}$ & $r_{L_2}$ \\
 							\midrule
 							$\rho$ & 2.07 & 2.06 & 2.28 & 2.29 \\
 							$u$    & 2.06 & 2.08 & 2.21 & 2.26 \\
@@ -824,7 +833,7 @@
 					\vspace{-0.3 cm}
 					\hspace*{-0.5cm}% <-- сдвиг графика влево
 					\includegraphics[width=1.12\textwidth]{compare_time_plot_2d.png}
-					\caption{\smaller{Время счета (с) от размера сетки $J\times J$, 2D}}
+					\caption{\smaller{Время счета (с), 2D}}
 				\end{figure}
 			\end{column}
 			\begin{column}{0.58\textwidth}
@@ -836,7 +845,7 @@
 					\resizebox{\textwidth}{!}{%
 						\begin{tabular}{lcccccccc}
 							\hline
-							& \multicolumn{2}{c}{\texttt{centpy}}
+							& \multicolumn{2}{c}{centpy}
 							& \multicolumn{2}{c}{\tikzmark{tl2} \textbf{JAX CPU}}
 							& \multicolumn{2}{c}{\textbf{JAX GPU}}
 							& \multicolumn{2}{c}{JAX-FL.} \\
@@ -851,7 +860,7 @@
 						\end{tabular}
 					}
 					\begin{tikzpicture}[remember picture, overlay]
-						\draw[red, very thick, rounded corners=2pt]
+						\draw[teal, very thick, rounded corners=2pt]
 						([xshift=7pt, yshift=-14pt]pic cs:tl2) rectangle ([xshift=48pt, yshift=4pt]pic cs:br2);
 					\end{tikzpicture}
 				\end{table}
@@ -867,14 +876,14 @@
 							\hline
 							Сравнение & SD2 & FD2 \\
 							\hline
-							\texttt{JAX} CPU        & 33.2$\times$          & 59.6$\times$  \\
-							\tikzmark{tlc2} \texttt{centpy}  & \textbf{91.5$\times$ }         & \textbf{102.0$\times$} \tikzmark{brc2} \\
-							\texttt{JAX-FLUIDS} GPU & 2.5$\times$           & 5.9$\times$            \\
+							JAX CPU        & 33.2$\times$          & 59.6$\times$  \\
+							\tikzmark{tlc2} centpy  & \textbf{91.5$\times$ }         & \textbf{102.0$\times$} \tikzmark{brc2} \\
+							JAX-FLUIDS GPU & 2.5$\times$           & 5.9$\times$            \\
 							\hline
 						\end{tabular}
 					}
 					\begin{tikzpicture}[remember picture, overlay]
-						\draw[red, very thick, rounded corners=2pt]
+						\draw[teal, very thick, rounded corners=2pt]
 						([xshift=-7pt, yshift=10pt]pic cs:tlc2) rectangle ([xshift=8pt, yshift=-4pt]pic cs:brc2);
 					\end{tikzpicture}
 				\end{table}
@@ -955,10 +964,10 @@
 		\begin{block}{Выводы}
 			\begin{enumerate}
 				\item Поставлена и решена модифицированная задача Римана о прохождении УВ через зону энерговложения для уравнений Эйлера (1D и 2D).
-				\item Реализован высокопроизводительный комплекс на базе \texttt{JAX} (схемы SD2 и FD2): JIT-компиляция, векторизация, единый код для CPU и GPU без модификации.
+				\item Реализован высокопроизводительный комплекс на базе JAX (схемы SD2 и FD2): JIT-компиляция, векторизация, единый код для CPU и GPU без модификации.
 				\item Подтвержден второй порядок точности на гладких решениях.
-				\item Проведена кросс-верификация с точным решением, \texttt{centpy} и \texttt{JAX-FLUIDS}: достигнуто хорошее согласие профилей решений.
-				\item В двумерных задачах решатель на GPU быстрее собственной CPU-реализации до $33\times$ (SD2) и $60\times$ (FD2), быстрее \texttt{centpy} в $90$--$100\times$, быстрее \texttt{JAX-FLUIDS} в $2.5$--$6\times$; достигнута сетка $1024\times1024$.
+				\item Проведена верификация решения относительно открытой библиотеки JAX-FLUIDS: достигнуто хорошее согласие профилей.
+				\item В двумерных задачах решатель на GPU быстрее собственной CPU-реализации до $33\times$ (SD2) и $60\times$ (FD2), быстрее centpy в $90$--$100\times$, быстрее JAX-FLUIDS в $2.5$--$6\times$; достигнута сетка $1024\times1024$.
 			\end{enumerate}
 		\end{block}
 
@@ -967,6 +976,23 @@
 	%==================================================================
 	% ВСПОМОГАТЕЛЬНЫЕ СЛАЙДЫ
 	\appendix
+	
+	
+	% TODO На слайде Как работае JAX можно добавить что такое JIT компиляция (в любой непонятной ситуации рассказывать про JIT компиляцию)
+	
+	% TODO Ренкино Гюгонио как получили числа для ударной волны
+	
+	% TODO Причесать нормы L1 и L2
+	
+	% TODO Расписать несколько лимитеров
+	
+	% TODO Расписать граничные условия и как они формулируются в коде
+	
+	% TODO Про шаг по времени и как он вычисляется в коде
+	
+	% TODO узнать про SSP2-RK2
+	
+	% TODO подробнее про шахматную сетку
 	
 %==================================================================
 %==================================================================
@@ -1006,7 +1032,7 @@
 
 
 \begin{frame}
-	\begin{block}{Как работает JAX (JIT-конвейер)}
+	\begin{block}{Как работает JAX (JIT-компиляция)}
 		\small
 		\begin{enumerate}\itemsep2pt
 			\item \textbf{Трассировка:} JAX проходит по Python-функции с абстрактными аргументами и записывает все операции.
@@ -1049,7 +1075,7 @@
 
 	\end{frame}
 
-	\begin{frame}{Пространственная реконструкция схемы SD2}
+	\begin{frame}{TVD-свойство}
 
 		\begin{block}{TVD-свойство (Total Variation Diminishing)}
 			Схема не порождает новые локальные экстремумы, если
@@ -1067,32 +1093,32 @@
 		\]
 	\end{frame}
 
-	% Бэкап: 1D-производительность
-	\begin{frame}{Производительность: одномерная задача (бэкап)}
-		\begin{table}[h]
-			\centering
-			\footnotesize
-			\caption{\smaller{Время счета (с), 1D, схема SD2}}
-			\vspace{-0.2 cm}
-			\resizebox{\textwidth}{!}{%
-				\begin{tabular}{lccccc}
-					\hline
-					$J$ & \texttt{centpy} & Разраб. CPU & Разраб. GPU & JAX-FL. CPU & JAX-FL. GPU \\
-					\hline
-					$\mathbf{256}$   & 1.138   & 0.096   & \textbf{0.143}  & 0.954   & 3.894 \\
-					$\mathbf{512}$   & 4.244   & 0.394   & \textbf{0.179}  & 2.857   & 7.545 \\
-					$\mathbf{1024}$  & 5.577   & 2.499   & \textbf{0.370}  & 4.893   & 16.403 \\
-					$\mathbf{2048}$  & 16.175  & 7.255   & \textbf{0.720}  & 13.040  & 33.451 \\
-					$\mathbf{4096}$  & 41.613  & 29.928  & \textbf{1.500}  & 44.688  & 70.443 \\
-					$\mathbf{8192}$  & 152.440 & 86.862  & \textbf{3.931}  & 161.556 & 153.630 \\
-					$\mathbf{16384}$ & 612.826 & 349.892 & \textbf{12.805} & 633.204 & 404.548 \\
-					\hline
-				\end{tabular}
-			}
-		\end{table}
-		\centering\small
-		Ускорение GPU (1D, $J=16384$): $47.9\times$ относительно \texttt{centpy}, $27.3\times$ относительно собственной CPU-версии.
-		На малых 1D-сетках выигрыш GPU невелик из-за накладных расходов; преимущество раскрывается в 2D.
-	\end{frame}
+%	% Бэкап: 1D-производительность
+%	\begin{frame}{Производительность: одномерная задача (бэкап)}
+%		\begin{table}[h]
+%			\centering
+%			\footnotesize
+%			\caption{\smaller{Время счета (с), 1D, схема SD2}}
+%			\vspace{-0.2 cm}
+%			\resizebox{\textwidth}{!}{%
+%				\begin{tabular}{lccccc}
+%					\hline
+%					$J$ & \texttt{centpy} & Разраб. CPU & Разраб. GPU & JAX-FL. CPU & JAX-FL. GPU \\
+%					\hline
+%					$\mathbf{256}$   & 1.138   & 0.096   & \textbf{0.143}  & 0.954   & 3.894 \\
+%					$\mathbf{512}$   & 4.244   & 0.394   & \textbf{0.179}  & 2.857   & 7.545 \\
+%					$\mathbf{1024}$  & 5.577   & 2.499   & \textbf{0.370}  & 4.893   & 16.403 \\
+%					$\mathbf{2048}$  & 16.175  & 7.255   & \textbf{0.720}  & 13.040  & 33.451 \\
+%					$\mathbf{4096}$  & 41.613  & 29.928  & \textbf{1.500}  & 44.688  & 70.443 \\
+%					$\mathbf{8192}$  & 152.440 & 86.862  & \textbf{3.931}  & 161.556 & 153.630 \\
+%					$\mathbf{16384}$ & 612.826 & 349.892 & \textbf{12.805} & 633.204 & 404.548 \\
+%					\hline
+%				\end{tabular}
+%			}
+%		\end{table}
+%		\centering\small
+%		Ускорение GPU (1D, $J=16384$): $47.9\times$ относительно \texttt{centpy}, $27.3\times$ относительно собственной CPU-версии.
+%		На малых 1D-сетках выигрыш GPU невелик из-за накладных расходов; преимущество раскрывается в 2D.
+%	\end{frame}
 
 \end{document}
