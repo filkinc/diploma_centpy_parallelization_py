@@ -8,10 +8,10 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 
-from core import Pars1d
-from equations import make_linear_advection_1d
-from parallel_solver import ParallelSolver1d
-from visualization import create_animation
+from jax_centpy.core import Pars1d
+from jax_centpy.equations import make_linear_advection_1d
+from experiments.parallel_solver import ParallelSolver1d
+from experiments.visualization import create_animation
 
 
 def run():

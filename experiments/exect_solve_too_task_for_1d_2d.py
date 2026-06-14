@@ -1,7 +1,7 @@
 import numpy as np
 import jax.numpy as jnp
-from solver import FastSolverWithAllLayersWithoutExtends1d, FastSolverWithAllLayersWithoutExtends2d # или нужный класс
-from core import Pars1d, Equation1d, Pars2d, Equation2d
+from jax_centpy.solver import Solver1d, Solver2d # или нужный класс
+from jax_centpy.core import Pars1d, Equation1d, Pars2d, Equation2d
 
 # ================================================================
 # УТИЛИТЫ
@@ -176,7 +176,7 @@ def verify_sine_1d(sine_equation_cls, scheme_name="sd2", limiter="minmod",
             scheme=scheme_name
         )
 
-        solver = FastSolverWithAllLayersWithoutExtends1d(pars, sine_equation_cls, scheme_name=scheme_name, limiter_name=limiter)
+        solver = Solver1d(pars, sine_equation_cls, scheme_name=scheme_name, limiter_name=limiter)
         out = solver.solve()
 
         U_final = to_np(out["u_n"][-1]) # (J, 3)
@@ -247,7 +247,7 @@ def verify_burgers_1d(burgers_equation_factory, scheme_name="sd2", limiter="minm
         )
 
         eqn = burgers_equation_factory(pars)
-        solver = FastSolverWithAllLayersWithoutExtends1d(
+        solver = Solver1d(
             pars, eqn, scheme_name=scheme_name, limiter_name=limiter
         )
         out = solver.solve()
@@ -305,7 +305,7 @@ def verify_vortex_2d(vortex_equation_cls, scheme_name="sd2", limiter="minmod",
             scheme="sd2"
         )
 
-        solver = FastSolverWithAllLayersWithoutExtends2d(pars, vortex_equation_cls, scheme_name=scheme_name, limiter_name=limiter)
+        solver = Solver2d(pars, vortex_equation_cls, scheme_name=scheme_name, limiter_name=limiter)
         out = solver.solve()
 
         U_final = to_np(out["u"][-1]) # (N, N, 4)

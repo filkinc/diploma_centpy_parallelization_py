@@ -3,10 +3,10 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from core import Pars1d, Equation1d
-import schemes
-import limiters
-import time_integration
+from jax_centpy.core import Pars1d, Equation1d
+from jax_centpy import schemes
+from jax_centpy import limiters
+from jax_centpy import time_integration
 
 
 class ParallelSolver1d:

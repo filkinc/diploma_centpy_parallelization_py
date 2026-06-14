@@ -2,10 +2,10 @@ import jax
 import matplotlib
 
 matplotlib.use('TkAgg')
-from core import Pars2d
-from equations import make_euler_explosion_2d, make_euler_isentropic_vortex_2d
-from solver import Solver2d
-from visualization import create_animation_2d
+from jax_centpy.core import Pars2d
+from jax_centpy.equations import make_euler_explosion_2d, make_euler_isentropic_vortex_2d
+from jax_centpy.solver import Solver2d
+from experiments.visualization import create_animation_2d
 
 jax.config.update("jax_enable_x64", True)
 

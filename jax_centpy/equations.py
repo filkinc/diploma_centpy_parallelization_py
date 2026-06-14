@@ -1,5 +1,5 @@
-from core import Equation1d, Equation2d
-from boundaries import periodic_bc, neumann_bc, dirichlet_zero_bc, periodic_bc_2d, neumann_bc_2d, \
+from .core import Equation1d, Equation2d
+from .boundaries import periodic_bc, neumann_bc, dirichlet_zero_bc, periodic_bc_2d, neumann_bc_2d, \
     dirichlet_riemann_bc_2d
 import jax.numpy as jnp
 

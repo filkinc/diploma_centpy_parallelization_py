@@ -7,9 +7,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Type
 
-from core import Pars1d, Equation1d
-from equations import make_burgers_1d
-from solver import Solver1d, FastSolver1d
+from jax_centpy.core import Pars1d, Equation1d
+from jax_centpy.equations import make_burgers_1d
+from jax_centpy.solver import Solver1d
 from parallel_solver import ParallelSolver1d
 
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     eqn = make_burgers_1d()
     grids = [10000]
 
-    df1 = run_solver_benchmark(FastSolver1d, eqn, "sd2", "JAX Single Core", grids)
+    df1 = run_solver_benchmark(Solver1d, eqn, "sd2", "JAX Single Core", grids)
 
     #df2 = run_solver_benchmark(ParallelSolver1d, eqn, "sd2", "JAX Parallel (4dev)", grids)
 

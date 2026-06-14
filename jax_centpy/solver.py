@@ -1,12 +1,11 @@
 import jax
 import jax.numpy as jnp
-import time
 from typing import Dict, List, Tuple, Callable, Any
 
-from core import Pars1d, Equation1d, Pars2d, Equation2d
-import schemes
-import limiters
-import time_integration
+from .core import Pars1d, Equation1d, Pars2d, Equation2d
+from . import schemes
+from . import limiters
+from . import time_integration
 
 
 def compute_dt(pars: Pars1d, eqn: Equation1d, u: jnp.ndarray) -> float:

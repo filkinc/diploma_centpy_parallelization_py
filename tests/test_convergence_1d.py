@@ -3,9 +3,9 @@ import jax.numpy as jnp
 import pandas as pd  # Для красивой таблички
 import numpy as np
 
-from core import Pars1d
-from equations import make_linear_advection_1d
-from solver import Solver1d
+from jax_centpy.core import Pars1d
+from jax_centpy.equations import make_linear_advection_1d
+from jax_centpy.solver import Solver1d
 
 jax.config.update("jax_enable_x64", True)
 

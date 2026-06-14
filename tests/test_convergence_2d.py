@@ -1,9 +1,9 @@
 import jax
 import jax.numpy as jnp
 import pandas as pd
-from core import Pars2d
-from equations import make_euler_isentropic_vortex_2d
-from solver import FastSolver2d, Solver2d
+from jax_centpy.core import Pars2d
+from jax_centpy.equations import make_euler_isentropic_vortex_2d
+from jax_centpy.solver import Solver2d
 
 jax.config.update("jax_enable_x64", True)
 
@@ -28,7 +28,7 @@ def run_convergence_test():
             t_final=t_final, dt_out=t_final, Jx=J, Jy=J, cfl=0.45, scheme="sd2"
         )
 
-        solver = FastSolver2d(pars, eqn, scheme_name="sd2", limiter_name="mc")
+        solver = Solver2d(pars, eqn, scheme_name="sd2", limiter_name="mc")
 
         x_1d = jnp.linspace(pars.x_init + pars.dx / 2, pars.x_final - pars.dx / 2, J)
         y_1d = jnp.linspace(pars.y_init + pars.dy / 2, pars.y_final - pars.dy / 2, J)

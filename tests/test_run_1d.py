@@ -2,10 +2,10 @@ import jax
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-from core import Pars1d
-from equations import make_burgers_1d
-from solver import Solver1d
-from visualization import create_animation
+from jax_centpy.core import Pars1d
+from jax_centpy.equations import make_burgers_1d
+from jax_centpy.solver import Solver1d
+from experiments.visualization import create_animation
 
 jax.config.update("jax_enable_x64", True)
 
