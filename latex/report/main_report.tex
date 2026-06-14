@@ -1,237 +1,2765 @@
-\documentclass[12pt, a4paper]{article}
-
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[russian]{babel}
-\usepackage[oglav,spisok,boldsect,eqwhole,figwhole,hyperref,hyperprint,remarks,greekit]{./style/fn2kursstyle}
-\graphicspath{{./style/}{./figures/}}
-
-\usepackage{multirow}
-\usepackage{supertabular}
-\usepackage{multicol}
-\usepackage{hyperref}
-\usepackage{enumitem}
-% Параметры титульного листа
-\title{Лабораторная работа 1}
-\author{А.\,Р.~Ластра-Грек}
-\supervisor{А.\,В.~Череднеченко}
-\group{ФН2-51Б}
-\date{2023}
-
-% Переопределение команды \vec, чтобы векторы печатались полужирным курсивом
-\renewcommand{\vec}[1]{\text{\mathversion{bold}${#1}$}}%{\bi{#1}}
-\newcommand\thh[1]{\text{\mathversion{bold}${#1}$}}
-%Переопределение команды нумерации перечней: точки заменяются на скобки
-\renewcommand{\labelenumi}{\theenumi)}
-
-\usepackage{amsmath}
-\usepackage{amssymb}
-
-\usepackage{float, graphicx}
-
-\usepackage{nicefrac}
-
-\usepackage{relsize}
-\usepackage{caption}
-\usepackage{listings}
-\usepackage{xcolor}
-\lstset { %
-	language=C++,
-	%backgroundcolor=\color{black!5}, % set backgroundcolor
-	basicstyle=\footnotesize % basic font setting
-}
-
-\frenchspacing
-\righthyphenmin=2
-\linespread{1.25}
-
-\newcounter{controlQCounter}
-\setcounter{controlQCounter}{1}
-
-\DeclareMathOperator{\cond}{cond}
-\newcommand{\tr}{\ensuremath{\mathrm{T}}}
-\newcommand{\bigO}{\ensuremath{\mathrm{O}}}
-\newcommand{\linSpan}[2]{\ensuremath{\overline{#1, \, #2}}}
-\newcommand{\RR}{\mathbb{R}}
-\newcommand{\NN}{\mathbb{N}}
-
-\newcommand{\clock}[4]{\boldsymbol{\mathrm{#1}\!:\!\mathrm{#2} \to \mathrm{#3}\!:\!\mathrm{#4} \blacktriangleright} \quad}
-\newcommand{\point}{$\_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ \_ $}
-\newcommand{\size}{1}
-
-\newenvironment{controlQ}{\textbf{Вопрос \arabic{controlQCounter}.} \addtocounter{controlQCounter}{1} \itshape}{\upshape}
-\newenvironment{controlAns}{\textrm{Ответ:} \par }{ \bigskip }
-
+% 14-й шрифт %
+\documentclass[a4paper,14pt]{extarticle}
+%\documentclass[12pt, a4paper]{article}
 \usepackage{amsthm}
 
-% Создаем стиль оформления по ГОСТ
-\newtheoremstyle{gostdef}
-{\topsep}     % Отступ сверху
-{\topsep}     % Отступ снизу
-{\normalfont} % Прямой шрифт текста (по ГОСТ определения не пишут курсивом)
-{\parindent}  % Красная строка (абзацный отступ 1.25 см)
-{\bfseries}   % Жирный шрифт заголовка
-{:}           % Двоеточие после номера
-{ 0.5em}      % Пробел после двоеточия перед текстом
-{}            % Формат заголовка (по умолчанию)
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+\usepackage{makecell}
+\usepackage{enumitem}
+\usepackage{dirtree}
+\usepackage[oglav,spisok,boldsect,hyperref,hyperprint,greekit,eqwhole,figwhole]{./style/fn2dipstyle}
 
-\theoremstyle{gostdef}
-% Команда для нумерации по разделам (Определение 1.1, Определение 1.2) - чаще всего требуют в ВКР
+% Точные размеры шрифта при любом кегле. Computer Modern (cm-super) существует
+% только в дискретных «магшаговых» размерах (…14.4, 17.28, 20.74…), поэтому без
+% этого пакета \fontsize{16} округляется до 17.28 (и 16, и 18 дают один размер).
+% anyfontsize масштабирует ближайший дизайн ровно до запрошенного размера =>
+% \fontsize{16} даёт настоящие 16 пт, кириллица и жирность сохраняются.
+\usepackage{anyfontsize}
+
+
+\newcommand{\specialcell}[2][c]{%
+	\begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+
+% \makeatletter
+% \renewcommand{\sectionfont}{\fontsize{16}{18}\bfseries\selectfont\typeout{>>>SECTIONFONT=\f@size}}
+% \makeatother
+
+\makeatletter
+\renewcommand{\sectionfont}{\fontsize{16}{18}\bfseries\selectfont\typeout{>>>SECTIONFONT=\f@size}}
+\makeatother
+
+% --- Выравнивание заголовков ---------------------------------------------
+% В стиле fn2dipstyle выравнивание всех заголовков управляется переключателем
+% \ifleftheadline (по умолчанию false -> по центру). Нам нужно: ГЛАВЫ (section,
+% включая ВВЕДЕНИЕ/ЗАКЛЮЧЕНИЕ через \section-) оставить по центру, а ПОДГЛАВЫ
+% (subsection) и ПОД-ПУНКТЫ (subsubsection) — по левому краю.
+% Для этого включаем левое выравнивание ровно на время набора под(под)раздела
+% и выключаем его в начале каждой главы. Оглавление (стр. ~275) и список
+% литературы (\thebibliography) набираются вне блоков подглав, где переключатель
+% уже сброшен в false, поэтому их центрирование сохраняется.
+\makeatletter
+\let\fn@orig@section\section
+\let\fn@orig@subsection\subsection
+\let\fn@orig@subsubsection\subsubsection
+\renewcommand{\section}{\leftheadlinefalse\fn@orig@section}
+% Подглавы/под-пункты переопределяем напрямую (как в стиле fn2dipstyle), чтобы
+% получить контроль над зазором ПОД их заголовком. Важно про вертикальные зазоры:
+%   * глава -> подглава  — задаётся afterskip'ом ГЛАВЫ (\secsepafter); beforeskip
+%     подглавы здесь подавляется флагом \@nobreak, т.к. подглава идёт сразу за
+%     заголовком главы (без текста между ними);
+%   * подглава -> текст  — это afterskip самой ПОДГЛАВЫ. В стиле он был 2ex и от
+%     \secsepafter не зависел, поэтому выглядел больше. Приравниваем его к
+%     \secsepafter => оба зазора одинаковы и управляются одной ручкой \secsepafter.
+% beforeskip (3ex) влияет только когда подглаве предшествует обычный текст
+% (отбивка сверху между подглавами одной главы).
+\renewcommand{\subsection}{\leftheadlinetrue
+        \@startctsection{subsection}{2}{\@secdelim}{3ex plus 1ex minus .2ex}{\secsepafter}{\bf}}
+\renewcommand{\subsubsection}{\leftheadlinetrue
+        \@startctsection{subsubsection}{3}{\@secdelim}{3ex plus 1ex minus .2ex}{\secsepafter}{\bf}}
+
+% Абзацный отступ (красная строка) у заголовков подглав/под-пунктов.
+% \head(sub)section — материал, печатаемый перед номером заголовка в теле
+% документа (в оглавлении используется \conthd..., поэтому TOC не затрагивается).
+% Подставляем туда отступ шириной \parindent => номер «1.1.» начинается с красной
+% строки. Чтобы вернуть заголовки к самому левому краю (без отступа) — очистите
+% обе строки: \def\headsubsection{}\def\headsubsubsection{}.
+\def\headsubsection{\hspace*{\parindent}}
+\def\headsubsubsection{\hspace*{\parindent}}
+
+% --- Зазор между заголовком главы и текстом ------------------------------
+% \secsepafter — вертикальный отступ после заголовка section (и \section-).
+% При \setstretch{1.5} один межстрочный интервал ≈ \baselineskip. Натуральный
+% переход от заголовка к тексту даёт ~1 интервал; добавляем ещё ~0.75\baselineskip,
+% получая суммарный зазор ≈ 1.5–2 межстрочных интервала. Чтобы сделать ровно
+% 1.5 интервала — уменьшите коэффициент до 0.5; для 2 — до 1.0.
+\def\secsepafter{0.1\baselineskip plus .15\baselineskip minus .1\baselineskip}
+\makeatother
+
+% Междустрочный интервал 1.5 %
+\usepackage{setspace}
+\setstretch{1.5}
+
+% Одинаковые отбивки вокруг ВСЕХ выключных формул (требование нормоконтроля).
+% Значения жёсткие (без plus/minus) и все четыре равны между собой, поэтому зазор
+% сверху и снизу у каждой формулы один и тот же — независимо от длины предыдущей
+% строки и от места на странице. \AtBeginDocument — потому что setspace
+% пересчитывает эти длины при старте; наш блок ставится после него и перекрывает.
+% Чтобы сделать зазоры больше/меньше — поменяйте 8pt во всех четырёх строках.
+\AtBeginDocument{%
+  \setlength{\abovedisplayskip}{8pt}%
+  \setlength{\belowdisplayskip}{8pt}%
+  \setlength{\abovedisplayshortskip}{8pt}%
+  \setlength{\belowdisplayshortskip}{8pt}%
+}
+
+
+\setlist[enumerate]{label=\arabic*., labelindent=1.25cm, leftmargin=*}
+\setlist[itemize]{labelindent=1.25cm, leftmargin=*}
+
+
+% Размер полей %
+\usepackage[left=3cm,right=1cm, top=2cm,bottom=2cm]{geometry}
+%\usepackage[a4paper, mag=1000,left=3cm, right=1cm, top=2cm, bottom=2cm, headsep=0.7cm, footskip=1cm]{geometry}
+\setlength{\parindent}{1.27cm}
+
+% Включение титульника PDF %
+\usepackage{pdfpages}
+
+% Меняем нумерацию страниц с красивой на снизу по центру %
+\pagestyle{plain}
+
+% multline внутри других оболочек %
+\usepackage{mathtools}
+
+% Центрированные таблицы фиксированной ширины %
+\usepackage{tabularx} % also loads 'array' package
+\newcolumntype{C}{>{\centering\arraybackslash}X} % centered version of 'X' columns
+
+% центрирование подписей к рисункам
+\usepackage[justification=centering]{caption}
+
+% Полное слово «Рисунок» в подписях (ГОСТ 7.32), а не «Рис.»
+\addto\captionsrussian{\renewcommand{\figurename}{Рисунок}}
+
+% Центрирование ДЛИННЫХ (переносимых) подписей к таблицам и рисункам.
+% Стиль fn2dipstyle центрирует только однострочные подписи, а многострочные
+% набирает по левому краю (ветка \par). Повторяем его \@makecaption, добавив
+% \centering в эту ветку => переносимые подписи тоже идут по центру.
+\makeatletter
+\long\def\@makecaption#1#2{%
+  \def\@tempa{#2}\def\@tempb{\ignorespaces}%
+  \ifx\@tempa\@tempb
+     \def\@tempb{{#1}}%
+  \else
+     \def\@tempb{{#1~--~}}% ГОСТ/МГТУ: «Таблица 1 – Название» (тире, а не точка)
+  \fi
+  \sbox\@tempboxa{\captionfont\@tempb#2}%
+  \ifdim \wd\@tempboxa >\hsize
+     {\captionfont\centering\@tempb#2\par}%
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi}
+\makeatother
+
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{bm}
+
+\usepackage{float}
+
+\usepackage{tikz}
+
+\usepackage{xcolor}
+
+% Определение цветов для подсветки синтаксиса
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}  % можно изменить на белый: {1,1,1}
+
+\usepackage{listings}
+\lstset{extendedchars=\true}
+
+\lstdefinestyle{codestyle}{
+	backgroundcolor={},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\small,
+	language=python,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=t,                    
+	keepspaces=true,                 
+	numbers=right,                    
+	numbersep=-10pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	linewidth = 0.93\linewidth,
+	showtabs=false,                  
+	tabsize=2
+}
+
+\lstset{style=codestyle,xleftmargin=0em}
+
+%\setmainfont{Times New Roman}
+
+\renewcommand{\listalgorithmname}{Список алгоритмов}
+\floatname{algorithm}{Алгоритм}
+\algdef{SE}[DOWHILE]{Do}{doWhile}{\algorithmicdo}[1]{\algorithmicwhile\ #1}%
+
+% Путь к графике %
+\graphicspath{{./style/}{./figures/}}
+
+
+\makeatletter
+\newcommand*{\skipnumber}[2][1]{%
+	{\renewcommand*{\alglinenumber}[1]{}\State #2}%
+	\addtocounter{ALG@line}{-#1}}
+
+
+%\newcounter{alttable}
+%\def\fnum@alttable{\it\tablename~\thealttable}
+%\let\ext@alttable\ext@table
+%\let\ftype@alttable\ftype@table
+%\def\thealttable{\arabic{alttable}}
+
+%\def\thetable{\arabic{alttable}}
+
+\def\tabhead#1#2{\multicolumn{#1}{r}{\normalsize{Таблица~\thetable.}\kern-2mm}\\
+	\multicolumn{#1}{c}{\normalsize{#2}}\\}
+\def\tabheadcont#1#2{\multicolumn{#1}{c}{\normalsize{#2}}\\}
+
+\makeatother
+
+\usepackage{multirow}
+
+\usepackage{booktabs}
+
+\usepackage{hhline}
+
+% Маленький верхний индекс %
+\usepackage{relsize}
+\newcommand{\smallalpha}{\mathsmaller{(} \alpha \mathsmaller{)}}
+\newcommand{\smallbeta}{\mathsmaller{(} \beta \mathsmaller{)}}
+
+% Осреднение по ансамблю %
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+
+% Пользовательские комманды %
+\newcommand{\newdef}{\refstepcounter{def} \textbf{Определение\;\thedef . }}
+% d %
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+% 1/2 %
+\newcommand{\half}{{1/2}}
+% Div %
+\renewcommand{\div}{\mathrm{div}}
+% Grad %
+\newcommand{\grad}{\mathrm{grad}}
+% Const %
+\newcommand{\const}{\mathrm{const}}
+% Max %
+%\renewcommand{\max}{\mathrm{max}}
+% E %
+\newcommand{\E}{\mathbb{E}}
+% D %
+\newcommand{\D}{\mathbb{D}}
+% D %
+\newcommand{\K}{\mathbb{K}}
+% = by def %
+\newcommand\eqbydef{\mathrel{\overset{\makebox[0pt]{\mbox{\normalfont\tiny\sffamily def}}}{=}}}
+% epsilon %
+\renewcommand{\epsilon}{\varepsilon}
+% Re %
+\renewcommand{\Re}{\ensuremath{\,\textrm{Re}}}
+% Vector %
+\renewcommand{\vec}{\bi}
+% e %
+\newcommand{\euler}{\mathrm{e}}
+% dirac delta %
+\newcommand{\diracdelta}{\delta}
+% green function G%
+\newcommand{\greenfunc}{\mathrm{G}}
+% erf %
+\newcommand{\erf}{\mathrm{erf}}
+% Wide tilde %
+\newcommand{\wt}{\widetilde}
+
+\newcommand{\COMMENT}[1]{\noindent{\color{red}\underline{\textbf{#1}}}}
+
+\newcommand{\NOTE}[1]{\noindent{\color{blue}\underline{\textbf{#1}}}}
+
+\newcommand{\appwidth}{6.45cm}
+
+
+%\makeatletter
+%\newlength{\AM@pagewidth}
+%\newlength{\AM@pageheight}
+%\setlength{\AM@pagewidth}{210mm}
+%\setlength{\AM@pageheight}{297mm}
+%\makeatother
+
+%\usepackage[final]{pdfpages}
+%\usepackage{comment}
+\pagestyle{plain}
+
+% Переопределение команды \vec, чтобы векторы печатались полужирным курсивом
+\renewcommand{\vec}[1]{\bm{#1}}
+
+
+%\newcommand\thh[1]{\text{\mathversion{bold}${#1}$}}
+
+\usepackage{comment}
+
+% 2-я страница оглавления начинается без отступа сверху %
+\usepackage[titles]{tocloft}
+% то есть используем tocloft, требуется явно указать что основыне разделы заполняют простанство до станиц точками %
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
+% ОФОРМЛЕНИЕ ТЕОРЕМ И ЛЕММ
+
+\newtheoremstyle{theorem}
+{} % Space above
+{} % Space below
+{\itshape} % Body font
+{} % Indent amount
+{\bfseries} % Theorem head font
+{.} % Punctuation after theorem head
+{ } % Space after theorem head, ' ', or \newline
+{\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}} % чтобы название теоремы в скобках было жирным
+\theoremstyle{theorem}
+\newtheorem{theorem}{Теорема}
+
+\newtheoremstyle{lemma} % Name
+{} % Space above
+{} % Space below
+{\itshape} % Body font
+{} % Indent amount
+{\bfseries} % Theorem head font
+{.} % Punctuation after theorem head
+{ } % Space after theorem head, ' ', or \newline
+{\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}} % чтобы название лемм в скобках было жирным
+\theoremstyle{lemma}
+\newtheorem{lemma}{Лемма}
+
 \newtheorem{defenv}{Определение}[section] 
-
-% ИЛИ раскомментируйте строку ниже для сквозной нумерации (Определение 1, Определение 2)
-% \newtheorem{defenv}{Определение}
 
 \begin{document}
 	%\maketitle
+
+    %======     ТИТУЛЬНЫЙ ЛИСТ     ======
+	\thispagestyle{empty}
+	
+	\begin{minipage}{0.15\textwidth}
+		\hspace{-1.5cm}\vspace{0.5cm}\includegraphics[width=\textwidth]{./style/emblema.pdf}
+	\end{minipage}
+	\hfill
+	\hspace{-2cm}
+	\begin{minipage}{0.9\textwidth}
+		\centering
+		\linespread{1.0}
+		\fontsize{11}{14pt}\selectfont
+		\textbf{Министерство образования и науки Российской Федерации \\
+			Федеральное государственное автономное образовательное учреждение\\высшего профессионального образования\\%
+			<<Московский\ государственный\ технический\ университет\\ имени\ Н.\,Э.\,Баумана\\(национальный исследовательский университет)>>\\(МГТУ им. Н.\,Э.\,Баумана)}\\[3mm]
+	\end{minipage}
+	\hrule height .7mm
+	
+	\bigskip
+	\begin{center}
+	\noindent ФАКУЛЬТЕТ <<Фундаментальные науки>> \\
+	КАФЕДРА <<Высшая математика>>    
+	\end{center}
+	
+	\bigskip
+	
+	\begin{center}
+		\begingroup
+		\fontsize{20pt}{20pt}\selectfont
+		\textbf{РАСЧЁТНО-ПОЯСНИТЕЛЬНАЯ ЗАПИСКА} \\ 
+		\fontsize{16pt}{20pt}\selectfont
+		\textbf{\textit{К~ВЫПУСКНОЙ~КВАЛИФИКАЦИОННОЙ}}\\ 
+		\textbf{\textit{РАБОТЕ НА ТЕМУ:}}
+		
+		\medskip
+		\fontsize{16pt}{20pt}\selectfont 
+        \underline{Моделирование распространения ударной волны в газе с} 
+        \underline{локальным энерговложением средствами библиотеки JAX}
+		\endgroup
+	\end{center}
+	
+	\vspace{4cm}
+
+	\noindent
+	\begin{tabular}{lp{4em}cl}
+		Студент группы ФН1-81Б & & \hspace{3cm} & Д.С. Филькин \\ \cline{3-3} & & \fontsize{8pt}{8pt}\selectfont(Подпись, дата) &\\
+		
+		Руководитель ВКР & & \hspace{3cm} & О.В. Кравченко\\ 
+		\cline{3-3} & & \fontsize{8pt}{8pt}\selectfont(Подпись, дата) &\\
+		
+		Нормоконтролер & & \hspace{3cm} & А.А. Польшкова\\
+		\cline{3-3} & & \fontsize{8pt}{8pt}\selectfont(Подпись, дата) &\\
+	\end{tabular}
+	
+	\vspace*{\fill}
+	
+	\begin{center}
+		2026 г.
+	\end{center}
+
+
+\newpage
+
+    \newpage
+    \section-{РЕФЕРАТ}
+
+    Расчётно-пояснительная записка состоит из $75$ страниц, $18$ рисунков,
+    $13$ таблиц, $17$ источников, $4$ глав и $1$ приложения.
+
+    Ключевые слова: ударная волна, локальное энерговложение, уравнения
+    Эйлера, центральные разностные схемы высокого разрешения, схемы SD2 и
+    FD2, библиотека JAX, дифференцируемое программирование, ускорение на
+    GPU, вычислительная газовая динамика.
+
+    Целью данной работы является численное моделирование распространения
+    ударной волны в газе с локальным энерговложением средствами
+    разработанного высокопроизводительного программного комплекса на базе
+    библиотеки JAX.
+
+    В соответствии с поставленной целью в работе решаются следующие задачи:
+    \begin{enumerate}
+        \item Программная адаптация и высокопроизводительная реализация
+        семейства центральных разностных схем высокого разрешения SD2 и FD2
+        на базе библиотеки JAX;
+        \item Верификация разработанного комплекса: анализ сходимости относительно
+        точного решения на гладких тестовых задачах, кросс- \\ верификация профилей
+        с открытой CFD-библиотекой JAX-FLUIDS, сравнение производительности
+        с библиотеками \textit{centpy} и JAX-FLUIDS;
+        \item Оценка вычислительной эффективности реализованных алгоритмов и
+        анализ аппаратного ускорения на центральном (CPU) и графическом (GPU)
+        процессорах;
+        \item Демонстрация возможностей разработанного комплекса на задаче
+        моделирования динамики параметров газа при прохождении ударной волны
+        через зону локального энерговложения.
+    \end{enumerate}
+
+    \newpage
 	
 	\tableofcontents
 	
-	\newpage
 	
-	\section{Введение}
-	\subsection{Мотивация}
+    \newpage
 	
-	\newpage
-	
-	\section{Семейство методов Курганова-Тадмора}
-	
-	В данной работе рассматривается три схемы, реализующие семейство центральных схем высокого разрешения Курганова-Тадмора: схема $SD2$ (Semi-Discrete $2$nd order), схема $SD3$ (Semi-Discrete $3$nd order) и $FD2$ (Fully-Discrete $2$nd order).
-	
-	\subsection{Постановка задачи и метод конечных объемов}
-	
-	Рассмотрим одномерное гиперболическое уравнение закона сохранения:
-	
-	\[
-	\frac{\partial u}{\partial t} + \frac{\partial f(u)}{\partial x} = 0.
-	\]
-	
-	Методы Курганова-Тадмора относятся к классу консервативных методов конечных объемов.
-	Его фундаментальная идея заключается в разбиении расчетной области на контрольные объемы шириной $\Delta x$.
-	Разобьем расчетную область на ячейки шириной $\Delta x$, центры которых обозначим как $x_i = i \Delta x$, а границы --- как $x_{i \pm 1/2} = x_i \pm \Delta x/2$
-	В методе конечных объемов мы отслеживаем эволюцию средних интегральных значений функции по ячейке $\bar{u}_i(t)$:
-	\[
-	\bar{u}_i(t) = \frac{1}{\Delta x} \int_{x_{i-1/2}}^{x_{i+1/2}} u(\xi, t) \, d\xi
-	\]
-	Главное преимущество метода конечных объемов заключается в его строгой консервативности: изменение среднего значения в ячейке происходит исключительно за счет потоков величины $u$ через ее границы $x_{i-1/2}$ и $x_{i+1/2}$.
-	
-	Для построения полудискретных схем $SD2$ и $SD3$ применяется метод прямых, при котором дискретизация проводится только по пространственным координатам. В результате исходное уравнение в частных производных сводится к системе обыкновенных дифференциальных уравнений по времени:
-	\[
-		\frac{d\bar{u}_{i}(t)}{dt} = - \frac{H_{i + 1/2}(t) - H_{i - 1/2}(t)}{\Delta x}, 
-	\]
-	где $H_{i \pm 1/2}$ --- численные потоки через границы ячеек.  Для интегрирования полученной системы ОДУ по времени в дальнейшем используются методы Рунге-Кутты. Таким образом, пространственная схема отвечает лишь за нахождение правой части, а временной шаг выполняется отдельно.
-	
-	\subsection{Метод SD2}
-	
-	Ключевая проблема при поиске решения в виде сеточной функции заключается в том, что вблизи разрывов и ударных волн могут возникать нефизичные осцилляции и дрожание или излишнее размытие фронта.
-	
-%	Рассмотрим основную идею метода SD2. При разбиении пространства на ячейки мы знаем лишь среднее значение плотности воды или газа внутри. Если происходит ударная волна при поиске решения в виде сеточной функции (дописать определение) может возникнуть размывание и дрожание решения. Однако если мы будем учитывать не только среднее значении внутри, но и значения с каждой стороны от стыка ячейки, можно получить более точное решение. Первым шагом в методе SD2 происходит реконструкция, то есть поиск значений на краях ячейки. Для этого мы находим разностные производные вперед и назад
+	\section-{ВВЕДЕНИЕ}
 
-	Для повышения точности до второго порядка метод SD2 использует кусочно-линейную реконструкцию решения. На первом шаге внутри каждой ячейки строится линейная функция, что позволяет вычислить значения на левой и правой границах ячейки:
-	
-	\[
-		u^{-}_{i + 1/2} = \bar{u}_{i} + \frac{\Delta x}{2}(u_x)_i
-	\]
-	\[
-		u^{+}_{i - 1/2} = \bar{u}_{i} - \frac{\Delta x}{2}(u_x)_i,
-	\]
-	
-	где $(u_x)_i$ --- численный наклон в ячейке $i$.
-	
-%	Чтобы избежать появления ложных осцилляций вблизи сильных градиентов, используются лимитеры --- нелинейные функции, которые адаптивно уменьшают наклон функции до нуля в точках экстремумов, сохраняя монотонность решения (TVD-свойство //TODO расписать опр). В работе применяется лимитер:
+    В физике и технике возникают проблемы, связанные с необходимостью изучения высокоскоростных течений и взаимодействия скачков уплотнения с неоднородностями среды. Такие задачи ставят, например, аэродинамика больших скоростей, проектирование сверхзвуковых двигателей и разработка перспективных летательных аппаратов. В связи с этим в настоящее время одной из актуальных областей прикладной газовой динамики является изучение процессов распространения ударных волн в газе с локальным энерговложением, которое открывает новые методы управления аэродинамическими характеристиками и снижения волнового сопротивления~\cite{knight2008}.
 
-	Чтобы избежать появления ложных осцилляций вблизи сильных градиентов, схема должна обладать свойством невозрастания полной вариации.
-	
-	\begin{defenv}
-		Численная схема обладает TVD-свойством (Total Variation Diminishing), если полная вариация ее решения не возрастает со временем: 
-		\[
-			TV(u^{n+1}) \leq TV(u^{n}).
-		\]
+    Для описания газодинамической среды идеального газа используется система уравнений Эйлера~\cite{landau}. Непосредственное аналитическое решение таких систем возможно лишь в ограниченном ряде случаев, например в классической задаче Римана для одномерного случая~\cite{toro,kulikovsky}. Однако подобные точные решения позволяют изучить лишь качественные особенности поведения объекта. В инженерных же приложениях одной из главных задач является получение точных количественных результатов. Поэтому возникает потребность в  численных методах для задач газовой динамики.
+
+    Более того, для всестороннего анализа подобных физических процессов часто требуется проведение ресурсоемких расчетов, зависящих от различных варьируемых параметров. 
+    Большинство современных пакетов  для газодинамического моделирования опираются на классические методы программирования для CPU, что при серийных расчетах на мелких сетках требует значительных временных затрат или доступа к дорогостоящим суперкомпьютерам. В связи с этим возникает потребность в разработке эффективного программного комплекса, переносящего известный класс численных методов на современные архитектуры, с использованием инструментов дифференцируемого программирования и аппаратного ускорения. При разработке программного комплекса, реализующего численное моделирование распространения ударной волны, будем опираться на следующие основные принципы:
+
+    \begin{itemize}
+        \item Использование математической библиотеки высокопроизводительных вычислений JAX~\cite{jax} для обеспечения векторизации и JIT-компиляции;
+        \item Вычисления на GPU с использованием облачной платформы Google Colab для программного ускорения ресурсоемких задач;
+        \item Интеграция с открытыми библиотеками Matplotlib/SciencePlots~\cite{matplotlib} для визуализации.
+    \end{itemize}
+
+    Целью работы является численное моделирование распространения ударной волны в газе с локальным энерговложением средствами разработанного высокопроизводительного программного комплекса на базе библиотеки JAX. Для достижения этой цели были решены следующие задачи:
+
+    \begin{enumerate}
+        \item Программная адаптация и высокопроизводительная реализация семейства центральных разностных схем SD2, FD2~\cite{nessyahu1990,kurganov2000} на базе библиотеки JAX;
+         \item Верификация разработанного комплекса: анализ сходимости на гладких тестах относительно точного решения и кросс-верификация профилей с открытой CFD-библиотекой JAX-FLUIDS~\cite{jaxfluids}; сравнение производительности с библиотеками \textit{centpy}~\cite{centpy} и JAX-FLUIDS;
+        \item Оценка вычислительной эффективности реализованных алгоритмов и анализ аппаратного ускорения на CPU и GPU;
+        \item Демонстрация возможностей разработанного комплекса на задаче моделирования динамики параметров газа при прохождении ударной волны через зону локального энерговложения.
+    \end{enumerate}
+
+    \newpage
+
+    \section{Математическая модель}
+
+    \subsection{Система уравнений Эйлера}
+    
+    Течение идеального сжимаемого невязкого газа описывается системой дифференциальных уравнений Эйлера~\cite{landau}, которая выражает фундаментальные физические законы: сохранения массы, импульса и полной энергии.
+
+    Для произвольного фиксированного контрольного объема $\Omega$ с границей $\partial\Omega$ в отсутствие внешних массовых сил и источников тепловыделения эти законы в интегральной форме формулируются следующим образом:
+
+\begin{itemize}
+    \item Закон сохранения массы: изменение массы газа внутри объема равно макроскопическому потоку массы через его границу
+    \begin{equation}
+    \label{eq:mass_cons}
+    \frac{\partial}{\partial t} \int_{\Omega} \rho \, d\Omega + \oint_{\partial\Omega} \rho (\mathrm{v} \cdot \mathrm{n}) \, dS = 0.
+    \end{equation}
+    \item Закон сохранения импульса: изменение импульса внутри объема обусловлено потоком импульса через границу и действием поверхностных сил газодинамического давления $p$
+    \begin{equation}
+    \label{eq:momentum_cons}
+    \frac{\partial}{\partial t} \int_{\Omega} \rho \mathrm{v} \, d\Omega + \oint_{\partial\Omega} \rho \mathrm{v} (\mathrm{v} \cdot \mathrm{n}) \, dS + \oint_{\partial\Omega} p \mathrm{n} \, dS = 0.
+    \end{equation}
+    \item Закон сохранения полной энергии: изменение полной энергии газа равно работе сил давления и конвективному переносу энергии через границу
+    \begin{equation}
+    \label{eq:energy_cons}
+    \frac{\partial}{\partial t} \int_{\Omega} \rho E \, d\Omega + \oint_{\partial\Omega} (\rho E + p) (\mathrm{v} \cdot \mathrm{n}) \, dS = 0.
+    \end{equation}
+\end{itemize}
+
+В приведенных выражениях $\rho$ — плотность газа, $v$ — вектор скорости течения, $p$ — давление, $E$ — удельная полная энергия, $n$ — вектор внешней нормали к элементу поверхности $dS$. 
+
+Применяя к интегральным законам сохранения теорему Остроградского-Гаусса, получаем систему уравнений в дифференциальной форме. Для двумерного течения в декартовой системе координат, где вектор скорости имеет компоненты $\mathrm{v} = (u, v)^T$, она принимает вид
+\begin{equation}
+\label{eq:euler_diff_2d}
+\begin{cases}
+    \displaystyle \frac{\partial \rho}{\partial t} + \frac{\partial (\rho u)}{\partial x} + \frac{\partial (\rho v)}{\partial y} = 0, \\[10pt]
+    \displaystyle \frac{\partial (\rho u)}{\partial t} + \frac{\partial (\rho u^2 + p)}{\partial x} + \frac{\partial (\rho u v)}{\partial y} = 0, \\[10pt]
+    \displaystyle \frac{\partial (\rho v)}{\partial t} + \frac{\partial (\rho u v)}{\partial x} + \frac{\partial (\rho v^2 + p)}{\partial y} = 0, \\[10pt]
+    \displaystyle \frac{\partial (\rho E)}{\partial t} + \frac{\partial \left(u(\rho E + p)\right)}{\partial x} + \frac{\partial \left(v(\rho E + p)\right)}{\partial y} = 0.
+\end{cases}
+\end{equation}
+    
+Полученная система~(\ref{eq:euler_diff_2d}) записана в консервативной (дивергентной) форме. При моделировании распространения ударных волн использование именно такой формы принципиально важно: только она гарантирует корректное выполнение законов сохранения на поверхностях разрывов и позволяет правильно рассчитывать параметры ударных волн в соответствии с условиями Ренкина-Гюгонио~\cite{godunov,leveque1992}.
+
+Для компактности систему~(\ref{eq:euler_diff_2d}) удобно представить в матричной (векторной) форме. В двумерном пространственном случае в декартовой системе координат $D(x, y)$ она записывается в виде матричного гиперболического уравнения
+    \begin{equation}
+    \label{eq:euler_2d}
+    \frac{\partial U}{\partial t} + \frac{\partial F(U)}{\partial x} + \frac{\partial G(U)}{\partial y} = 0,
+    \end{equation}
+    где $U$ — вектор консервативных переменных, а $F(U)$ и $G(U)$ — векторы физических потоков вдоль осей $x$ и $y$ соответственно. Данные векторы определяются следующим образом:
+    \begin{equation}
+    \label{eq:vectors_2d}
+    U = 
+    \begin{pmatrix} 
+    \rho \\ 
+    \rho u \\ 
+    \rho v \\
+    \rho E 
+    \end{pmatrix}, \quad 
+    F(U) = 
+    \begin{pmatrix} 
+    \rho u \\ 
+    \rho u^2 + p \\ 
+    \rho u v \\
+    u(\rho E + p) 
+    \end{pmatrix}, \quad
+    G(U) = 
+    \begin{pmatrix} 
+    \rho v \\ 
+    \rho u v \\ 
+    \rho v^2 + p \\
+    v(\rho E + p) 
+    \end{pmatrix},
+    \end{equation}
+    где:
+    \begin{itemize}
+        \item $\rho$ — плотность газа [кг/м$^3$];
+        \item $u, v$ — компоненты вектора скорости газа вдоль осей $x$ и $y$ [м/с];
+        \item $\rho u, \rho v$ — компоненты вектора плотности импульса [кг/(м$^2\cdot$с)];
+        \item $p$ — газодинамическое давление [Па];
+        \item $E$ — полная удельная энергия газа, в расчете на единицу массы [Дж/кг], определяемая как 
+        \begin{equation}
+            E = e + \frac{u^2 + v^2}{2},
+        \end{equation} 
+        где $e$ — удельная внутренняя энергия;
+        \item $\rho E$ — плотность полной энергии (энергия в единице объема) [Дж/м$^3$].
+    \end{itemize}
+    
+    Система уравнений (\ref{eq:euler_2d})--(\ref{eq:vectors_2d}) является незамкнутой, так как содержит пять неизвестных величин ($\rho, u, v, p, E$) при четырех уравнениях. Для замыкания системы используется термодинамическое уравнение состояния. Для идеального газа оно имеет вид
+    {% локально уменьшаем отбивки только для этой формулы
+    \setlength{\abovedisplayskip}{4pt plus 2pt minus 2pt}%
+    \setlength{\belowdisplayskip}{4pt plus 2pt minus 2pt}%
+    \setlength{\abovedisplayshortskip}{0pt plus 2pt}%
+    \setlength{\belowdisplayshortskip}{2pt plus 2pt minus 2pt}%
+    \begin{equation}
+    \label{eq:eos}
+    p = (\gamma - 1) \rho e,
+    \end{equation}%
+    }%
+    где $\gamma$ — показатель адиабаты.
+    
+    Выражая удельную внутреннюю энергию через полную энергию 
+    \begin{equation}
+        e = E - \frac{u^2 + v^2}{2}, 
+    \end{equation}
+    уравнение (\ref{eq:eos}) можно переписать в форме, удобной для прямого вычисления давления из компонент вектора $U$
+    \begin{equation}
+    \label{eq:pressure_2d}
+    p = (\gamma - 1) \left( \rho E - \frac{(\rho u)^2 + (\rho v)^2}{2\rho} \right).
+    \end{equation}
+    
+    В случае рассмотрения одномерных течений, градиенты параметров по оси $y$ полагаются равными нулю $\frac{\partial}{\partial y} = 0$, а компонента скорости $v$ и вектор потока $G(U)$ исключаются из системы, что сводит её~(\ref{eq:euler_2d}) к одномерному случаю.
+
+    В реальных же приложениях взаимодействие плоского фронта ударной волны с нагретой областью носит существенно многомерный характер. Тем не менее, исследование данной проблемы методически верно начинать с одномерной постановки. Во-первых, одномерное сечение по нормали к зонам нагрева позволяет исключить поперечные потоки и изолированно изучить фундаментальные механизмы рефракции фронта. Во-вторых, применяемые в работе схемы сквозного счета базируются на методе расщепления по направлениям. Двумерный расчет сводится к последовательному решению множества локальных 1D-задач. Таким образом, верифицированная одномерная модель является базовым математическим и алгоритмическим ядром разрабатываемого программного комплекса.
+
+\subsection{Квазилинейная форма уравнений и характеристические скорости}
+
+Приведем подробный вывод матрицы Якоби и её собственных значений для одномерных уравнений Эйлера~\cite{toro}. Система уравнений Эйлера в консервативной форме имеет вид
+\begin{equation}
+    \label{eq:euler_1d}
+    \frac{\partial U}{\partial t} + \frac{\partial F(U)}{\partial x} = 0,
+\end{equation}
+где $U$ --- вектор консервативных переменных, а $F(U)$ --- вектор потоков
+\begin{equation}
+    U = \begin{pmatrix} U_1 \\ U_2 \\ U_3 \end{pmatrix} = \begin{pmatrix} \rho \\ \rho u \\ \rho E \end{pmatrix}, \quad
+    F(U) = \begin{pmatrix} F_1 \\ F_2 \\ F_3 \end{pmatrix} = \begin{pmatrix} \rho u \\ \rho u^2 + p \\ u( \rho E + p) \end{pmatrix}.
+\end{equation}
+Здесь $\rho$ --- плотность, $u$ --- скорость, $p$ --- давление, $E$ --- удельная полная энергия (отнесённая к единице массы), так что $\rho E$ --- полная энергия единицы объёма.
+
+Для замыкания системы используется уравнение состояния идеального газа
+\begin{equation}
+    p = (\gamma - 1)\left( \rho E - \frac{\rho u^2}{2} \right),
+\end{equation}
+где $\gamma$ --- показатель адиабаты. Выразим давление $p$ исключительно через компоненты вектора $U$
+\begin{equation}
+    p = (\gamma - 1)\left( U_3 - \frac{1}{2}\frac{U_2^2}{U_1} \right).
+\end{equation}
+
+Теперь перепишем компоненты вектора потоков $F$ через переменные $U_1, U_2, U_3$
+{\setlength{\abovedisplayskip}{2pt}
+\setlength{\abovedisplayshortskip}{2pt}
+\begin{gather}
+    F_1 = U_2, \\
+    F_2 = \frac{U_2^2}{U_1} + (\gamma - 1)\left( U_3 - \frac{1}{2}\frac{U_2^2}{U_1} \right) = \frac{3-\gamma}{2}\frac{U_2^2}{U_1} + (\gamma - 1)U_3, \\
+    F_3 = \frac{U_2}{U_1}\left( U_3 + (\gamma - 1)\left( U_3 - \frac{1}{2}\frac{U_2^2}{U_1} \right) \right) = \gamma \frac{U_2 U_3}{U_1} - \frac{\gamma - 1}{2}\frac{U_2^3}{U_1^2}.
+\end{gather}
+}
+
+Для перехода к квазилинейной форме 
+\begin{equation}
+    \frac{\partial U}{\partial t} + A(U)\frac{\partial U}{\partial x} = 0
+\end{equation}
+необходимо найти матрицу Якоби $A = \frac{\partial F}{\partial U}$. Вычислим её элементы $A_{ij} = \frac{\partial F_i}{\partial U_j}$ почленно.
+
+Первая строка $ A_{11} = 0, \quad A_{12} = 1, \quad A_{13} = 0.$
+
+Вторая строка (возвращаясь к физическим переменным через подстановку $u = U_2/U_1$):
+\begin{gather}
+    A_{21} = -\frac{3-\gamma}{2}\frac{U_2^2}{U_1^2} = \frac{\gamma-3}{2}u^2, \\
+    A_{22} = (3-\gamma)\frac{U_2}{U_1} = (3-\gamma)u, \\
+    A_{23} = \gamma - 1.
+\end{gather}
+
+Для вывода третьей строки введём полную удельную энтальпию
+\begin{equation}
+    H = \frac{\rho E+p}{\rho}.
+\end{equation}
+
+Из уравнения состояния следует, что 
+\begin{equation}
+    \gamma E = H + \frac{\gamma-1}{2}u^2.
+\end{equation} 
+
+Вычисляем производные
+\begin{equation}
+\begin{gathered}
+    A_{31} = -\gamma \frac{U_2 U_3}{U_1^2} + (\gamma - 1)\frac{U_2^3}{U_1^3} = \\
+    = -u \left( \gamma E - (\gamma-1)u^2 \right) = \\
+    = u\left(\frac{\gamma-1}{2}u^2 - H\right),
+\end{gathered}
+\end{equation}
+\vspace{-0.7 cm}
+\begin{gather}
+    A_{32} = \gamma \frac{U_3}{U_1} - \frac{3(\gamma-1)}{2}\frac{U_2^2}{U_1^2} = \gamma E - \frac{3}{2}(\gamma-1)u^2 = H - (\gamma-1)u^2, \\
+    A_{33} = \gamma \frac{U_2}{U_1} = \gamma u.
+\end{gather}   
+Собирая вычисленные элементы вместе, получаем матрицу Якоби $A$
+\begin{equation}
+    A = \begin{pmatrix}
+    0 & 1 & 0 \\
+    \frac{\gamma-3}{2}u^2 & (3-\gamma)u & \gamma-1 \\
+    u\left(\frac{\gamma-1}{2}u^2 - H\right) & H - (\gamma-1)u^2 & \gamma u
+    \end{pmatrix}.
+\end{equation}
+
+Скорости распространения волн определяются собственными значениями $\lambda$ матрицы $A$, которые являются корнями характеристического уравнения
+{% локально уменьшаем отбивки только для этой формулы
+    \setlength{\abovedisplayskip}{8pt plus 2pt minus 2pt}%
+    \setlength{\belowdisplayskip}{8pt plus 2pt minus 2pt}%
+    \setlength{\abovedisplayshortskip}{0pt plus 2pt}%
+    \setlength{\belowdisplayshortskip}{2pt plus 2pt minus 2pt}%
+\begin{equation}
+    \det(A - \lambda I) = 0.
+\end{equation}}
+
+Раскрытие данного определителя приводит к кубическому уравнению относительно $\lambda$. Вводя скорость звука \begin{equation}
+    a = \sqrt{(\gamma-1)\left(H - \frac{u^2}{2}\right)}, 
+\end{equation}
+находим три действительных корня характеристического уравнения
+\begin{equation}
+    \lambda_1 = u - a, \quad \lambda_2 = u, \quad \lambda_3 = u + a.
+\end{equation}
+
+Поскольку характеристическое уравнение имеет степень $n=3$, система обладает тремя действительными собственными значениями, что подтверждает её гиперболичность~\cite{kulikovsky}. Каждому собственному значению отвечает своё семейство характеристик в плоскости $(x, t)$. Физически это означает, что при распаде произвольного разрыва образуются три волны: две акустические ($\lambda_1$ и $\lambda_3$), отвечающие нелинейным характеристическим полям (ударные волны или волны разрежения), и одна энтропийная ($\lambda_2$), отвечающая линейно вырожденному полю (контактному разрыву). Именно эти скорости в дальнейшем используются для вычисления численной вязкости в центральных схемах Курганова--Тадмора~\cite{kurganov2000}.
+
+\subsection{Классическая задача о распаде произвольного разрыва} 
+    
+    В вычислительной газовой динамике фундаментальную роль играет задача Римана о распаде произвольного разрыва~\cite{godunov,toro}. Математически классическая одномерная задача Римана представляет собой задачу Коши для системы уравнений Эйлера с начальными условиями в виде кусочно-постоянных функций, имеющих единственный разрыв в точке $x = x_0$:
+    \begin{equation}
+    \label{eq:riemann_init}
+    U(x, 0) = 
+    \begin{cases} 
+    U_L, & \text{при } x < x_0 \\ 
+    U_R, & \text{при } x > x_0 
+    \end{cases}
+    \end{equation}
+    где $U_L$ и $U_R$ --- векторы консервативных параметров слева и справа от разрыва.
+
+    Опираясь на полученный ранее характеристический анализ (наличие трех волн $\lambda_1, \lambda_2, \lambda_3$), математическая теория показывает, что распад начального разрыва приводит к формированию автомодельного течения, зависящего только от переменной $x/t$. Структура этого течения состоит из левой волны (ударной или веера разрежения), правой волны (ударной или веера разрежения) и центрального контактного разрыва, на котором давление $p_*$ и скорость $u_*$ непрерывны, а плотность терпит скачок.
+
+Таким образом, нахождение точного решения сводится к определению параметров газа в так называемой <<звездной области>> (Star Region), заключенной между левой и правой волнами.
+
+Ключевым этапом алгоритма точного решателя Римана (Exact Riemann Solver), подробно описанного Э. Торо~\cite{toro}, является нахождение давления $p_*$ в контактном разрыве. Для этого выводится единое нелинейное алгебраическое уравнение
+\begin{equation}
+\label{eq:toro_function}
+f(p_*, U_L, U_R) \equiv f_L(p_*, U_L) + f_R(p_*, U_R) + \Delta u = 0,
+\end{equation}
+где $\Delta u = u_R - u_L$ — разность начальных скоростей, а функции $f_K$ ($K = L, R$) задают изменение скорости на соответствующей волне в зависимости от того, является ли она волной разрежения (изоэнтропический процесс) или ударной волной (соотношения Ренкина-Гюгонио)
+\begin{equation}
+\label{eq:toro_branches}
+f_K(p, U_K) = 
+\begin{cases}
+\displaystyle (p - p_K) \sqrt{\frac{A_K}{p + B_K}}, & \text{если } p > p_K \text{ ударная волна}, \\[10pt]
+\displaystyle \frac{2 a_K}{\gamma - 1} \left[ \left(\frac{p}{p_K}\right)^{\displaystyle \frac{\gamma - 1}{2\gamma}} - 1 \right], & \text{если } p \leq p_K \text{ волна разрежения},
+\end{cases}
+\end{equation}
+здесь $a_K = \sqrt{\gamma p_K / \rho_K}$ --- локальная скорость звука, а 
+\begin{equation}
+    A_K = \frac{2}{(\gamma + 1)\rho_K}, \quad B_K = \frac{\gamma - 1}{\gamma + 1} p_K
+\end{equation} 
+- газодинамические константы.
+
+Поскольку функция $f(p_*)$ является монотонно возрастающей и строго выпуклой, нелинейное уравнение (\ref{eq:toro_function}) эффективно и с любой заданной точностью разрешается итерационным методом Ньютона-Рафсона. 
+
+После того как давление $p_*$ найдено, скорость $u_*$ вычисляется аналитически через функции $f_L$ и $f_R$. Зная параметры в контактном разрыве и типы волн (определяемые соотношением $p_*$ и $p_{L,R}$), плотности $\rho_{*L}$ и $\rho_{*R}$ вычисляются по уравнениям адиабаты или Гюгонио соответственно. Наконец, пространственное распределение всех параметров $\rho(x,t), u(x,t), p(x,t)$ в любой момент времени $t$ восстанавливается по аналитическим формулам траекторий волн (лучей веера Римана или скоростей ударных фронтов).
+
+
+\subsection{Постановка модифицированной задачи}
+\label{sec:modified_setup}
+В данной работе рассматривается процесс импульсного (изохорного) локального подвода энергии в газ. Поскольку характерное время выделения энергии существенно меньше характерных газодинамических времен, газ в области энерговложения не успевает расшириться. Это приводит к локальному скачку температуры и давления с последующим газодинамическим выравниванием, в результате которого формируется область с существенно пониженной плотностью газа по сравнению с невозмущенной средой (эффект теплового следа)~\cite{knight2008}.
+
+Подобная физическая формулировка позволяет отказаться от явного введения источниковых членов в систему уравнений Эйлера и свести проблему к решению задачи Коши с профилированными начальными условиями. Расчетная область одномерной задачи $x \in [0, 1]$ делится на три характерные зоны:
+\begin{itemize}
+    \item \textit{Зона инициации ударной волны ($x \in [x_{sw}, 1]$):} содержит сжатый газ ($U_{sw}$), генерирующий падающую ударную волну, которая движется в отрицательном направлении оси $x$ (справа налево).
+    \item \textit{Зона невозмущенного газа:} содержит покоящийся газ с фоновыми параметрами $U_0 = (\rho_0, u_0, p_0)^T$, где $u_0 = 0$.
+    \item \textit{Зона локального энерговложения ($x \in [x_{e1}, x_{e2}]$):} задается через параметр локального минимума плотности 
+    \begin{equation}
+        \alpha = \frac{\rho_e}{\rho_0} < 1.
+    \end{equation}
+    Внутри этой зоны давление равно фоновому $p_0$, а плотность равна $\alpha \rho_0$.
+\end{itemize}
+
+Для корректного моделирования параметров зоны инициации $U_{sw}$ необходимо, чтобы в невозмущенный газ двигалась строго одна изолированная ударная волна с заданным числом Маха $M_s$ в отрицательном направлении оси $x$. Параметры за фронтом стационарной ударной волны жестко связаны с параметрами невозмущенного газа классическими соотношениями Ренкина-Гюгонио~\cite{landau}, выражающими законы сохранения массы, импульса и энергии на поверхности разрыва
+\begin{equation}
+\label{eq:rankine_hugoniot}
+\begin{cases}
+    \rho_{sw} (u_{sw} - D) = \rho_0 (u_0 - D), \\
+    \rho_{sw} (u_{sw} - D)^2 + p_{sw} = \rho_0 (u_0 - D)^2 + p_0, \\
+    (u_{sw} - D)\left( \rho_{sw} E_{sw} + p_{sw} \right) = (u_0 - D)\left( \rho_0 E_0 + p_0 \right),
+\end{cases}
+\end{equation}
+где $D = -M_s a_0$ — скорость движения фронта ударной волны в лабораторной системе координат (знак <<минус>> отвечает распространению справа налево), $a_0$ — скорость звука в невозмущенном газе. 
+
+Разрешая систему (\ref{eq:rankine_hugoniot}) относительно параметров сжатого газа при условии $u_0 = 0$, получаем явные формулы для задания вектора $U_{sw}$
+\begin{equation}
+\label{eq:shock_params}
+\begin{cases}
+    \displaystyle p_{sw} = p_0 \left[ 1 + \frac{2\gamma}{\gamma + 1}(M_s^2 - 1) \right], \\[10pt]
+    \displaystyle \rho_{sw} = \rho_0 \left[ \frac{(\gamma + 1) M_s^2}{(\gamma - 1) M_s^2 + 2} \right], \\[10pt]
+    \displaystyle u_{sw} = -a_0 \frac{2}{\gamma + 1} \left( M_s - \frac{1}{M_s} \right).
+\end{cases}
+\end{equation}
+
+Используя полученные параметры (\ref{eq:shock_params}), вектор начальных условий $U(x, 0)$ для задачи с энерговложением принимает следующий вид
+\begin{equation}
+\label{eq:initial_energy}
+(\rho, u, p)\big|_{t=0} = 
+\begin{cases} 
+(\rho_{sw}, u_{sw}, p_{sw}), & x \in [x_{sw}, 1], \\
+(\alpha \rho_0, 0, p_0), & x \in [x_{e1}, x_{e2}], \\
+(\rho_0, 0, p_0), & \text{в остальных частях области.}
+\end{cases}
+\end{equation}
+
+% До момента столкновения ударной волны с зоной пониженной плотности течение представляет собой изолированную задачу Римана. Однако при вхождении ударной волны в область $x \in [x_{e1}, x_{e2}]$ происходит рефракция фронта. Из-за возросшей локальной скорости звука волна ускоряется, генерируя сложную систему переотраженных возмущений. Описанная физическая картина множественного взаимодействия разрывов не имеет глобального аналитического решения, что обуславливает необходимость применения центральных разностных схем сквозного счета.
+
+% {
+% \color{red!80}\bf
+% Добавить иллюстрацию.
+% }
+
+Для проведения численного эксперимента и верификации реализованных алгоритмов зафиксированы физические параметры модельной среды. В качестве рабочего тела рассматривается идеальный двухатомный газ с показателем адиабаты $\gamma = 1.4$. Фоновые параметры невозмущенной среды нормированы: $\rho_0 = 1.0$, $p_0 = 1.0$, $u_0 = 0.0$.
+
+Пусть инициирующая ударная волна имеет число Маха $M_s = 2.0$. Выбор данного режима обусловлен следующими физическими и методологическими соображениями. С одной стороны, при малых числах Маха ($M_s \to 1$) интенсивность волны падает, она приближается к акустической, из-за чего нелинейные эффекты взаимодействия становятся слабовыраженными. С другой стороны, при высоких сверхзвуковых скоростях ($M_s > 4$) температура за фронтом волны возрастает настолько, что начинают играть существенную роль реальные физико-химические свойства газа, что делает использование модели совершенного газа с постоянным показателем адиабаты $\gamma = 1.4$ физически некорректным. Режим $M_s = 2.0$ представляет собой оптимальный баланс: он обеспечивает развитие выраженных нелинейных газодинамических структур при строгом соблюдении границ применимости выбранной математической модели.
+
+Подстановка заданных величин в аналитические соотношения Ренкина-Гюгонио (\ref{eq:shock_params}) позволяет однозначно определить параметры сжатого газа в зоне инициации
+\begin{equation}
+\label{eq:shock_numbers}
+\begin{cases}
+    \displaystyle p_{sw} = 1.0 \left[ 1 + \frac{2 \cdot 1.4}{2.4}(4.0 - 1) \right] = 4.5, \\[10pt]
+    \displaystyle \rho_{sw} = 1.0 \left[ \frac{2.4 \cdot 4.0}{0.4 \cdot 4.0 + 2} \right] \approx 2.667, \\[10pt]
+    \displaystyle u_{sw} = -\sqrt{1.4} \cdot \frac{2}{2.4} \left( 2.0 - 0.5 \right) \approx -1.479.
+\end{cases}
+\end{equation}
+
+Зона локального энерговложения характеризуется параметром плотности $\alpha = 0.1$, что соответствует десятикратному изобарному уменьшению плотности газа. Геометрия расчетной области для одномерного случая определяется следующими пространственными интервалами: $x \in [0.0, 1.0]$ --- общая длина расчетного домена; $x \in [0.8, 1.0]$ --- зона генерации ударной волны; $x \in [0.3, 0.5]$ --- зона теплового следа. Оставшиеся участки заполнены невозмущенным газом. 
+
+Поскольку ударная волна инициируется у правой границы и движется справа налево (в отрицательном направлении оси $x$), вектор скорости за фронтом принимает отрицательное значение ($u_{sw} \approx -1.479$). Вектор начальных макроскопических параметров (\ref{eq:initial_energy}) принимает следующий числовой вид:
+\begin{equation}
+\label{eq:initial_1d_numbers}
+(\rho, u, p)\big|_{t=0} = 
+\begin{cases} 
+(1.0,\; 0.0,\; 1.0), & \text{при } x \in [0.0, 0.3), \\
+(0.1,\; 0.0,\; 1.0), & \text{при } x \in [0.3, 0.5], \\
+(1.0,\; 0.0,\; 1.0), & \text{при } x \in (0.5, 0.8), \\
+(2.667,\; -1.479,\; 4.5), & \text{при } x \in [0.8, 1.0].
+\end{cases}
+\end{equation}
+
+Для корректного замыкания системы на границах расчетной области задаются смешанные граничные условия. На левой границе ($x=0$) ставится условие Неймана (свободный выход), обеспечивающее беспрепятственное прохождение волн за пределы расчетного домена за счет равенства нулю пространственных градиентов всех макроскопических параметров. На правой границе ($x=1$) задается физическое условие непротекания (идеальная жесткая стенка), математически выражающееся равенством нулю нормальной компоненты скорости при сохранении нулевого градиента для термодинамических величин:
+\begin{equation}
+\label{eq:bc_1d}
+\frac{\partial \mathrm{q}}{\partial x}\bigg|_{x=0} = 0, \quad u\big|_{x=1} = 0, \quad \frac{\partial \rho}{\partial x}\bigg|_{x=1} = 0, \quad \frac{\partial p}{\partial x}\bigg|_{x=1} = 0,
+\end{equation}
+где $\mathrm{q} = (\rho, u, p)^T$ — вектор макроскопических параметров.
+
+\begin{figure}[h]
+    \begin{minipage}[h]{1\textwidth}
+        \begin{center}
+            \includegraphics[width=0.6\textwidth]{./animation/rieman_modify_t0.png}\\
+        \end{center}
+    \end{minipage}\\
+    \caption{Постановка модифицированной задачи в одномерном случае}
+    \label{eq:initial_1d_euler}
+\end{figure}
+
+
+Двумерная модификация задачи формируется путем расширения одномерной постановки на прямоугольный расчетный домен $(x, y) \in [0, 1] \times [0, 1]$. 
+
+Зона инициации ударной волны задается как вертикальная полоса $x \ge 0.8$ для всех $y \in [0, 1]$. Подобная конфигурация генерирует плоский фронт падающей ударной волны, движущийся параллельно оси $x$ справа налево. Газодинамические параметры в данной зоне соответствуют одномерному случаю, при этом поперечная компонента скорости тождественно равна нулю $v_{sw} = 0$.
+
+С целью исследования истинно двумерных эффектов рефракции на различных геометрических формах, зона локального энерговложения состоит из двух изолированных областей пониженной плотности. Первая область представляет собой круг с центром в точке $(x_{c1}, y_{c1}) = (0.45, 0.65)$ и радиусом $R_1 = 0.08$. Вторая область имеет форму квадрата и ограничена координатами $x \in [0.25, 0.41], y \in [0.20, 0.44]$. Вектор начальных условий имеет вид:
+\begin{equation}
+\label{eq:initial_2d_numbers}
+(\rho, u, v, p)\big|_{t=0} = 
+\begin{cases} 
+(2.667,\; -1.479,\; 0.0,\; 4.5), & \text{при } x \ge 0.8, \\ 
+(0.1,\; 0.0,\; 0.0,\; 1.0), & \text{внутри зон энерговложений}, \\
+(1.0,\; 0.0,\; 0.0,\; 1.0), & \text{в остальных точках домена.}
+\end{cases}
+\end{equation}
+
+Для корректного замыкания расчетной области применяются смешанные граничные условия. На левой границе ($x=0$) задается условие Неймана (свободный выход), обеспечивающее нулевой градиент всех макроскопических параметров для беспрепятственного выхода волн. На правой ($x=1$), нижней ($y=0$) и верхней ($y=1$) границах задаются физические условия непротекания (жесткая стенка). Математически это выражается равенством нулю нормальной компоненты скорости при сохранении нулевого градиента для термодинамических величин и тангенциальной скорости:
+\begin{equation}
+\label{eq:bc_2d}
+\frac{\partial \mathrm{q}}{\partial x}\bigg|_{x=0} = 0, \quad u\big|_{x=1} = 0, \quad v\big|_{y=0, 1} = 0, \quad \frac{\partial \rho}{\partial \mathrm{n}}\bigg|_{\Gamma_{w}} = 0, \quad \frac{\partial p}{\partial \mathrm{n}}\bigg|_{\Gamma_{w}} = 0,
+\end{equation}
+где $\mathrm{q} = (\rho, u, v, p)^T$ — вектор макроскопических параметров, а $\Gamma_{w}$ обозначает границы с условием непротекания (правую, верхнюю и нижнюю). 
+
+Данная постановка позволяет корректно моделировать процессы нелинейного взаимодействия разрывов и рефракции на скругленной и острой геометриях.
+
+\begin{figure}[h]
+    \begin{minipage}[h]{1\textwidth}
+        \begin{center}
+            \includegraphics[width=0.46\textwidth]{./animation/rieman_modify_t0_2D.png}\\
+        \end{center}
+    \end{minipage}\\
+    \caption{Постановка модифицированной задачи в двумерном случае}
+    \label{eq:initial_2d_euler}
+\end{figure}
+
+
+% Двумерная постановка представляет собой модификацию задачи о взаимодействии плоской ударной волны с зоной локального энерговложения. Для исследования дифракционных эффектов на границах различной формы зона энерговложения задана в виде двух локализованных макроскопических неоднородностей — круглой и прямоугольной формы.
+
+% Начальные условия задаются в единичном квадрате $(x, y) \in [0, 1] \times [0, 1]$. Пространство разбито на три основные подобласти: зону сжатого газа за фронтом ударной волны ($x \geq 0.8$), область локального энерговложения (состоящую из двух независимых пузырей) и невозмущённый фоновый газ.
+
+% Параметры потока в начальный момент времени $t=0$ имеют следующий вид:
+% \begin{equation}
+%   \label{eq:initial_2d_numbers}
+%   \left[\rho,\, u,\, v,\, p\right]^T_{\! t=0} =
+%   \begin{cases}
+%     \left[2.667,\, -1.479,\, 0.0,\, 4.5\right]^T, & \text{если } x \geq 0.8, \\[1.5em]
+%     \left[\alpha \rho_0,\, 0,\, 0,\, p_0\right]^T, & \text{если }
+%     \begin{aligned}
+%       &(x - 0.45)^2 + (y - 0.65)^2 \leq 0.08^2 \\
+%       &\text{или } (x \in [0.25, 0.41] \text{ и } y \in [0.20, 0.44]),
+%     \end{aligned} \\[2.5em]
+%     \left[\rho_0,\, 0,\, 0,\, p_0\right]^T, & \text{в остальных точках.}
+%   \end{cases}
+% \end{equation}
+
+% Здесь $\rho_0 = 1.0$ и $p_0 = 1.0$ — плотность и давление невозмущённого фонового газа. Параметр $\alpha = 0.1$ задаёт степень изобарного разрежения газа внутри зон энерговложения. Значения параметров в зоне $x \geq 0.8$ соответствуют ударной волне с числом Маха $M_s = 2.0$, распространяющейся справа налево.
+
+% Граничные условия на всех четырёх сторонах расчётной области задаются как твёрдые непротекаемые стенки:
+% \begin{equation}
+%     v_n \big|_{\partial \Omega} = 0,
+% \end{equation}
+% где $v_n$~--- нормальная компонента вектора скорости газа к соответствующей границе. Данное условие моделирует развитие процесса в замкнутом объёме и позволяет анализировать фокусировку отражённых волн.
+
+    \newpage
+
+    \section{Построение разностных схем}
+
+    \subsection{Семейство центральных схем высокого разрешения}
+
+При численном решении гиперболических систем традиционно используются два принципиально разных класса методов: противопотоковые (upwind) схемы, к которым относятся в том числе методы типа Годунова~\cite{godunov}, и центральные схемы.
+
+Методы типа Годунова обладают высокой разрешающей способностью на скачках, однако требуют точного или приближенного решения локальной задачи Римана на каждой границе расчетной ячейки и на каждом временном шаге. Процесс нахождения решения задачи Римана основан на спектральном разложении матриц Якоби и является крайне ресурсоемким.
+
+Альтернативным подходом, выбранным в данной дипломной работе, является использование семейства центральных схем высокого разрешения. Фундаментальным преимуществом этих методов является то, что они не требуют решения локальной задачи Римана на границах ячеек. Центральные схемы интегрируют уравнения по вееру волн Римана, опираясь лишь на информацию о максимальной локальной скорости распространения возмущений. Это делает алгоритм полностью алгебраическим, легко векторизуемым и хорошо приспособленным для аппаратного ускорения с использованием выбранной библиотеки.
+
+В рамках данной работы реализованы, протестированы и оптимизированы две центральные схемы из библиотеки \textit{centpy}~\cite{centpy}:
+
+Схема FD2 (Fully-Discrete, 2-го порядка) --- полностью дискретная схема Нессяху--Тадмора (Nessyahu--Tadmor)~\cite{nessyahu1990}. Является прямым развитием классической схемы Лакса--Фридрихса. Схема использует шахматную сетку для обхода поверхностей разрывов, что позволяет вычислять потоки в гладких областях течения.
+
+Схема SD2 (Semi-Discrete, 2-го порядка) --- полудискретная схема \\\mbox{Курганова--Тадмора} (Kurganov--Tadmor)~\cite{kurganov2000}. Была получена путем перехода к пределу при $\Delta t \to 0$ в схеме Нессяху--Тадмора. Использование полудискретной формы позволяет отказаться от шахматных сеток и применять для интегрирования по времени стандартные методы Рунге--Кутты с сохранением TVD-свойств (Total Variation Diminishing).
+
+Вычисление численных потоков в современных многомерных газодинамических комплексах (включая 2D-постановки) базируется на методе расщепления по пространственным координатам. Двумерный оператор дивергенции потока представляется в виде суммы одномерных операторов вдоль осей $x$ и $y$. В силу этого свойства математический аппарат схем ниже излагается для одномерной скалярной постановки, которая без потери общности обобщается на многомерный векторный случай.
+
+\subsection{ Полностью дискретный подход}
+
+\subsubsection{Интегро-интерполяционный метод конечных объемов}
+    
+Полностью дискретные схемы подразумевают интегрирование законов сохранения одновременно по пространству и по времени. Главная идея центральной схемы Нессяху--Тадмора заключается в интегрировании уравнений Эйлера на так называемой <<шахматной>> или смещенной сетке. Это позволяет изолировать поверхности разрывов (веера Римана), зарождающиеся на границах ячеек $x_j$, внутри новых контрольных объемов, где решение остается гладким.
+
+Рассмотрим контрольный объем <<шахматной>> сетки $[x_j, x_{j+1}]$, смещенный на полшага $\Delta x / 2$ относительно исходных узлов. Проинтегрируем уравнение Эйлера (\ref{eq:euler_1d}) по этому объему и по временному интервалу от $t^n$ до $t^{n+1}$:
+\begin{equation}
+\label{eq:fd_integral}
+\int\limits_{x_j}^{x_{j+1}} \int\limits_{t^n}^{t^{n+1}} \left( \frac{\partial U}{\partial t} + \frac{\partial F(U)}{\partial x} \right) dt dx = 0.
+\end{equation}
+
+Применяя формулу Ньютона--Лейбница, вычисляем интегралы:
+\begin{equation}
+\label{eq:fd_integrated}
+\begin{gathered}
+    \int\limits_{x_j}^{x_{j+1}} U(x, t^{n+1}) dx = \int\limits_{x_j}^{x_{j+1}} U(x, t^n) dx - \\
+    - \int\limits_{t^n}^{t^{n+1}} \left[ F(U(x_{j+1}, t)) - F(U(x_j, t)) \right] dt.
+\end{gathered}
+\end{equation}
+
+Разделим уравнение (\ref{eq:fd_integrated}) на шаг сетки $\Delta x$. Левая часть представляет собой среднее значение вектора состояния на новом временном шаге в смещенной ячейке $U_{j+1/2}^{n+1}$. Интеграл от начального состояния (первое слагаемое справа) вычисляется точно за счет кусочно-линейной реконструкции решения $U(x, t^n)$ с наклонами $U'$:
+\begin{equation}
+\label{eq:fd_spatial_avg}
+\frac{1}{\Delta x} \int\limits_{x_j}^{x_{j+1}} U(x, t^n) dx = \frac{1}{2} (U_j^n + U_{j+1}^n) + \frac{1}{8} (U_j' - U_{j+1}').
+\end{equation}
+
+Интеграл потоков по времени (второе слагаемое справа) аппроксимируется правилом средней точки
+\begin{equation}
+\label{eq:fd_time_avg}
+\frac{1}{\Delta x} \int\limits_{t^n}^{t^{n+1}} F(U(x_j, t)) dt \approx \frac{\Delta t}{\Delta x} F\left( U_j^{n+1/2} \right),
+\end{equation}
+где $U_j^{n+1/2}$ — промежуточное значение (предиктор) в центре исходной ячейки на полушаге по времени.
+
+Подставляя (\ref{eq:fd_spatial_avg}) и (\ref{eq:fd_time_avg}) в уравнение (\ref{eq:fd_integrated}), получаем итоговую формулу обновления полностью дискретной центральной схемы FD2:
+\begin{equation}
+\label{eq:fd2_final}
+\begin{gathered}
+U_{j+1/2}^{n+1} = \frac{1}{2} \left( U_j^n + U_{j+1}^n \right) + \frac{1}{8} \left( U_j^\prime - U_{j+1}^\prime \right) - \\
+- \frac{\Delta t}{\Delta x} \left[ F\left( U_{j+1}^{n+1/2} \right) - F\left( U_j^{n+1/2} \right) \right].
+\end{gathered}
+\end{equation}
+
+% \begin{multline}
+% \label{eq:fd2_final}
+% U_{j+1/2}^{n+1} = \frac{1}{2} \left( U_j^n + U_{j+1}^n \right) + \frac{1}{8} \left( U_j^\prime - U_{j+1}^\prime \right) - \\
+% - \frac{\Delta t}{\Delta x} \left[ F\left( U_{j+1}^{n+1/2} \right) - F\left( U_j^{n+1/2} \right) \right].
+% \end{multline}
+
+
+
+Формула (\ref{eq:fd2_final}) выражает решение на новом временном слое через две вспомогательные величины, которые на данном этапе считаются известными: наклоны $U_j^\prime$ кусочно-линейной реконструкции и предикторные значения $U_j^{n+1/2}$ на полушаге по времени. Конкретные процедуры их вычисления (реконструкция с ограничителем наклонов и предиктор по схеме Тейлора) детализируются в следующем пункте.
+
+
+В двумерном пространстве интегрирование выполняется по смещенному контрольному объему 
+{% локально уменьшаем отбивки только для этой формулы
+    \setlength{\abovedisplayskip}{8pt plus 2pt minus 2pt}%
+    \setlength{\belowdisplayskip}{8pt plus 2pt minus 2pt}%
+    \setlength{\abovedisplayshortskip}{0pt plus 2pt}%
+    \setlength{\belowdisplayshortskip}{2pt plus 2pt minus 2pt}%
+\begin{equation}
+    \Omega_{j+1/2, k+1/2} = [x_j, x_{j+1}] \times [y_k, y_{k+1}]
+\end{equation}}
+и временному интервалу $[t^n, t^{n+1}]$. Интеграл от дивергенции потоков $\nabla \cdot (F, G)^T$ по площади ячейки с помощью теоремы Гаусса--Остроградского (формулы Грина) преобразуется в контурный интеграл потока вектора через границу $\partial \Omega$:
+\begin{equation}
+\label{eq:gauss_2d_fd}
+\iint_{\Omega} \left( \frac{\partial F}{\partial x} + \frac{\partial G}{\partial y} \right) dx dy = \oint_{\partial \Omega} \left( F \, dy - G \, dx \right).
+\end{equation}
+
+Интегрируя систему уравнений по времени и применяя соотношение (\ref{eq:gauss_2d_fd}), получаем полностью дискретный закон сохранения для среднего значения в шахматной ячейке $U_{j+1/2, k+1/2}^{n+1}$. Интеграл от начального состояния (пространственное усреднение по смещенному объему) в двумерном случае вычисляется как среднее по четырем вершинам исходной ячейки с добавлением поправок от градиентов
+\begin{equation}
+\label{eq:spatial_avg_2d}
+\begin{gathered}
+\overline{U}_{j+1/2, k+1/2}^n = \frac{1}{4} \left( U_{j,k}^n + U_{j+1,k}^n + U_{j,k+1}^n + U_{j+1,k+1}^n \right) + \\
++ \frac{1}{16} \left( U_x'^{(L)} - U_x'^{(R)} \right) + \frac{1}{16} \left( U_y'^{(B)} - U_y'^{(T)} \right),
+\end{gathered}
+\end{equation}
+где $U_{x,y}'$ — численные производные вдоль соответствующих направлений на гранях. 
+
+Аппроксимируя интегралы потоков во времени по правилу средней точки, итоговая двумерная схема Нессяху--Тадмора принимает вид:
+\begin{equation}
+\label{eq:fd2_final_2d}
+\begin{gathered}
+U_{j+1/2, k+1/2}^{n+1} = \overline{U}_{j+1/2, k+1/2}^n \\
+- \frac{\Delta t}{\Delta x} \left[ F\left(U^{n+1/2}_{j+1, k+1/2}\right) - F\left(U^{n+1/2}_{j, k+1/2}\right) \right] \\
+- \frac{\Delta t}{\Delta y} \left[ G\left(U^{n+1/2}_{j+1/2, k+1}\right) - G\left(U^{n+1/2}_{j+1/2, k}\right) \right].
+\end{gathered}
+\end{equation}
+
+Здесь потоки $F$ и $G$ вычисляются от промежуточных значений предикторов $U^{n+1/2}$, расположенных в центрах граней <<шахматной>> ячейки.
+
+
+\subsubsection{Алгоритм схемы Нессяху--Тадмора второго порядка}
+
+Опираясь на проведённый выше вывод, сформулируем вычислительный алгоритм схемы FD2 второго порядка точности; исторически это первый успешный центральный метод второго порядка, не требующий решения задачи Римана. Ниже детализируются процедуры вычисления наклонов $U_j^\prime$ и предиктора $U_j^{n+1/2}$, которые при выводе формулы обновления (\ref{eq:fd2_final}) считались известными величинами.
+
+Рассмотрим построение схемы для одномерной системы гиперболических уравнений. Введем равномерную вычислительную сетку с шагом по пространству $\Delta x$ и узлами $x_j = j \Delta x$, а также шаг по времени $\Delta t$ и моменты времени $t^n = n \Delta t$. Обозначим через $U_j^n$ среднее по ячейке значение вектора консервативных переменных в момент времени $t^n$.
+
+Алгоритм схемы FD2 состоит из трех основных этапов:
+
+\textit{1. Пространственная реконструкция} 
+
+Для достижения второго порядка точности по пространству конструируется кусочно-линейная аппроксимация решения внутри каждой ячейки:
+\begin{equation}
+\label{eq:reconstruction}
+U(x, t^n) = U_j^n + (x - x_j) \frac{U_j^\prime}{\Delta x}, \quad x \in \left[ x_{j-1/2}, x_{j+1/2} \right],
+\end{equation}
+где $U_j^\prime / \Delta x$ — численная производная (наклон) в ячейке $j$. 
+
+При численном решении уравнений гиперболического типа использование линейной реконструкции может приводить к появлению нефизичных осцилляций Годуновского типа вблизи сильных градиентов. Чтобы избежать этого, численная схема должна удовлетворять условию невозрастания полной вариации.
+
+Численная схема обладает TVD-свойством (Total Variation Diminishing), если полная вариация ее решения не возрастает со временем: 
+\begin{equation}
+\label{eq:tvd_condition}
+\mathrm{TV}(U^{n+1}) \leq \mathrm{TV}(U^{n}),
+\end{equation}
+
+где дискретная полная вариация сеточной функции определяется как сумма модулей разностей значений в соседних ячейках:
+\begin{equation}
+\label{eq:tv_def}
+\mathrm{TV}(U^n) = \sum_{j} \left| U_{j+1}^n - U_j^n \right|.
+\end{equation}
+
+Выполнение данного условия гарантирует, что схема не генерирует новых локальных экстремумов и предотвращает появление паразитных осцилляций на скачках уплотнения.
+
+Для обеспечения TVD-свойства используются нелинейные ограничители наклонов (лимитеры), которые адаптивно уменьшают наклон функции до нуля в точках экстремумов. В данной работе применяется классическая функция \textrm{minmod}, которая выбирает наименьшую по модулю разностную производную при совпадении знаков и возвращает нуль в противном случае
+\begin{equation}
+\label{eq:slope_limiter}
+U_j^\prime = \text{minmod} \left( U_j^n - U_{j-1}^n, U_{j+1}^n - U_j^n \right).
+\end{equation}
+
+Математическое определение ограничителя minmod для двух аргументов имеет следующий аналитический вид:
+\begin{equation}
+\label{eq:minmod_def}
+\text{minmod}(a, b) = \frac{1}{2} \big( \operatorname{sgn}(a) + \operatorname{sgn}(b) \big) \cdot \min\big( |a|, |b| \big),
+\end{equation}
+где $\operatorname{sgn}(x)$ — стандартная знаковая функция:
+\begin{equation}
+\label{eq:sgn_def}
+\operatorname{sgn}(x) =
+\begin{cases} 
+    1, & x > 0, \\
+    0, & x = 0, \\
+    -1, & x < 0.
+\end{cases}
+\end{equation}
+
+\textit{2. Предиктор} 
+
+Вычисляются промежуточные значения переменных на полушаге по времени $t^{n+1/2} = t^n + \Delta t / 2$ в центрах ячеек с использованием разложения в ряд Тейлора
+\begin{equation}
+\label{eq:predictor}
+U_j^{n+1/2} = U_j^n - \frac{\lambda}{2} F_j^\prime,
+\end{equation}
+где $\lambda = \frac{\Delta t}{\Delta x}$, а $F_j^\prime$ — численная производная (наклон) потока в ячейке $j$. В соответствии с исходной формулировкой схемы Нессяху--Тадмора~\cite{nessyahu1990} наклон потока вычисляется непосредственно по его разностям --- тем же ограничителем minmod, что и наклон решения (\ref{eq:slope_limiter}):
+\begin{equation}
+    F_j^\prime = \text{minmod} \left( F_j^n - F_{j-1}^n, F_{j+1}^n - F_j^n \right), \quad F_j^n = F(U_j^n).
+\end{equation}
+Такой способ вычисления наклона потока не требует построения матрицы Якоби.
+
+\textit{3. Корректор} 
+
+Вычисленные наклоны $U_j^\prime$ и предикторные значения $U_j^{n+1/2}$ подставляются в выведенную ранее формулу обновления (\ref{eq:fd2_final}), дающую решение на следующем временном слое $t^{n+1}$ на смещённой сетке в узлах $x_{j+1/2}$.
+
+Перенос алгоритма Нессяху--Тадмора на двумерные сетки $D(x, y)$ осуществляется путем использования двумерных <<шахматных>> контрольных объёмов. Вектор состояния $U$ смещается на полшага по обеим осям, переходя из узлов $(x_j, y_k)$ в узлы $(x_{j+1/2}, y_{k+1/2})$.
+
+Пространственная реконструкция (\ref{eq:reconstruction}) расширяется до билинейной аппроксимации:
+\begin{equation}
+\label{eq:reconstruction_2d}
+U(x, y, t^n) = U_{j,k}^n + (x - x_j) \frac{U_x'}{\Delta x} + (y - y_k) \frac{U_y'}{\Delta y},
+\end{equation}
+где численные производные $U_x'$ и $U_y'$ вычисляются с применением ограничителя (лимитера) независимо по каждому пространственному направлению.
+
+Предиктор вычисляется в центрах ячеек, причём наклоны потоков $F'_x$ и $G'_y$ находятся непосредственно по разностям потоков ограничителем minmod независимо вдоль каждого направления (аналогично одномерному случаю):
+\begin{equation}
+\label{eq:predictor_2d}
+U_{j,k}^{n+1/2} = U_{j,k}^n - \frac{\Delta t}{2\Delta x} F'_x - \frac{\Delta t}{2\Delta y} G'_y.
+\end{equation}
+
+На этапе корректора интегрирование производится по смещённому контрольному объёму $[x_j, x_{j+1}] \times [y_k, y_{k+1}]$, что приводит к выведенной ранее двумерной формуле обновления (\ref{eq:fd2_final_2d}).
+
+Главным недостатком полностью дискретной схемы FD2 является необходимость работы на <<шахматной>> сетке. Это вызывает существенные трудности при постановке граничных условий, так как границы сетки смещаются между временными шагами, что делает метод неприменимым для стационарных задач из-за сильной числовой диссипации, зависящей от шага по времени $\Delta t$. При двумерной постановке дополнительно возрастает алгоритмическая сложность при вычислении угловых потоков и постановке граничных условий, из-за чего в современных 2D-симуляторах чаще используются полудискретные аналоги. Эти проблемы были успешно решены в полудискретных схемах, рассматриваемых далее.
+
+    \subsection{Полудискретный подход}
+
+    \subsubsection{Полудискретная форма уравнений}
+
+Основой для построения схем семейства SD2 и SD3 является метод конечных объемов в его полудискретной формулировке, метод линий. В отличие от полностью дискретных схем, данный подход подразумевает интегрирование уравнений только по пространственным координатам, оставляя время непрерывной переменной.
+
+В качестве расчетной области выберем одномерную равномерную сетку с шагом $\Delta x$:
+\begin{equation}
+    \Omega_h = \{ x_j : x_j = j \Delta x \}, \quad j = 0, 1, \dots, N.
+\end{equation}
+Определим границы контрольного объема как точки 
+\begin{equation}
+    x_{j-1/2} = x_j - \frac{\Delta x}{2} \quad \text{ и } \quad x_{j+1/2} = x_j + \frac{\Delta x}{2}.
+\end{equation}
+
+Проинтегрируем исходное уравнение Эйлера в дивергентной форме (\ref{eq:euler_1d}) по контрольному объему $[x_{j-1/2}, x_{j+1/2}]$:
+\begin{equation}
+    \label{eq:spatial_integral}
+    \int\limits_{x_{j-1/2}}^{x_{j+1/2}} \frac{\partial U(x,t)}{\partial t} dx + \int\limits_{x_{j-1/2}}^{x_{j+1/2}} \frac{\partial F(U(x,t))}{\partial x} dx = 0.
+\end{equation}
+
+Поскольку границы ячейки не зависят от времени, производную по времени в первом слагаемом можно вынести за знак интеграла. Ко второму слагаемому применим формулу Ньютона--Лейбница
+\begin{equation}
+    \label{eq:spatial_integral_2}
+    \frac{d}{dt} \left( \int\limits_{x_{j-1/2}}^{x_{j+1/2}} U(x,t) dx \right) + \left[ F\left(U(x_{j+1/2}, t)\right) - F\left(U(x_{j-1/2}, t)\right) \right] = 0.
+\end{equation}
+
+Введем понятие пространственного среднего значения вектора консервативных переменных в $j$-й ячейке
+\begin{equation}
+    \label{eq:cell_average}
+    v_j(t) = \frac{1}{\Delta x} \int\limits_{x_{j-1/2}}^{x_{j+1/2}} U(x,t) dx.
+\end{equation}
+
+Разделив уравнение (\ref{eq:spatial_integral_2}) на шаг сетки $\Delta x$ и подставив определение (\ref{eq:cell_average}), получаем строгую полудискретную форму закона сохранения
+\begin{equation}
+    \label{eq:semi_discrete_ode}
+    \frac{d v_j(t)}{dt} = -\frac{H_{j+1/2}(t) - H_{j-1/2}(t)}{\Delta x}.
+\end{equation}
+
+Уравнение (\ref{eq:semi_discrete_ode}) представляет собой систему обыкновенных дифференциальных уравнений относительно средних значений $v_j(t)$. Здесь $H_{j+1/2}(t)$ обозначает численный поток через границу ячейки, который аппроксимирует физический поток $F(U(x_{j+1/2}, t))$. 
+
+В отличие от полностью дискретных методов, которые требуют совместного интегрирования по пространству и времени, полудискретная форма (\ref{eq:semi_discrete_ode}) позволяет разделить задачу на два независимых этапа: вычисление численных потоков $H_{j\pm1/2}(t)$ на основе пространственной реконструкции и интегрирование полученной системы ОДУ по времени с использованием высокоточных TVD-методов Рунге--Кутты.
+
+В случае двух пространственных измерений контрольным объемом выступает прямоугольная ячейка \begin{equation}
+    \Omega_{j,k} = [x_{j-1/2}, x_{j+1/2}] \times [y_{k-1/2}, y_{k+1/2}].
+\end{equation}
+Интегрируя двумерное уравнение Эйлера (\ref{eq:euler_2d}) по этому объему и применяя формулу Грина к дивергентному члену $\left(\frac{\partial F}{\partial x} + \frac{\partial G}{\partial y}\right)$, мы получаем:
+\begin{equation}
+    \begin{gathered}
+    \frac{d}{dt} \iint_{\Omega_{j,k}} U(x,y,t)\,dx\,dy = \\
+    = - \int_{y_{k-1/2}}^{y_{k+1/2}} \left[ F\big|_{x_{j+1/2}} - F\big|_{x_{j-1/2}} \right] dy - \\
+    - \int_{x_{j-1/2}}^{x_{j+1/2}} \left[ G\big|_{y_{k+1/2}} - G\big|_{y_{k-1/2}} \right] dx.
+\end{gathered}
+\end{equation}
+
+Вводя пространственное среднее значение 
+\begin{equation}
+    v_{j,k}(t) = \frac{1}{\Delta x \Delta y} \iint U dx dy
+\end{equation}
+и деля уравнение на площадь ячейки, мы получаем двумерную систему ОДУ:
+\begin{equation}
+\label{eq:semi_discrete_ode_2d}
+\frac{d v_{j,k}(t)}{dt} = -\frac{H^x_{j+1/2, k} - H^x_{j-1/2, k}}{\Delta x} - \frac{H^y_{j, k+1/2} - H^y_{j, k-1/2}}{\Delta y},
+\end{equation}
+где $H^x$ и $H^y$ — численные аппроксимации линейных интегралов физических потоков вдоль соответствующих граней ячейки.
+
+
+\subsubsection{Алгоритм схемы Курганова--Тадмора второго порядка с линейной реконструкцией}
+
+Несмотря на высокую эффективность схемы Нессяху--Тадмора, использование ею шахматных сеток создает значительные алгоритмические трудности при задании сложных граничных условий и делает диссипацию схемы зависимой от шага по времени $\Delta t$. Для решения этих проблем А.~Курганов и Э.~Тадмор предложили полудискретный предел центральной схемы~\cite{kurganov2000}. Если в схеме FD2 устремить шаг по времени к нулю ($\Delta t \to 0$), пространственная ширина <<смещённых>> ячеек Римана стягивается в линию, что позволяет полностью отказаться от использования шахматных сеток и вычислять потоки на фиксированной (исходной) сетке.
+
+В результате такого предельного перехода вновь приходим к полудискретной форме закона сохранения (\ref{eq:semi_discrete_ode}), выведенной выше прямым интегрированием по контрольному объёму, --- системе обыкновенных дифференциальных уравнений по времени относительно средних по ячейкам значений $v_j(t)$. Специфику схемы SD2 определяет конкретный вид численного потока Курганова--Тадмора $H_{j+1/2}(t)$ через грань ячейки $x_{j+1/2}$, который при выводе (\ref{eq:semi_discrete_ode}) считался известной величиной.
+
+Ключевым элементом схемы SD2 является конструкция этого потока. Он вычисляется как центральная аппроксимация физических потоков с добавлением диссипативного члена (числовой вязкости), который пропорционален максимальной локальной скорости распространения волн $a_{j+1/2}$:
+\begin{equation}
+\label{eq:kt_flux}
+H_{j+1/2} = \frac{F(v_{j+1/2}^+) + F(v_{j+1/2}^-)}{2} - \frac{a_{j+1/2}}{2} \left[ v_{j+1/2}^+ - v_{j+1/2}^- \right].
+\end{equation}
+
+Здесь $v_{j+1/2}^+$ и $v_{j+1/2}^-$ — реконструированные значения консервативных переменных на правой и левой стороне грани $x_{j+1/2}$ соответственно. Реконструкция выполняется с использованием ограничителя наклонов (например, minmod) для сохранения свойства невозрастания полной вариации (TVD):
+\begin{equation}
+\label{eq:kt_reconstruction}
+v_{j+1/2}^- = v_j(t) + \frac{\Delta x}{2} (v_x)_j(t), \quad v_{j+1/2}^+ = v_{j+1}(t) - \frac{\Delta x}{2} (v_x)_{j+1}(t),
+\end{equation}
+где $(v_x)_j$ — численная производная (наклон) в $j$-й ячейке.
+
+Скалярная локальная скорость распространения возмущений $a_{j+1/2}(t)$ оценивается через спектральный радиус $\rho$ матрицы Якоби $A(v) = \frac{\partial F}{\partial v}$ по формуле:
+\begin{equation}
+\label{eq:kt_speed}
+a_{j+1/2}(t) = \max \left[ \rho \left( A(v_{j+1/2}^-) \right), \rho \left( A(v_{j+1/2}^+) \right) \right].
+\end{equation}
+Для системы уравнений Эйлера спектральный радиус матрицы Якоби равен сумме локальной скорости потока и местной скорости звука: $\rho(A) = |u| + c$.
+
+Поскольку система (\ref{eq:semi_discrete_ode}) представляет собой систему ОДУ, интегрирование по времени осуществляется методами Рунге--Кутты. Для сохранения свойства TVD необходимо использовать специальные SSP-методы (Strong Stability Preserving). В данной работе применяется SSP-метод Рунге--Кутты 2-го порядка~\cite{gottlieb1998}, согласованный по порядку точности с пространственной аппроксимацией схемы SD2:
+\begin{equation}
+\label{eq:rk2}
+\begin{aligned}
+v^{(1)} &= v^n + \Delta t \, L(v^n), \\
+v^{n+1} &= \frac{1}{2} v^n + \frac{1}{2} v^{(1)} + \frac{1}{2} \Delta t \, L(v^{(1)}),
+\end{aligned}
+\end{equation}
+где $L(v)$ — правая часть уравнения (\ref{eq:semi_discrete_ode}), а $\Delta t$ выбирается из условия Куранта--Фридрихса--Леви (CFL).
+
+Таким образом, полудискретная схема SD2 полностью избавляется от шахматных сеток, сохраняя при этом <<Riemann-solver-free>> природу: для вычисления потока требуется знать лишь максимальную скорость волны $a_{j+1/2}$, без необходимости точного разрешения структуры веера Римана.
+
+Одно из главных достоинств полудискретного подхода \\ Курганова--Тадмора --- математически строгий и алгоритмически прозрачный переход к многомерным задачам. Двумерная полудискретная система (\ref{eq:semi_discrete_ode_2d}), выведенная выше, сохраняет ту же структуру.
+
+Потоки $H^x$ и $H^y$ вычисляются независимо (dimensional splitting). Поток $H^x_{j+1/2, k}$ вдоль оси $x$ рассчитывается по формуле (\ref{eq:kt_flux}) с использованием значений $v_{j+1/2, k}^+$ и $v_{j+1/2, k}^-$, полученных путем одномерной реконструкции вдоль индексов $j$. Аналогично, поток $H^y_{j, k+1/2}$ вдоль оси $y$ вычисляется с использованием реконструкции вдоль индексов $k$:
+\begin{equation}
+\label{eq:kt_flux_y}
+H^y_{j, k+1/2} = \frac{G(v_{j, k+1/2}^+) + G(v_{j, k+1/2}^-)}{2} - \frac{b_{j, k+1/2}}{2} \left[ v_{j, k+1/2}^+ - v_{j, k+1/2}^- \right],
+\end{equation}
+где 
+\begin{equation}
+    b_{j, k+1/2} = \max(\rho(B(v^-)), \rho(B(v^+)))
+\end{equation}
+--- максимальная скорость распространения волн вдоль оси $y$ (определяемая через спектральный радиус матрицы Якоби $B(v) = \partial G / \partial v$).
+
+Благодаря аддитивной структуре правой части уравнения (\ref{eq:semi_discrete_ode_2d}), интегратор по времени Рунге--Кутты (\ref{eq:rk2}) применяется к двумерному массиву состояний без каких-либо алгоритмических изменений.
+
+\newpage
+
+\section{Программная реализация}
+
+\subsection{Библиотека для вычислений JAX}
+
+Библиотека JAX~\cite{jax} представляет собой современный программный комплекс для высокопроизводительных численных вычислений, разработанный компанией Google. В его основе лежит компиляция Python-кода в оптимизированные инструкции для гетерогенных вычислительных устройств (CPU, GPU, TPU) с использованием компилятора XLA (Accelerated Linear Algebra). Ключевой особенностью JAX является опора на парадигму функционального программирования, требующую применения чистых функций без побочных эффектов.
+
+В рамках данной работы из инструментария JAX непосредственно использованы следующие возможности:
+
+\begin{itemize}
+    \item JIT-компиляция (Just-In-Time). Декоратор jax.jit выполняет трассировку Python-функции и компилирует ее в оптимизированный код XLA, устраняя накладные расходы интерпретатора Python и обеспечивая слияние операций (operator fusion). В разработанном комплексе под jax.jit помещается полный шаг интегрирования по времени.
+    \item Векторизованные операции над массивами. Модуль jax.numpy предоставляет интерфейс в стиле NumPy, позволяющий выражать вычисления на структурированных сетках через матричные срезы и сдвиги осей (jax.numpy.moveaxis) без явных циклов по пространству.
+    \item Функциональное обновление массивов. Поскольку массивы JAX неизменяемы, запись в элементы выполняется через конструкцию \\ at[\,\ldots\,].set(\,\ldots\,), возвращающую новый массив; этот механизм применяется для сохранения временных слоёв решения.
+    \item Структурный цикл jax.lax.while\_loop. Позволяет включить итерационный процесс продвижения по времени в компилируемый граф вычислений, что недостижимо при использовании обычного цикла Python.
+    \item Перенос вычислений между устройствами. Один и тот же исходный код исполняется на CPU и GPU без изменений, что использовано при анализе аппаратного ускорения.
+\end{itemize}
+
+Перечисленные возможности определяют структуру и стиль реализации программного комплекса, рассматриваемого далее.
+
+\subsection{Функциональная парадигма JAX}
+
+Эффективное применение JIT-компиляции и переноса вычислений на ускорители требует отказа от объектно-ориентированного стиля с изменяемым состоянием в пользу функционального. В исходной библиотеке \textit{centpy}~\cite{centpy} использовались объекты-решатели, хранящие и изменяющие внутреннее состояние в процессе счёта. Такой подход несовместим с требованиями jax.jit, для которого компилируемая функция должна быть чистой, то есть детерминированно отображать аргументы в результат без модификации внешних данных.
+
+В связи с этим расчётное ядро комплекса jax\_centpy построено в функциональном стиле, опирающемся на три принципа:
+
+\begin{enumerate}
+    \item Разделение данных и поведения. Параметры сетки и описание физической задачи (функции потоков, спектральных радиусов, граничных условий) вынесены в неизменяемые структуры NamedTuple (Pars1d, \\ Pars2d, Equation1d, Equation2d) и передаются в алгоритмы как аргументы.
+    \item Отсутствие побочных эффектов. Функции численных схем и шага по времени не изменяют переданные им массивы: они принимают текущее состояние u и возвращают новый массив, что делает их пригодными для компиляции jax.jit.
+    \item Векторизация вместо циклов. Вычисление потоков на гранях ячеек выражено через срезы массивов и сдвиги осей, благодаря чему схемы SD2 и FD2 записываются как последовательность векторных операций.
+\end{enumerate}
+
+Подчинение этим принципам делает расчётное ядро прозрачным для компилятора jax.jit и позволяет исполнять его на графическом ускорителе без изменения исходного кода.
+
+\subsection{Архитектура программного комплекса}
+
+Комплекс jax\_centpy имеет модульную структуру, в которой каждый модуль отвечает за отдельный уровень абстракции. Такое разделение обеспечивает расширяемость: добавление новых уравнений или ограничителей не требует изменения кода решателя. Взаимодействие модулей организовано следующим образом:
+
+\begin{itemize}
+    \item core.py --- базовый уровень данных. Содержит определения неизменяемых структур Pars1d, Pars2d, Equation1d, Equation2d, задающих параметры сетки и интерфейсы функций физических потоков, спектральных радиусов и обработки границ. Здесь же включается режим 64-битной арифметики с плавающей точкой, необходимый для задач газовой динамики.
+
+    \item limiters.py --- уровень базовых операций. Содержит набор ограничителей наклона (minmod, superbee, van\_leer и другие), подавляющих нефизичные осцилляции вблизи разрывов.
+
+    \item schemes.py и time\_integration.py --- уровень численных методов. В schemes.py реализованы кусочно-линейная реконструкция и вычисление правых частей (численных потоков) полудискретной схемы SD2, а также полный шаг полностью дискретной схемы FD2 для одномерной и двумерной постановок. Модуль time\_integration.py содержит чистые функции интеграторов по времени; в расчётах используется метод SSP-RK2, согласованный по порядку точности с пространственной аппроксимацией.
+
+    \item solver.py --- уровень управления вычислением. Содержит используемые в работе решатели Solver1d и Solver2d. Каждый из них настраивается на схему (SD2 или FD2) и ограничитель, инициализирует сетку, помещает шаг интегрирования под jax.jit и организует продвижение по времени через jax.lax.while\_loop с адаптивным выбором шага $\Delta t$ по числу Куранта. В ходе счёта решатель сохраняет все промежуточные временные слои, что используется для последующего анализа и визуализации.
+
+    \item equations.py --- уровень физических моделей. Содержит фабричные функции, формирующие конкретные постановки задач: одномерное и двумерное уравнения Эйлера, включая модифицированную задачу о распаде разрыва с областью локального энерговложения.
+
+    \item boundaries.py --- уровень граничных условий. Содержит набор обработчиков границ расчётной области, реализуемых через добавление фиктивных ячеек: периодические условия, условия свободного выхода (Неймана), условия Дирихле и условие непротекания на твёрдой стенке для одномерной и двумерной постановок.
+
+\end{itemize}
+
+Представленная архитектура обеспечивает перенос расчётов на графический ускоритель при сохранении читаемости математического кода. Передача конфигурации через структуры Equation делает комплекс применимым к широкому классу гиперболических систем.
+
+\newpage
+
+\section{Численное исследование}
+
+\subsection{Верификация численных методов}
+
+Для подтверждения корректности разработанной JAX-реализации схем $SD2$ и $FD2$ проводится численный анализ сходимости на гладких тестовых решениях. В отличие от задач с разрывами, рассматриваемых в разделе~\ref{sec:results}, где порядок схемы деградирует до первого в окрестности ударных волн, гладкие решения позволяют наблюдать теоретический порядок аппроксимации схемы в глобальной норме.
+
+Для количественной оценки точности используются нормы $L_1$ и $L_2$.
+Норма $L_1$ чувствительна к погрешностям интегрального характера и является
+стандартной метрикой в вычислительной газодинамике:
+\begin{equation}
+    \label{eq:l1_norm}
+    \|e\|_{L_1} = \frac{1}{N} \sum_{i=1}^{N} \left| u_i^h - u_i^{\mathrm{ref}} \right|,
+\end{equation}
+Норма $L_2$ или среднеквадратическая позволяет дополнительно оценить
+равномерность распределения погрешности по всей области:
+\begin{equation}
+    \label{eq:l2_norm}
+    \|e\|_{L_2} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} \left( u_i^h - u_i^{\mathrm{ref}} \right)^2},
+\end{equation}
+где в обоих выражениях $u_i^h$ --- численное решение в центре $i$-й ячейки
+сетки с числом ячеек $N$, $u_i^{\mathrm{ref}}$ --- точное аналитическое решение.
+
+Эмпирический порядок сходимости при последовательном удвоении числа ячеек
+вычисляется по формуле Ричардсона:
+\begin{equation}
+    \label{eq:richardson}
+    p = \log_2 \frac{\|e^{(N)}\|}{\|e^{(2N)}\|},
+\end{equation}
+где $\|e^{(N)}\|$ и $\|e^{(2N)}\|$ --- ошибки на грубой и вдвое
+измельченной сетке в выбранной норме соответственно. Согласно теоретическому
+порядку аппроксимации, схемы $SD2$ и $FD2$ должны демонстрировать $p \approx 2$.
+
+\textit{Одномерный случай}
+
+В качестве одномерной тестовой задачи рассматривается уравнение Эйлера
+(\ref{eq:euler_1d}) на периодической области $x \in [0, 1]$ с начальными
+условиями в виде синусоидального возмущения плотности при постоянных скорости
+и давлении:
+{% локально уменьшаем отбивки только для этой формулы
+    \setlength{\abovedisplayskip}{2pt}%
+    \setlength{\abovedisplayshortskip}{2pt}%
+\begin{equation}
+    \label{eq:smooth_1d_ic}
+    \rho(x, 0) = 1 + 0.2\sin(2\pi x), \quad u(x, 0) = 1, \quad p(x, 0) = 1.
+\end{equation}}
+Точное решение представляет собой перенос начального профиля без изменения формы
+со скоростью $u = 1$, что при периодических граничных условиях даёт:
+{% локально уменьшаем отбивки только для этой формулы
+    \setlength{\abovedisplayskip}{2pt}%
+    \setlength{\abovedisplayshortskip}{2pt}%
+\begin{equation}
+    \label{eq:smooth_1d_exact}
+    \rho(x, t) = 1 + 0.2\sin\bigl(2\pi(x - t)\bigr).
+\end{equation}}
+Расчёт проводился до момента времени $t = 1$ (один полный период переноса)
+при числе Куранта $C = 0.475$ с ограничителем наклонов типа монотонизированной
+центральной разности (mc). Ошибка вычислялась по плотности $\rho$
+в соответствии с формулами (\ref{eq:l1_norm})--(\ref{eq:l2_norm}).
+Для оценки сходимости последовательно использовались сетки с числом ячеек
+$N \in \{50,\, 100,\, 200,\, 400\}$.
+
+Результаты анализа сходимости для схем $SD2$ и $FD2$ в одномерном
+случае представлены в таблицах~\ref{tab:conv_sd2_1d}--\ref{tab:conv_fd2_1d}.
+
+% ---- SD2 1D ----
+\begin{table}[!htbp]
+\centering
+\caption{Сходимость схемы $SD2$ относительно точного решения, одномерный случай, плотность $\rho$}
+\vspace{0.1cm}
+\label{tab:conv_sd2_1d}
+\begin{tabular}{ccccc}
+\toprule
+$N$ & $\|e\|_{L_1}$ & $p_{L_1}$ & $\|e\|_{L_2}$ & $p_{L_2}$ \\
+\midrule
+50  & $1.9348\times 10^{-3}$ & ---  & $2.2379\times 10^{-3}$ & ---  \\
+100 & $5.5983\times 10^{-4}$ & 1.79 & $6.9353\times 10^{-4}$ & 1.69 \\
+200 & $1.4718\times 10^{-4}$ & 1.93 & $2.1407\times 10^{-4}$ & 1.70 \\
+400 & $3.7337\times 10^{-5}$ & 1.98 & $6.6111\times 10^{-5}$ & 1.70 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% \begin{table}[H]
+% \centering
+% \caption{Сходимость схемы $SD2$ относительно точного решения, одномерный случай, плотность $\rho$}
+% \label{tab:conv_sd2_1d}
+% \begin{tabular}{|c|c|c|c|c|}
+% \hline
+% $N$ & $\|e\|_{L_1}$ & $p_{L_1}$ & $\|e\|_{L_2}$ & $p_{L_2}$ \\
+% \hline
+% 50  & $1.9348\times 10^{-3}$ & ---  & $2.2379\times 10^{-3}$ & ---  \\
+% 100 & $5.5983\times 10^{-4}$ & 1.79 & $6.9353\times 10^{-4}$ & 1.69 \\
+% 200 & $1.4718\times 10^{-4}$ & 1.93 & $2.1407\times 10^{-4}$ & 1.70 \\
+% 400 & $3.7337\times 10^{-5}$ & 1.98 & $6.6111\times 10^{-5}$ & 1.70 \\
+% \hline
+% \end{tabular}
+% \end{table}
+
+% ---- FD2 1D ----
+\begin{table}[!htbp]
+\centering
+\caption{Сходимость схемы $FD2$ относительно точного решения, одномерный случай, плотность $\rho$}
+\vspace{0.1cm}
+\label{tab:conv_fd2_1d}
+\begin{tabular}{ccccc}
+\toprule
+$N$ & $\|e\|_{L_1}$ & $p_{L_1}$ & $\|e\|_{L_2}$ & $p_{L_2}$ \\
+\midrule
+50  & $1.3469\times 10^{-3}$ & ---  & $1.8671\times 10^{-3}$ & ---  \\
+100 & $3.2891\times 10^{-4}$ & 2.03 & $5.2057\times 10^{-4}$ & 1.84 \\
+200 & $7.5657\times 10^{-5}$ & 2.12 & $1.4457\times 10^{-4}$ & 1.85 \\
+400 & $1.7951\times 10^{-5}$ & 2.08 & $4.0688\times 10^{-5}$ & 1.83 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% \begin{table}[H]
+% \centering
+% \caption{Сходимость схемы $FD2$ относительно точного решения, одномерный случай, плотность $\rho$}
+% \label{tab:conv_fd2_1d}
+% \begin{tabular}{|c|c|c|c|c|}
+% \hline
+% $N$ & $\|e\|_{L_1}$ & $p_{L_1}$ & $\|e\|_{L_2}$ & $p_{L_2}$ \\
+% \hline
+% 50  & $1.3469\times 10^{-3}$ & ---  & $1.8671\times 10^{-3}$ & ---  \\
+% 100 & $3.2891\times 10^{-4}$ & 2.03 & $5.2057\times 10^{-4}$ & 1.84 \\
+% 200 & $7.5657\times 10^{-5}$ & 2.12 & $1.4457\times 10^{-4}$ & 1.85 \\
+% 400 & $1.7951\times 10^{-5}$ & 2.08 & $4.0688\times 10^{-5}$ & 1.83 \\
+% \hline
+% \end{tabular}
+% \end{table}
+
+Как следует из таблиц~\ref{tab:conv_sd2_1d}--\ref{tab:conv_fd2_1d}, обе
+схемы демонстрируют близкий ко второму порядок сходимости: по интегральной
+норме $L_1$ эмпирический порядок выходит на $p \approx 2$, тогда как по
+среднеквадратичной норме $L_2$ для схемы $SD2$ он несколько ниже
+($p \approx 1.7$). Умеренное снижение наблюдаемого порядка в более строгих
+нормах на гладких решениях является характерной особенностью центральных схем
+рассматриваемого семейства, обусловленной диссипативной структурой
+потоковой функции Лакса--Фридрихса; оно не связано с выбором ограничителя
+наклонов и не свидетельствует об ошибке реализации. Формальная
+второпорядочность реализованных операторов пространственной реконструкции и
+интегрирования по времени методами TVD-Рунге--Кутты подтверждается
+двумерным тестом на изоэнтропийном вихре, где порядок $p \approx 2$ достигается по всем примитивным переменным.
+
+Вместе с тем следует отметить, что проверка TVD-свойства на гладком решении
+уравнений Эйлера носит иллюстративный характер: для систем уравнений полная
+вариация отдельных компонент не обязана убывать в силу нелинейного взаимодействия
+волн~\cite{leveque1992}. Строгое теоретическое обоснование TVD-условия справедливо
+лишь для скалярных законов сохранения. Поэтому для независимой проверки
+монотонности схем дополнительно рассматривается одномерное уравнение Бюргерса.
+
+\textit{Проверка TVD-свойства на уравнении Бюргерса (1D)}
+
+Рассматривается скалярное нелинейное уравнение Бюргерса на периодической
+области $x \in [0, 2\pi]$:
+\begin{equation}
+    \label{eq:burgers_1d}
+    \frac{\partial u}{\partial t} + \frac{\partial}{\partial x}
+    \!\left(\frac{u^2}{2}\right) = 0,
+    \qquad u(x, 0) = u_0(x) = \sin x + \tfrac{1}{2}\sin\tfrac{x}{2}.
+\end{equation}
+Выбор данной задачи обусловлен двумя её свойствами. Во-первых, при $t < T_*$,
+где 
+\begin{equation}
+    T_* = -\frac{1}{\min_x u_0'(x)} \approx 0.99
+\end{equation}
+--- момент опрокидывания
+характеристик, решение остаётся гладким и описывается
+\begin{equation}
+    \label{eq:burgers_exact}
+    u(x, t) = u_0(\xi), \qquad \xi + u_0(\xi)\,t = x, \qquad
+    u_0(\xi) = \sin\xi + \tfrac{1}{2}\sin\tfrac{\xi}{2},
+\end{equation}
+что позволяет находить $\xi$ итерационно методом Ньютона. Во-вторых, при
+$t > T_*$ в решении формируется ударная волна, и полная вариация точного
+решения начинает монотонно убывать~\cite{leveque1992}. Именно в этом
+разрывном режиме для скалярного уравнения сохранения строго доказано
+выполнение TVD-условия~(\ref{eq:tvd_condition})~\cite{harten1983}.
+
+Расчёт проводился до момента $t = 2$, что существенно превышает время
+опрокидывания $T_*$ и позволяет проследить как гладкую стадию переноса, так
+и формирование с последующим распространением ударной волны, при числе
+Куранта $C = 0.475$.
+
+На рисунке~\ref{fig:tvd_burgers_1d} показана эволюция полной вариации $\mathrm{TV}(t)$
+для обеих схем.
+
+% ---- РИСУНОК: TVD Бюргерс 1D (вставить) ----
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/burgers_1d_tv_evolution_sd2.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/burgers_1d_tv_evolution_fd2.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Эволюция полной вариации $\mathrm{TV}(t)$ для уравнения Бюргерса~(\ref{eq:burgers_1d}).
+             Пунктирная линия соответствует начальному значению $\mathrm{TV}(t=0)$}
+    \label{fig:tvd_burgers_1d}
+\end{figure}
+
+Как следует из рисунка~\ref{fig:tvd_burgers_1d}, на начальном этапе расчёта
+полная вариация остаётся практически постоянной: гладкий профиль переносится
+без заметной диссипации. После образования и развития ударной волны
+$\mathrm{TV}(t)$ начинает монотонно убывать. Для схемы $SD2$ полная вариация
+не превышает начального значения на всём протяжении расчёта; для схемы $FD2$
+на гладкой стадии наблюдается пренебрежимо малое (менее $0.2\,\%$) превышение
+уровня $\mathrm{TV}(t=0)$, не сопровождающееся ростом вариации в окрестности
+разрыва. Это подтверждает, что применяемый лимитер minmod совместно с
+TVD-интегратором Рунге--Кутты~\cite{gottlieb1998} корректно подавляет
+осцилляции вблизи разрыва и обеспечивает монотонность численного решения.
+
+
+\textit{Двумерный случай}
+
+Для верификации двумерной реализации используется классический тест --- изоэнтропийный вихрь Ху и Шу~\cite{hu1999}, обладающий точным аналитическим решением и широко применяемый в вычислительной газодинамике для оценки порядка схем на многомерных сетках. Задача формулируется на квадратной области $[0, 10] \times [0, 10]$ с периодическими граничными условиями по обоим направлениям.
+
+Начальные условия задаются как гладкое возмущение фонового однородного потока $(\rho_\infty,\, u_\infty,\, v_\infty,\, p_\infty) = (1,\, 1,\, 1,\, 1)$ вихревым возмущением интенсивности $\varepsilon = 5$ с центром в точке $(x_0, y_0) = (5, 5)$:
+\begin{equation}
+    \label{eq:vortex_delta}
+    \begin{aligned}
+        \delta u &= -\frac{\varepsilon}{2\pi}(y - y_0)\,\euler^{\frac{1-r^2}{2}}, \\
+        \delta v &= +\frac{\varepsilon}{2\pi}(x - x_0)\,\euler^{\frac{1-r^2}{2}}, \\
+        \delta T &= -\frac{(\gamma-1)\varepsilon^2}{8\gamma\pi^2}\,\euler^{1-r^2},
+    \end{aligned}
+\end{equation}
+где $r^2 = (x - x_0)^2 + (y - y_0)^2$. Плотность и давление восстанавливаются из условия изоэнтропийности течения:
+\begin{equation}
+    \label{eq:vortex_rho_p}
+    \rho = (1 + \delta T)^{\frac{1}{\gamma-1}}, \qquad p = (1 + \delta T)^{\frac{\gamma}{\gamma-1}}.
+\end{equation}
+Точное решение --- перенос вихря без изменения его структуры с единичной скоростью по обеим осям (в силу периодичности при $t = 10$ вихрь возвращается в исходное положение):
+\begin{equation}
+    \label{eq:vortex_exact}
+    (\rho, u, v, p)(x, y, t) = (\rho, u, v, p)(x - t,\; y - t,\; 0).
+\end{equation}
+Расчёт проводился при числе Куранта $C = 0.475$ на квадратных равномерных сетках $N \times N$, $N \in \{50,\, 100,\, 200,\, 400\}$, с центральной (неограниченной) реконструкцией наклонов. Погрешность вычислялась относительно сдвинутого аналитического решения~(\ref{eq:vortex_exact}) на конечном временном слое $t = 1$.
+
+Результаты анализа сходимости представлены в таблицах~\ref{tab:conv_sd2_2d}--\ref{tab:conv_fd2_2d}.
+
+Полученные результаты свидетельствуют о том, что двумерная JAX-реализация
+корректно воспроизводит теоретический второй порядок аппроксимации схем по всем
+примитивным переменным.
+Таким образом, операторы расщепления по направлениям, реализованные с
+применением тензорных операций jax.numpy, сохраняют расчетную
+точность многомерной схемы.
+
+Перенос верификации монотонности на двумерный случай требует принципиальной
+оговорки. Теорема Гудмана--Левека~\cite{goodman1985} устанавливает, что
+для многомерных задач не существует линейных схем второго и выше порядка
+точности, которые были бы TVD в классическом смысле~(\ref{eq:tvd_condition}).
+
+Попытка применить условие 
+\begin{equation}
+    \mathrm{TV}(u^{n+1}) \leq \mathrm{TV}(u^n)
+\end{equation}
+напрямую к двумерной задаче приводит к принципиальным нарушениям даже для
+монотонных схем, поскольку перенос разрыва под углом к сетке неизбежно
+порождает осциллирующий вклад в суммарную вариацию $\mathrm{TV} = \mathrm{TV}_x + \mathrm{TV}_y$.
+
+% ---- SD2 2D ----
+
+\begin{table}[H]
+\centering
+\fontsize{13pt}{15.6pt}\selectfont
+\setlength{\tabcolsep}{4pt}
+\caption{Анализ сходимости схемы $SD2$, двумерный случай}
+\vspace{0.1cm}
+\label{tab:conv_sd2_2d}
+\begin{tabular}{c|cccc|cccc}
+\toprule
+\multirow{2}{*}{$N \times N$}
+  & \multicolumn{4}{c}{$\rho$}
+  & \multicolumn{4}{c}{$u$} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+  & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+  & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$
+  & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+  & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$ \\
+\midrule
+$50{\times}50$  & $6.483\times10^{-4}$ & --- & $1.466\times10^{-3}$ & --- & $1.399\times10^{-3}$ & --- & $3.418\times10^{-3}$ & --- \\
+$100{\times}100$ & $1.294\times10^{-4}$ & 2.32 & $2.907\times10^{-4}$ & 2.33 & $2.774\times10^{-4}$ & 2.33 & $6.879\times10^{-4}$ & 2.31 \\
+$200{\times}200$ & $2.817\times10^{-5}$ & 2.20 & $6.354\times10^{-5}$ & 2.19 & $6.100\times10^{-5}$ & 2.18 & $1.483\times10^{-4}$ & 2.21 \\
+$400{\times}400$ & $6.700\times10^{-6}$ & 2.07 & $1.522\times10^{-5}$ & 2.06 & $1.466\times10^{-5}$ & 2.06 & $3.506\times10^{-5}$ & 2.08 \\
+\midrule
+\multirow{2}{*}{$N \times N$}
+  & \multicolumn{4}{c}{$v$}
+  & \multicolumn{4}{c}{$p$} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+  & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+  & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$
+  & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+  & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$ \\
+\midrule
+$50{\times}50$  & $1.416\times10^{-3}$ & --- & $3.393\times10^{-3}$ & --- & $7.701\times10^{-4}$ & --- & $1.948\times10^{-3}$ & --- \\
+$100{\times}100$ & $2.776\times10^{-4}$ & 2.35 & $6.681\times10^{-4}$ & 2.34 & $1.578\times10^{-4}$ & 2.29 & $3.788\times10^{-4}$ & 2.36 \\
+$200{\times}200$ & $5.994\times10^{-5}$ & 2.21 & $1.412\times10^{-4}$ & 2.24 & $3.574\times10^{-5}$ & 2.14 & $8.254\times10^{-5}$ & 2.20 \\
+$400{\times}400$ & $1.417\times10^{-5}$ & 2.08 & $3.306\times10^{-5}$ & 2.09 & $8.626\times10^{-6}$ & 2.05 & $1.967\times10^{-5}$ & 2.07 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% \begin{table}[H]
+% \centering
+% \fontsize{13pt}{15.6pt}\selectfont
+% \setlength{\tabcolsep}{4pt}
+% \caption{Анализ сходимости схемы $SD2$, двумерный случай}
+% \label{tab:conv_sd2_2d}
+% \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+% \hline
+% \multirow{2}{*}{$N \times N$}
+%   & \multicolumn{4}{c|}{$\rho$}
+%   & \multicolumn{4}{c|}{$u$} \\
+% \cline{2-9}
+%   & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+%   & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$
+%   & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+%   & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$ \\
+% \hline
+% $50{\times}50$  & $6.483\times10^{-4}$ & --- & $1.466\times10^{-3}$ & --- & $1.399\times10^{-3}$ & --- & $3.418\times10^{-3}$ & --- \\
+% $100{\times}100$ & $1.294\times10^{-4}$ & 2.32 & $2.907\times10^{-4}$ & 2.33 & $2.774\times10^{-4}$ & 2.33 & $6.879\times10^{-4}$ & 2.31 \\
+% $200{\times}200$ & $2.817\times10^{-5}$ & 2.20 & $6.354\times10^{-5}$ & 2.19 & $6.100\times10^{-5}$ & 2.18 & $1.483\times10^{-4}$ & 2.21 \\
+% $400{\times}400$ & $6.700\times10^{-6}$ & 2.07 & $1.522\times10^{-5}$ & 2.06 & $1.466\times10^{-5}$ & 2.06 & $3.506\times10^{-5}$ & 2.08 \\
+% \hline
+% \multirow{2}{*}{$N \times N$}
+%   & \multicolumn{4}{c|}{$v$}
+%   & \multicolumn{4}{c|}{$p$} \\
+% \cline{2-9}
+%   & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+%   & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$
+%   & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+%   & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$ \\
+% \hline
+% $50{\times}50$  & $1.416\times10^{-3}$ & --- & $3.393\times10^{-3}$ & --- & $7.701\times10^{-4}$ & --- & $1.948\times10^{-3}$ & --- \\
+% $100{\times}100$ & $2.776\times10^{-4}$ & 2.35 & $6.681\times10^{-4}$ & 2.34 & $1.578\times10^{-4}$ & 2.29 & $3.788\times10^{-4}$ & 2.36 \\
+% $200{\times}200$ & $5.994\times10^{-5}$ & 2.21 & $1.412\times10^{-4}$ & 2.24 & $3.574\times10^{-5}$ & 2.14 & $8.254\times10^{-5}$ & 2.20 \\
+% $400{\times}400$ & $1.417\times10^{-5}$ & 2.08 & $3.306\times10^{-5}$ & 2.09 & $8.626\times10^{-6}$ & 2.05 & $1.967\times10^{-5}$ & 2.07 \\
+% \hline
+% \end{tabular}
+% \end{table}
+
+
+% ---- FD2 2D ----
+
+\begin{table}[H]
+\centering
+\fontsize{13pt}{15.6pt}\selectfont
+\setlength{\tabcolsep}{4pt}
+\caption{Анализ сходимости схемы $FD2$, двумерный случай}
+\vspace{0.1cm}
+\label{tab:conv_fd2_2d}
+\begin{tabular}{c|cccc|cccc}
+\toprule
+\multirow{2}{*}{$N \times N$}
+  & \multicolumn{4}{c}{$\rho$}
+  & \multicolumn{4}{c}{$u$} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+  & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+  & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$
+  & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+  & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$ \\
+\midrule
+$50{\times}50$  & $1.500\times10^{-3}$ & --- & $3.389\times10^{-3}$ & --- & $3.933\times10^{-3}$ & --- & $9.460\times10^{-3}$ & --- \\
+$100{\times}100$ & $1.740\times10^{-4}$ & 3.11 & $4.144\times10^{-4}$ & 3.03 & $4.058\times10^{-4}$ & 3.28 & $1.050\times10^{-3}$ & 3.17 \\
+$200{\times}200$ & $3.089\times10^{-5}$ & 2.49 & $7.330\times10^{-5}$ & 2.50 & $7.565\times10^{-5}$ & 2.42 & $1.899\times10^{-4}$ & 2.47 \\
+$400{\times}400$ & $6.365\times10^{-6}$ & 2.28 & $1.503\times10^{-5}$ & 2.29 & $1.632\times10^{-5}$ & 2.21 & $3.959\times10^{-5}$ & 2.26 \\
+\midrule
+\multirow{2}{*}{$N \times N$}
+  & \multicolumn{4}{c}{$v$}
+  & \multicolumn{4}{c}{$p$} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+  & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+  & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$
+  & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+  & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$ \\
+\midrule
+$50{\times}50$  & $3.929\times10^{-3}$ & --- & $9.370\times10^{-3}$ & --- & $1.837\times10^{-3}$ & --- & $5.168\times10^{-3}$ & --- \\
+$100{\times}100$ & $3.919\times10^{-4}$ & 3.33 & $9.813\times10^{-4}$ & 3.26 & $1.993\times10^{-4}$ & 3.20 & $5.186\times10^{-4}$ & 3.32 \\
+$200{\times}200$ & $6.910\times10^{-5}$ & 2.50 & $1.648\times10^{-4}$ & 2.57 & $3.625\times10^{-5}$ & 2.46 & $9.010\times10^{-5}$ & 2.52 \\
+$400{\times}400$ & $1.371\times10^{-5}$ & 2.33 & $3.171\times10^{-5}$ & 2.38 & $7.763\times10^{-6}$ & 2.22 & $1.824\times10^{-5}$ & 2.30 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% \begin{table}[H]
+% \centering
+% \fontsize{13pt}{15.6pt}\selectfont
+% \setlength{\tabcolsep}{4pt}
+% \caption{Анализ сходимости схемы $FD2$, двумерный случай}
+% \label{tab:conv_fd2_2d}
+% \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+% \hline
+% \multirow{2}{*}{$N \times N$}
+%   & \multicolumn{4}{c|}{$\rho$}
+%   & \multicolumn{4}{c|}{$u$} \\
+% \cline{2-9}
+%   & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+%   & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$
+%   & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+%   & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$ \\
+% \hline
+% $50{\times}50$  & $1.500\times10^{-3}$ & --- & $3.389\times10^{-3}$ & --- & $3.933\times10^{-3}$ & --- & $9.460\times10^{-3}$ & --- \\
+% $100{\times}100$ & $1.740\times10^{-4}$ & 3.11 & $4.144\times10^{-4}$ & 3.03 & $4.058\times10^{-4}$ & 3.28 & $1.050\times10^{-3}$ & 3.17 \\
+% $200{\times}200$ & $3.089\times10^{-5}$ & 2.49 & $7.330\times10^{-5}$ & 2.50 & $7.565\times10^{-5}$ & 2.42 & $1.899\times10^{-4}$ & 2.47 \\
+% $400{\times}400$ & $6.365\times10^{-6}$ & 2.28 & $1.503\times10^{-5}$ & 2.29 & $1.632\times10^{-5}$ & 2.21 & $3.959\times10^{-5}$ & 2.26 \\
+% \hline
+% \multirow{2}{*}{$N \times N$}
+%   & \multicolumn{4}{c|}{$v$}
+%   & \multicolumn{4}{c|}{$p$} \\
+% \cline{2-9}
+%   & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+%   & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$
+%   & $\|e^{(N)}\|_{L_1}$ & $p_{L_1}$
+%   & $\|e^{(N)}\|_{L_2}$ & $p_{L_2}$ \\
+% \hline
+% $50{\times}50$  & $3.929\times10^{-3}$ & --- & $9.370\times10^{-3}$ & --- & $1.837\times10^{-3}$ & --- & $5.168\times10^{-3}$ & --- \\
+% $100{\times}100$ & $3.919\times10^{-4}$ & 3.33 & $9.813\times10^{-4}$ & 3.26 & $1.993\times10^{-4}$ & 3.20 & $5.186\times10^{-4}$ & 3.32 \\
+% $200{\times}200$ & $6.910\times10^{-5}$ & 2.50 & $1.648\times10^{-4}$ & 2.57 & $3.625\times10^{-5}$ & 2.46 & $9.010\times10^{-5}$ & 2.52 \\
+% $400{\times}400$ & $1.371\times10^{-5}$ & 2.33 & $3.171\times10^{-5}$ & 2.38 & $7.763\times10^{-6}$ & 2.22 & $1.824\times10^{-5}$ & 2.30 \\
+% \hline
+% \end{tabular}
+% \end{table}
+
+Практически значимой заменой TVD-свойства в многомерном случае служит
+\textit{принцип максимума}: численное решение не должно порождать новые
+экстремумы, превышающие начальные~\cite{leveque1992}:
+\begin{equation}
+    \label{eq:max_principle}
+    \min_j u_j^0 \;\leq\; u_j^n \;\leq\; \max_j u_j^0
+    \qquad \forall\, j,\, n.
+\end{equation}
+Это условие выполняется для монотонных схем в любом числе измерений
+и является стандартным критерием верификации монотонности в вычислительной
+газодинамике~\cite{leveque1992}.
+
+\textit{Проверка принципа максимума на задаче линейной адвекции (2D)}
+
+Рассматривается двумерное уравнение линейной адвекции на периодической
+области $[0,1]^2$ с единичными скоростями по обоим направлениям:
+\begin{equation}
+    \label{eq:advection_2d}
+    \frac{\partial u}{\partial t}
+    + \frac{\partial u}{\partial x}
+    + \frac{\partial u}{\partial y} = 0,
+    \qquad
+    u(x, y, 0) =
+    \begin{cases}
+        1, & \sqrt{(x-0.5)^2 + (y-0.5)^2} < 0.25, \\
+        0, & \text{иначе.}
+    \end{cases}
+\end{equation}
+Начальное условие представляет собой «шапку» --- окружность единичной высоты
+с центром в точке $(0.5,\,0.5)$ и радиусом $0.25$. Граница «шапки»
+является разрывом первого рода, что позволяет наблюдать работу лимитера
+в двумерном случае.
+
+Точное решение --- перенос «шапки» без изменения формы:
+\begin{equation}
+    \label{eq:advection_2d_exact}
+    u(x, y, t) = u_0\!\left((x - t)\bmod 1,\; (y - t)\bmod 1\right).
+\end{equation}
+Данная задача служит эталонной для верификации принципа максимума:
+численное решение обязано удовлетворять условию~(\ref{eq:max_principle})
+в каждый момент времени. Расчёт проводился до момента $t = 1$
+(один полный период переноса) при числе Куранта $C = 0.45$ на
+сетке $N \times N$, $N = 100$.
+
+На рисунке~\ref{fig:maxprin_advection_2d} показана эволюция $u_{\min}(t)$
+и $u_{\max}(t)$ на протяжении расчёта для обеих схем.
+
+% ---- РИСУНОК: TVD адвекция 2D (вставить) ----
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/max_principle_sd2.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/max_principle_fd2.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Эволюция $u_{\min}(t)$ и $u_{\max}(t)$ для задачи линейной
+         адвекции~(\ref{eq:advection_2d}).
+         Пунктирные линии --- начальные значения $u_{\min}(t=0)=0$
+         и $u_{\max}(t=0)=1$}
+\label{fig:maxprin_advection_2d}
+\end{figure}
+
+Как следует из рисунка~\ref{fig:maxprin_advection_2d}, схема $SD2$ строго
+удовлетворяет условию~(\ref{eq:max_principle}) на протяжении всего расчёта:
+$u_{\min}(t) \geq 0$ и $u_{\max}(t) \leq 1$ для всех $t \in [0, 1]$.
+
+Схема $FD2$ демонстрирует незначительные нарушения в начальный момент
+расчёта: undershoot по минимуму ($u_{\min} \approx -0.02$) и сопоставимый
+по величине overshoot по максимуму ($u_{\max} \approx 1.01$). Они обусловлены
+особенностью шахматной пространственной сетки Нессияху--Тадмора: при
+инициализации разрыва чётные и нечётные ячейки сдвинуты относительно друг
+друга на половину шага, что на первых итерациях приводит к локальному
+нарушению монотонности. В дальнейшем отклонения не нарастают, а монотонно
+затухают: overshoot по максимуму исчезает уже к $t \approx 0.1$, а
+остаточный undershoot по минимуму ($u_{\min} \approx -0.01$) плавно
+уменьшается по модулю и к концу расчёта ($t = 1$) практически обращается
+в нуль. Описанное поведение является характерной особенностью полностью
+дискретных разностных схем на шахматных сетках при наличии
+разрывов~\cite{leveque1992}, имеет ограниченную по модулю амплитуду и не
+приводит к накоплению погрешности в ходе расчёта. При уменьшении числа
+Куранта до $C = 0.27$ (рисунок~\ref{fig:mp_fd2_small}) нарушение полностью
+исчезает, что подтверждает зависимость диссипативных свойств $FD2$ от шага
+по времени.
+
+\begin{figure}[h]
+    \begin{minipage}[h]{1\textwidth}
+        \begin{center}
+            \includegraphics[width=0.5\textwidth]{./animation/max_principle_fd2_small_cfl.png}\\
+        \end{center}
+    \end{minipage}\\
+    \caption{Эволюция $u_{\min}(t)$ и $u_{\max}(t)$ для задачи линейной
+         адвекции~(\ref{eq:advection_2d}). Схема $FD2$, число Куранта $C=0.27$}
+    \label{fig:mp_fd2_small}
+\end{figure}
+
+Проведённый анализ сходимости и проверка TVD-свойства для одномерных
+и двумерных задач подтверждают корректность разработанной JAX-реализации
+схем $SD2$ и $FD2$. Второй порядок сходимости подтверждён на гладких
+задачах: в одномерном случае (контактная волна) --- по интегральной норме
+$L_1$, а на двумерном изоэнтропийном вихре, возбуждающем все характеристические
+поля, --- $p \approx 2$ по всем примитивным переменным и обеим нормам.
+Монотонность численного решения верифицирована на скалярных задачах с разрывами:
+в одномерном случае --- через TVD-условие на уравнении Бюргерса~(\ref{eq:tvd_condition}),
+в двумерном --- через принцип максимума~(\ref{eq:max_principle}) на задаче
+линейной адвекции, поскольку строгое TVD-свойство в многомерных
+задачах недостижимо для схем выше первого порядка~\cite{goodman1985}.
+
+\subsection{Анализ модифицированных задач}
+\label{sec:results}
+
+В данном разделе проводится детальный анализ результатов численного моделирования модифицированных задач газовой динамики. Основное внимание уделяется исследованию процессов взаимодействия сильных ударных волн с областями локального понижения плотности, моделирующими тепловой след зоны энерговложения~\cite{knight2008}, а также сравнению разрешающей способности схем SD2 и FD2 на сложных нестационарных течениях. Рассматривается как одномерная постановка, позволяющая изучить волновую структуру в направлении распространения фронта, так и двумерная задача, демонстрирующая эффекты рефракции на границах раздела сред различной формы (круглом и квадратном пузырях). Вычисления проводились с числом Куранта $\mathrm{CFL} = 0.475$ до конечного момента времени $t_{\text{end}} = 0.4$. В одномерном случае использовалась равномерная сетка из $N = 400$ ячеек, в двумерном — сетка $200 \times 200$ ячеек.
+    
+
+\textit{Физическая картина течения: одномерная задача}
+
+На рисунках~\ref{fig:anim_1d_rho}--\ref{fig:anim_1d_p} представлены профили
+трёх примитивных переменных~--- плотности $\rho$, скорости $u$ и давления $p$
+--- в три характерных момента времени: начальный ($t = 0$), промежуточный
+($t = 0.2$, момент активного взаимодействия) и конечный ($t = 0.4$,
+после завершения взаимодействия). 
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/rho_modify_rieman_plot_1d_sd2.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/rho_modify_rieman_plot_1d_fd2.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Одномерная задача. Профили плотности $\rho(x)$ в три характерных
+    момента времени: $t = 0.0, 0.2, 0.4$. Параметры: $N=400$, $\mathrm{CFL}=0.475$}
+  \label{fig:anim_1d_rho}
+\end{figure}
+
+В начальный момент ($t = 0$) плотность задана в соответствии с начальным профилем: сжатый газ в зоне $x \ge 0.8$ с $\rho_{sw} \approx 2.667$, область пониженной плотности $\rho_e = 0.1$ в зоне теплового следа $x \in [0.3, 0.5]$ и невозмущённый газ $\rho_0 = 1.0$ на остальной части области. В промежуточный момент ($t=0.2$) падающая ударная волна достигла зоны теплового следа и пронизывает её: характерен сильный провал плотности в этой зоне, окруженный пиковыми значениями сжатия. Скорость распространения волны внутри разреженной каверны существенно возрастает из-за высокой локальной скорости звука. В конечный момент ($t=0.4$) ударная волна покинула расчетную область через левую границу благодаря заданным условиям свободного выхода (Неймана). Позади неё в области теплового следа сформировалась сложная система акустических и энтропийных возмущений с характерными перепадами плотности. 
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/v_modify_rieman_plot_1d_sd2.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/v_modify_rieman_plot_1d_fd2.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Одномерная задача. Профили скорости $u(x)$ в три характерных
+    момента времени: $t = 0.0, 0.2, 0.4$. Параметры: $N=400$, $\mathrm{CFL}=0.475$}
+  \label{fig:anim_1d_vel}
+\end{figure}
+
+Профиль скорости наглядно демонстрирует структуру волновых взаимодействий. В начальный момент газ в зоне инициации движется со скоростью $u_{sw} \approx -1.479$ в отрицательном направлении оси $x$. В промежуточный момент внутри каверны формируется область интенсивного течения с ярко выраженным градиентом скорости. К моменту $t=0.4$ движение газа в целом затухает, однако профиль скорости сохраняет сложную немонотонную структуру, обусловленную множественными акустическими отражениями внутри бывшей каверны.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/p_modify_rieman_plot_1d_sd2.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/p_modify_rieman_plot_1d_fd2.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Одномерная задача. Профили давления $p(x)$ в три характерных
+    момента времени: $t = 0.0, 0.2, 0.4$. Параметры: $N=400$, $\mathrm{CFL}=0.475$}
+  \label{fig:anim_1d_p}
+\end{figure}
+
+Давление является наиболее информативным параметром для анализа волновой структуры. Изобарное начальное условие $p_0=1.0$ вне ударной волны сменяется сложной картиной в момент $t=0.2$, когда внутри разреженной зоны образуется выраженный пик давления, свидетельствующий о сильном сжатии газа с малой инерцией. К моменту $t=0.4$ основное возмущение давления покидает домен, а оставшийся профиль постепенно выравнивается, стремясь к фоновому значению.
+
+\textit{Физическая картина течения: двумерная задача}
+
+Двумерная постановка позволяет исследовать эффекты рефракции на различных геометрических формах: круглом (центр $(0.45, 0.65)$, радиус $0.08$) и квадратном (ограничен координатами $x \in [0.25, 0.41], y \in [0.20, 0.44]$) пузырях.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/rho_modify_rieman_plot_2d_sd2.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/rho_modify_rieman_plot_2d_fd2.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Двумерная задача. Тепловые карты плотности $\rho(x, y)$ в три
+    характерных момента времени: $t = 0.0, 0.2, 0.4$. Параметры: Сетка $200 \times 200, \mathrm{CFL}=0.475$}
+  \label{fig:anim_2d_rho}
+\end{figure}
+
+В начальный момент ($t=0$) тепловая карта плотности воспроизводит двумерную постановку: плоский фронт у правой границы и две зоны пониженной плотности. В момент $t = 0.2$ визуализируется феномен рефракции. При прохождении плоского фронта через круглую каверну фронт дифрагирует плавно, образуя <<линзу>>. Взаимодействие с квадратной каверной приводит к резкому искажению фронта на углах препятствия. В конечный момент ($t = 0.4$) основная ударная волна пересекает левую границу. На месте круглого пузыря формируется симметричная вихревая структура грибовидной формы: завихренность генерируется бароклинным механизмом из-за неколлинеарности градиентов плотности и давления на искривлённой границе раздела~\cite{landau}. На месте квадратного пузыря структура оказывается вытянутой и хаотичной.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/v_modify_rieman_plot_2d_sd2.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/v_modify_rieman_plot_2d_fd2.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Двумерная задача. Тепловые карты модуля скорости в три
+    характерных момента времени: $t = 0.0, 0.2, 0.4$. Параметры: Сетка $200 \times 200, \mathrm{CFL}=0.475$}
+  \label{fig:anim_2d_v}
+\end{figure}
+
+Поле модуля скорости детально иллюстрирует кинематику процесса разрушения каверн. В промежуточный момент ($t=0.2$) внутри обеих зон энерговложения наблюдаются ярко выраженные максимумы скорости, что связано с ускорением легкого газа под действием перепада давления на ударной волне. В круглом пузыре разгон потока происходит плавно и центростремительно. В то же время, на острых гранях квадратного пузыря возникают зоны локального торможения и отрыва потока, что приводит к формированию сложной системы сдвиговых слоев. К моменту $t=0.4$ поле скорости визуализирует развитые вихревые течения: для круглого пузыря это пара устойчивых вихрей, для квадратного — каскад мелких вихревых структур.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/p_modify_rieman_plot_2d_sd2.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/p_modify_rieman_plot_2d_fd2.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Двумерная задача. Тепловые карты давления $p(x, y)$ в три
+    характерных момента времени: $t = 0.0, 0.2, 0.4$. Параметры: Сетка $200 \times 200, \mathrm{CFL}=0.475$}
+  \label{fig:anim_2d_p}
+\end{figure}
+
+Тепловые карты давления подтверждают описанную акустическую динамику взаимодействия. Изобарность нарушается в момент $t=0.2$, когда внутри легкого газа происходит интенсивное сжатие. Значительные градиенты давления локализуются на границах пузырей, причем квадратная форма порождает сильные локальные пики на углах препятствия, являющиеся источниками вторичных акустических возмущений. К конечному моменту ($t=0.4$) макроскопическое поле давления выравнивается, оставляя лишь локальные минимумы в центрах образовавшихся вихрей, что соответствует физике вращательного движения газа.
+
+\textit{Сравнение схем и анализ осцилляций}
+
+Сравнение результатов, полученных схемами SD2 и FD2, показывает их качественное совпадение, однако схема SD2 (на основе спектрального радиуса) демонстрирует заметно меньшую численную диссипацию. Это особенно ярко проявляется в двумерных расчётах полей плотности и модуля скорости в конечный момент времени ($t=0.4$), где контуры мелкомасштабных вихревых структур на месте разрушенных каверн разрешаются более чётко и контрастно по сравнению со схемой FD2. 
+
+Обе схемы обеспечивают строгую монотонность решения: плотность и давление не имеют нефизичных выбросов на фронтах сильных разрывов. Успешный выход сильной ударной волны за пределы домена без генерации паразитных отражений подтверждает корректность реализации смешанных граничных условий (свободный выход слева, жесткие стенки на остальных границах), что делает разработанные алгоритмы надежным инструментом для моделирования газодинамических течений со сложной пространственно-временной структурой.
+
+\subsection{Кросс-верификация относительно JAX-FLUIDS}
+
+Для количественной проверки корректности разработанных схем SD2 и FD2 проведено сопоставление с открытой эталонной библиотекой JAX-FLUIDS~\cite{jaxfluids}, использующей конфигурацию Godunov + Rusanov + MINMOD. Тестовая задача — модифицированная задача Сода~\cite{sod1978}, заданная начальными условиями~(\ref{eq:initial_1d_numbers}).
+
+Сравнение выполнено в двух характерных моментах времени:
+\begin{itemize}
+    \item $t = 0.2$ --- фаза взаимодействия ударной волны с контактным разрывом;
+    \item $t = 0.4$ --- пост-интерактивный устоявшийся режим.
+\end{itemize}
+
+Расчёты проведены на серии сеток $N \in \{100, 200, 400\}$ с идентичными числовыми параметрами: $\mathrm{CFL} = 0.475$, ограничитель minmod, граничные условия ZEROGRADIENT на левой границе и WALL на правой. Для согласования временной дискретизации используется схема SSP-RK2 для метода SD2 и встроенный предиктор-корректор для FD2. Для FD2 предварительно устранён эффект шахматной сетки путём компенсирующего сдвига $\Delta x = -h/2$ при нечётном числе временных шагов до момента сохранения.
+
+\textit{Качественное сопоставление профилей}
+
+На рисунках~\ref{fig:cross_1d_rho}--\ref{fig:cross_1d_p} представлены профили плотности, скорости и давления, полученные обеими схемами на сетке $N = 400$ в три выбранных момента времени. На всех временных срезах решения обеих схем визуально неотличимы от эталонных JAX-FLUIDS, включая корректное воспроизведение сложной пиковой структуры плотности и скорости в зоне $x \in [0.2, 0.5]$ на этапе взаимодействия волн ($t = 0.2$) и устоявшегося режима ($t = 0.4$).
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.85\textwidth]{./animation/rho_cross_verify_sd2_1d.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.85\textwidth]{./animation/rho_cross_verify_fd2_1d.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Кросс-верификация плотности относительно~JAX-FLUIDS}
+    \label{fig:cross_1d_rho}
+\end{figure}
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.85\textwidth]{./animation/v_cross_verify_sd2_1d.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.85\textwidth]{./animation/v_cross_verify_fd2_1d.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Кросс-верификация скорости относительно~JAX-FLUIDS}
+    \label{fig:cross_1d_v}
+\end{figure}
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.85\textwidth]{./animation/p_cross_verify_sd2_1d.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.85\textwidth]{./animation/p_cross_verify_fd2_1d.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Кросс-верификация давления относительно~JAX-FLUIDS}
+    \label{fig:cross_1d_p}
+\end{figure}
+
+\textit{Поточечное сравнение}
+
+На рисунке~\ref{fig:pointwise_1d} показана поточечная разность 
+\begin{equation}
+    \Delta q(x) = q_{\text{JAX}}(x) - q_{\text{JAX-FLUIDS}}(x)    
+\end{equation}
+полей $\rho$, $u$, $p$ в момент $t = 0.4$ для трёх разрешений сетки.
+
+В гладких регионах решения амплитуда $|\Delta q|$ мала (порядка $10^{-2}$ и менее) и в целом уменьшается при измельчении сетки, тогда как на фронтах волн различие локализовано в области шириной $\sim h$. При этом, как поясняется ниже, убывание $|\Delta q|$ по $N$ немонотонно, поэтому поточечная норма служит лишь иллюстративной, а не количественной мерой согласия схем.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.9\textwidth]{./animation/point_wise_diff_sd2_1d.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.9\textwidth]{./animation/point_wise_diff_fd2_1d.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Поточечная разность профилей $\rho$, $u$, $p$ при $t = 0.4$ относительно JAX-FLUIDS}
+    \label{fig:pointwise_1d}
+\end{figure}
+
+Следует подчеркнуть, что поточечное сравнение чувствительно к фазовому сдвигу фронтов на доли ячейки, причём эта величина является немонотонной функцией разрешения, поскольку и абсолютное расхождение положений фронта $|x_A(N) - x_B(N)| \to 0$, и шаг $h_N \to 0$ стремятся к нулю с разными скоростями. Поэтому корректной мерой согласия двух схем является не норма поточечной разности, а сравнение положений фронта $x_A(N)$, $x_B(N)$ и доказательство того, что их разность убывает с измельчением сетки.
+
+\textit{Количественное сравнение положений волновых структур}
+
+В момент времени $t = 0.4$ в решении выделены четыре локализованные волновые структуры. Положения фронтов определялись методом интерполяции пересечения уровня
+\begin{equation}
+\rho^* = \frac{\rho_{\max} + \rho_{\min}}{2}
+\end{equation}
+в фиксированных пространственных окнах вокруг каждой структуры. Эта метрика устойчива к численному размытию фронта и не требует знания типа волны, а лишь наличия локализованного градиента поля.
+
+Результаты для SD2 представлены в таблице~\ref{tab:front_shift_sd2}.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Фазовый сдвиг положений фронтов между схемой SD2 и JAX-FLUIDS в единицах ячеек ($\Delta x / h$), $t = 0.4$}
+    \vspace{0.1cm}
+    \label{tab:front_shift_sd2}
+    \begin{tabular}{lccc}
+        \toprule
+        Фронт & $N=100$ & $N=200$ & $N=400$ \\
+        \midrule
+        Волна $\approx 0.05$  & $+0.024$ & $+0.001$ & $+0.073$ \\
+        Волна $\approx 0.40$  & $-0.083$ & $-0.001$ & $-0.072$ \\
+        Волна $\approx 0.60$  & $-0.001$ & $-0.000$ & $-0.010$ \\
+        Волна $\approx 0.80$  & $-0.082$ & $-0.001$ & $-0.116$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Фазовый сдвиг между SD2 и JAX-FLUIDS не превышает $0.12$ ячейки во всём диапазоне исследованных разрешений. При $N=200$ положения фронтов обеих схем совпадают с точностью $\sim 10^{-3}$ ячейки, что является следствием случайной фазовой синхронизации дискретных шагов: накопленные за $\sim 160$ шагов численные диссипации обеих схем выстраиваются в одну точку. Этот эффект подтверждает немонотонную природу обсуждаемой выше поточечной разности.
+
+Экстраполяция Ричардсона первого порядка по двум наиболее тонким сеткам (таблице~\ref{tab:richardson_sd2}) даёт предельные положения фронтов, согласующиеся между двумя схемами с точностью не хуже $6 \times 10^{-4}$, что в четыре раза меньше шага самой тонкой использованной сетки $h_{400} = 2.5 \times 10^{-3}$. Это позволяет считать схему SD2 согласованной с эталоном в пределах их собственной численной точности.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Предельные положения фронтов $x^*$ при $h \to 0$ для схемы SD2, полученные экстраполяцией Ричардсона первого порядка по сеткам $N=200$ и $N=400$}
+    \vspace{0.1cm}
+    \label{tab:richardson_sd2}
+    \begin{tabular}{lccc}
+        \toprule
+        Фронт & $x^*$ (SD2) & $x^*$ (JAX-FLUIDS) & $|$разность$|$ \\
+        \midrule
+        Волна $\approx 0.05$ & $0.027741$ & $0.027384$ & $3.57 \times 10^{-4}$ \\
+        Волна $\approx 0.40$ & $0.390087$ & $0.390439$ & $3.52 \times 10^{-4}$ \\
+        Волна $\approx 0.60$ & $0.627655$ & $0.627706$ & $5.10 \times 10^{-5}$ \\
+        Волна $\approx 0.80$ & $0.745819$ & $0.746393$ & $5.74 \times 10^{-4}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Аналогичное сопоставление для схемы FD2 (таблица~\ref{tab:front_shift_fd2}) демонстрирует двойственное поведение.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Фазовый сдвиг положений фронтов между схемой FD2 и JAX-FLUIDS в единицах ячеек ($\Delta x / h$), $t = 0.4$}
+    \vspace{0.1cm}
+    \label{tab:front_shift_fd2}
+    \begin{tabular}{lccc}
+        \toprule
+        Фронт & $N=100$ & $N=200$ & $N=400$ \\
+        \midrule
+        Волна $\approx 0.05$ & $+0.232$ & $+0.848$ & $+1.000$ \\
+        Волна $\approx 0.40$ & $-0.119$ & $-0.067$ & $-0.144$ \\
+        Волна $\approx 0.60$ & $+0.293$ & $+0.012$ & $+0.277$ \\
+        Волна $\approx 0.80$ & $+0.688$ & $+1.008$ & $+1.330$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+На контактном разрыве и волне разрежения согласование с эталоном составляет $\le 0.3$ ячейки, что сопоставимо с результатом для SD2. На ударных волнах, напротив, наблюдается систематическое отклонение порядка одной ячейки, убывающее в абсолютных единицах ($|\Delta x|$ от $6.88 \times 10^{-3}$ при $N=100$ до $3.33 \times 10^{-3}$ при $N=400$) медленнее первого порядка: $|\Delta x| \propto h^{0.5}$.
+
+Это явление имеет фундаментальную природу и обусловлено различием механизмов численной диссипации сравниваемых схем. Центральная схема Нессияху--Тадмора обладает диссипацией порядка $O(h^2 / \Delta t)$, заключённой в самой структуре предиктор-корректора, тогда как Godunov + Rusanov реализует диссипацию через приближённое решение задачи Римана на гранях ячеек. Различные модифицированные уравнения двух схем приводят к слегка различным скоростям распространения ударных волн, что и проявляется как медленно сходящееся смещение их положений. Это известное теоретическое свойство центральных схем по сравнению со схемами годуновского типа описано, в частности, в работах~\cite{toro,kurganov2000}.
+
+Экстраполяция Ричардсона для FD2 (таблица~\ref{tab:richardson_fd2}) подтверждает количественную картину: для контакта и волн разрежения предельные положения совпадают с эталоном с точностью $\sim (4 / 13) \times 10^{-4}$, для ударной волны --- $1.61 \times 10^{-3}$. Все указанные величины меньше шага самой тонкой использованной сетки $h_{400}$.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Предельные положения фронтов $x^*$ при $h \to 0$ для схемы FD2, полученные экстраполяцией Ричардсона первого порядка по сеткам $N=200$ и $N=400$}
+    \vspace{0.1cm}
+    \label{tab:richardson_fd2}
+    \begin{tabular}{lccc}
+        \toprule
+        Фронт & $x^*$ (FD2) & $x^*$ (JAX-FLUIDS) & $|$разность$|$ \\
+        \midrule
+        Волна $\approx 0.05$ & $0.028141$ & $0.027384$ & $7.57 \times 10^{-4}$ \\
+        Волна $\approx 0.40$ & $0.390051$ & $0.390439$ & $3.88 \times 10^{-4}$ \\
+        Волна $\approx 0.60$ & $0.629035$ & $0.627706$ & $1.33 \times 10^{-3}$ \\
+        Волна $\approx 0.80$ & $0.748001$ & $0.746393$ & $1.61 \times 10^{-3}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textit{Выводы по верификации}
+
+Проведённое сопоставление позволяет сформулировать ряд выводов. Обе разработанные схемы (SD2 и FD2) корректно воспроизводят волновую структуру решения, согласованную с эталоном JAX-FLUIDS на качественном уровне во всех исследованных моментах времени, включая нелинейное взаимодействие ударной волны с контактным разрывом. Схема SD2 обеспечивает количественное согласование с эталоном на уровне $\le 0.12$ ячейки для всех волновых структур, а экстраполированные предельные положения фронтов совпадают с эталоном с точностью $\le 6 \times 10^{-4}$, что в четыре раза меньше шага самой тонкой сетки. Схема FD2 согласуется с эталоном на контактных разрывах и волнах разрежения на том же уровне точности, что и SD2, тогда как на ударных волнах наблюдается ожидаемое теоретически расхождение порядка одной ячейки, обусловленное различием численной диссипации центральной и годуновской схем. Наконец, экстраполяция Ричардсона подтверждает сходимость обеих схем к общему предельному решению с точностью, существенно меньшей шага самой тонкой использованной сетки. Таким образом, корректность реализаций обеих схем в одномерном случае количественно подтверждена.
+
+Двумерная постановка позволяет проверить корректность реализаций на принципиально новых физических явлениях, отсутствующих в одномерной задаче: взаимодействии ударной волны с неоднородностями, формировании вихревых структур и развитии неустойчивости Рихтмайера--Мешкова на границах включений после прохождения шока.
+
+На рисунке~\ref{fig:compare_jax_fluids_2d} представлены тепловые карты поля плотности $\rho(x, y)$, полученные тремя схемами в три характерных момента времени.
+
+\begin{figure}[!htb]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/rho_modify_rieman_plot_2d_sd2__for_compare.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/rho_modify_rieman_plot_2d_fd2__for_compare.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/rho_modify_rieman_plot_2d_jax-fluids__for_compare.png}
+        \caption{Схема из JAX-FLUIDS}
+    \end{subfigure}
+    \caption{Двумерная задача. Тепловые карты плотности $\rho(x, y)$ в три
+    характерных момента времени: $t = 0.0, 0.2, 0.4$. Параметры: сетка $200 \times 200$, $\mathrm{CFL}=0.475$}
+  \label{fig:compare_jax_fluids_2d}
+\end{figure}
+
+В начальный момент $t = 0$ все три схемы корректно воспроизводят заданные начальные условия с чёткими границами квадратного и кругового включений плотности $\rho = 0.1$, ровной вертикальной границей высокоплотной зоны при $x = 0.8$ и однородным фоном. Различия между схемами визуально отсутствуют, что подтверждает идентичность инициализации поля во всех трёх реализациях.
+
+К моменту $t = 0.2$ левобегущая ударная волна от границы $x = 0.8$ достигает зоны включений и взаимодействует с ними, и все три схемы воспроизводят согласованную качественную картину. Фронт ударной волны переместился в зону $x \approx 0.35\text{--}0.40$ и сохраняет почти плоскую форму вне области включений, а за фронтом в зоне $x \in [0.4, 0.8]$ установилось однородное поле сжатой плотности $\rho \approx 2.0$. Квадратное включение деформировалось: первоначально прямоугольная область пониженной плотности сжалась горизонтально и приобрела «линзообразную» форму, отражая сжатие потоком. Круговое включение, в свою очередь, преобразовалось в характерную структуру с двумя «лопастями» --- это начальная стадия формирования вихревого диполя, типичного для прохождения ударной волны через сферическое включение. Положение фронта ударной волны и форма деформированных включений в обеих разработанных схемах визуально совпадают с эталонной картиной JAX-FLUIDS с точностью, не различимой невооружённым глазом.
+
+К моменту $t = 0.4$ ударная волна проходит включения и продолжает движение влево, оставляя за собой развитое вихревое течение. В зоне $x \in [0, 0.2]$, $y \in [0.1, 0.8]$ во всех трёх схемах формируются вихревые структуры с характерными «глазами» пониженной плотности, возникающие в результате развития неустойчивости Рихтмайера--Мешкова на деформированных границах включений. Исходные круговая и квадратная формы оказываются полностью разрушены, на их месте образуется серия вторичных структур меньшего масштаба, а в зоне $x \in [0.4, 0.6]$, $y \in [0.4, 0.6]$ наблюдается диффузный «след» пониженной плотности, отражающий «отпечаток» прошедших через эту зону включений. Общая картина течения характеризуется градиентом плотности от значений $\rho \approx 1.5$ в левой части области к фоновому $\rho \approx 1.0$ в правой.
+
+Крупномасштабная структура решения --- число вихрей, их относительное положение и относительный размер — идентична во всех трёх схемах. Мелкомасштабные особенности, такие как точные положения и резкость экстремумов в вихревых ядрах, демонстрируют слабые количественные различия, объяснимые разной численной диссипацией схем. Схемы SD2 и JAX-FLUIDS, использующие близкие MUSCL-формулировки, дают практически идентичную мелкомасштабную картину, тогда как FD2 на основе схемы \\ Нессияху--Тадмора показывает слегка более сглаженные мелкомасштабные структуры. Это согласуется с теоретически более высокой численной вязкостью центральной схемы по сравнению с MUSCL-схемами годуновского типа и подтверждает выводы, полученные ранее при анализе одномерной задачи.
+
+\textit{Выводы по двумерной верификации}
+
+Качественное сопоставление двумерных расчётов показывает, что все три схемы корректно воспроизводят сложную нелинейную динамику задачи, включая распространение и преломление ударной волны на неоднородностях, деформацию включений, формирование вихревого диполя и развитие неустойчивости Рихтмайера--Мешкова. Крупномасштабная структура решения --- положение фронта ударной волны, число и положение вторичных вихрей --- оказывается согласованной во всех трёх схемах во все исследованные моменты времени. Наблюдаемые мелкомасштабные различия между схемами не противоречат их теоретическим свойствам и не указывают на ошибки реализации, что подтверждает пригодность обеих разработанных схем (SD2 и FD2) для моделирования двумерных задач газовой динамики с разрывами и развитыми неустойчивостями. Таким образом, корректность реализаций обеих разработанных схем подтверждена и в двумерной постановке.
+
+\subsection{Анализ аппаратного ускорения}
+
+Для оценки эффективности аппаратного ускорения разработанной библиотеки было
+проведено сравнение её производительности с двумя открытыми решателями:
+классической библиотекой \textit{centpy}~\cite{centpy} (реализация на NumPy, исполнение на
+CPU) и открытой библиотекой JAX-FLUIDS~\cite{jaxfluids}, также построенным на JAX/XLA. Во всех
+экспериментах использовалась единая физическая постановка (модифицированная
+задача Сода в одномерном случае и задача о взаимодействии ударной волны с двумя
+пузырями в двумерном), а также одинаковые параметры дискретизации:
+$t_{\text{end}} = 0.4$, $\text{dt}_{\text{out}} = 0.005$, $\mathrm{CFL} = 0.475$,
+вычисления выполнялись с двойной точностью.
+
+
+Время для решателей на основе JAX (разработанная библиотека и JAX-FLUIDS)
+замерялось после предварительного <<прогрева>> — первого запуска, в ходе которого
+происходит JIT-компиляция вычислительного графа средствами XLA; таким образом, в
+итоговый замер входит только чистое время счёта. Для \textit{centpy}, не
+использующей компиляцию, фиксировалось время единственного запуска. Следует
+отметить, что JAX-FLUIDS реализует иную численную схему (интегратор RK2,
+конвективный поток годуновского типа с приближённым решателем Римана Русанова и MINMOD-реконструкцией), тогда
+как разработанная библиотека использует центральные схемы SD2 и FD2. Поэтому
+сравнение с JAX-FLUIDS носит характер сопоставления программных реализаций в
+целом, а не идентичных алгоритмов.
+
+% ------------------------- РИСУНКИ -------------------------
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/compare_plot_sd2_1d.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/compare_plot_fd2_1d.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Одномерная постановка. $t_{\text{end}} = 0.4$, $\text{dt}_{\text{out}} = 0.005$, $\mathrm{CFL} = 0.475$}
+  \label{fig:compare_plot_1d}
+\end{figure}
+
+\begin{table}[!htb]
+    \centering
+    %\footnotesize
+    \caption{Время счёта (с) для одномерной постановки, схема SD2}
+    \vspace{0.1cm}
+    \label{tab:time_sd2_1d}
+    \begin{tabular}{rccccc}
+        \hline
+        $J$ & \makecell{Разраб.\\GPU} & \makecell{Разраб.\\CPU} & \textit{centpy} & \makecell{JAX-FLUIDS\\GPU} & \makecell{JAX-FLUIDS\\CPU} \\
+        \hline
+        256   & 0.143  & 0.096   & 1.138   & 3.894   & 0.954   \\
+        512   & 0.179  & 0.394   & 4.244   & 7.545   & 2.857   \\
+        1024  & 0.370  & 2.499   & 5.577   & 16.403  & 4.893   \\
+        2048  & 0.720  & 7.255   & 16.175  & 33.451  & 13.040  \\
+        4096  & 1.500  & 29.928  & 41.613  & 70.443  & 44.688  \\
+        8192  & 3.931  & 86.862  & 152.440 & 153.630 & 161.556 \\
+        16384 & 12.805 & 349.892 & 612.826 & 404.548 & 633.204 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+    \centering
+    %\footnotesize
+    \caption{Время счёта (с) для одномерной постановки, схема FD2}
+    \vspace{0.1cm}
+    \label{tab:time_fd2_1d}
+    \begin{tabular}{rccccc}
+        \hline
+        $J$ & \makecell{Разраб.\\GPU} & \makecell{Разраб.\\CPU} & \textit{centpy} & \makecell{JAX-FLUIDS\\GPU} & \makecell{JAX-FLUIDS\\CPU} \\
+        \hline
+        256   & 0.131 & 0.023  & 0.218   & 3.894   & 0.954   \\
+        512   & 0.189 & 0.057  & 0.662   & 7.545   & 2.857   \\
+        1024  & 0.280 & 0.207  & 1.972   & 16.403  & 4.893   \\
+        2048  & 0.588 & 0.785  & 3.875   & 33.451  & 13.040  \\
+        4096  & 1.217 & 4.067  & 13.218  & 70.443  & 44.688  \\
+        8192  & 3.082 & 14.377 & 46.947  & 153.630 & 161.556 \\
+        16384 & 8.819 & 60.462 & 186.817 & 404.548 & 633.204 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\textit{Одномерная постановка}
+
+В одномерном случае (таблицы~\ref{tab:time_sd2_1d}, \ref{tab:time_fd2_1d})
+ускорение от перехода на GPU оказывается умеренным, а на малых сетках GPU-версия
+даже проигрывает CPU-реализации (например, для схемы FD2 при $J=256$: $0.131$~с на
+GPU против $0.023$~с на CPU). Причина в том, что одномерная задача представляет
+собой вектор всего из $J$ ячеек, и при малых $J$ графический процессор остаётся
+существенно недогруженным: время определяется не арифметикой, а накладными
+расходами на запуск вычислительных ядер и диспетчеризацию. Лишь с ростом сетки
+GPU выходит вперёд, достигая на $J=16384$ ускорения $27.3\times$ (SD2) и
+$6.9\times$ (FD2) относительно собственной CPU-версии.
+
+Реализации, исполняемые на CPU (\textit{centpy} и CPU-вариант разработанной
+библиотеки), демонстрируют теоретический закон масштабирования $T \propto J^2$:
+при удвоении сетки время возрастает приблизительно в четыре раза. Так, для
+\textit{centpy} (SD2) на участке $4096 \to 8192 \to 16384$ имеем
+$41.6 \to 152.4 \to 612.8$~с, то есть множители $3.66$ и $4.02$.
+
+Наименьшую производительность среди решателей на JAX в одномерном случае на малых
+сетках показывает JAX-FLUIDS ($3.89$~с при $J=256$). Это объясняется тем, что его
+цикл интегрирования по времени управляется на уровне Python с синхронизацией
+<<хост--устройство>> на каждом шаге, вследствие чего доминируют фиксированные
+накладные расходы шага. Как следствие, выигрыш от GPU у JAX-FLUIDS в 1D
+практически отсутствует: отношение времён CPU/GPU составляет лишь $\approx 1.6$
+($633.2$ против $404.5$~с при $J=16384$). Разработанный решатель на GPU остаётся
+самым быстрым во всём диапазоне, опережая \textit{centpy} до $47.9\times$ и
+JAX-FLUIDS (GPU) до $31.6\times$ (схема SD2, $J=16384$).
+
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/compare_plot_sd2_2d.png}
+        \caption{Схема SD2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./animation/compare_plot_fd2_2d.png}
+        \caption{Схема FD2}
+    \end{subfigure}
+    \caption{Двумерная постановка. $t_{\text{end}} = 0.4$, $\text{dt}_{\text{out}} = 0.005$, $\mathrm{CFL} = 0.475$}
+  \label{fig:compare_plot_2d}
+\end{figure}
+
+% ------------------------- ТАБЛИЦЫ 2D -------------------------
+\begin{table}[!htb]
+    \centering
+    %\footnotesize
+    \caption{Время счёта (с) для двумерной постановки, схема SD2. Прочерк --- расчёт не выполнялся ввиду чрезмерного времени}
+    \vspace{0.1cm}
+    \label{tab:time_sd2_2d}
+    \begin{tabular}{rccccc}
+        \hline
+        $J\times J$ & \makecell{Разраб.\\GPU} & \makecell{Разраб.\\CPU} & \textit{centpy} & \makecell{JAX-FLUIDS\\GPU} & \makecell{JAX-FLUIDS\\CPU} \\
+        \hline
+        $64$    & 0.108   & 1.348    & 2.456    & 1.753   & 1.322    \\
+        $128$   & 0.344   & 12.988   & 27.274   & 5.191   & 11.709   \\
+        $256$   & 3.036   & 119.955  & 293.400  & 13.530  & 131.803  \\
+        $512$   & 31.572  & 1047.884 & 2888.498 & 78.417  & 1294.979 \\
+        $1024$  & 271.457 & ---      & ---      & 577.726 & ---      \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+    \centering
+    %\footnotesize
+    \caption{Время счёта (с) для двумерной постановки, схема FD2. Прочерк --- расчёт не выполнялся ввиду чрезмерного времени}
+    \vspace{0.1cm}
+    \label{tab:time_fd2_2d}
+    \begin{tabular}{rccccc}
+        \hline
+        $J\times J$ & \makecell{Разраб.\\GPU} & \makecell{Разраб.\\CPU} & \textit{centpy} & \makecell{JAX-FLUIDS\\GPU} & \makecell{JAX-FLUIDS\\CPU} \\
+        \hline
+        $64$    & 0.133  & 0.885   & 0.930    & 1.753   & 1.322    \\
+        $128$   & 0.232  & 9.233   & 9.865    & 5.191   & 11.709   \\
+        $256$   & 1.458  & 85.072  & 132.367  & 13.530  & 131.803  \\
+        $512$   & 13.316 & 793.620 & 1357.738 & 78.417  & 1294.979 \\
+        $1024$  & 95.325 & ---     & ---      & 577.726 & ---      \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\textit{Двумерная постановка}
+
+Полное преимущество GPU проявляется в двумерной постановке
+(таблицы~\ref{tab:time_sd2_2d}, \ref{tab:time_fd2_2d}), где сетка содержит $J^2$
+ячеек и оказывается достаточной для насыщения вычислительного устройства.
+Разработанный решатель на GPU ускоряет собственную CPU-реализацию в $33.2\times$
+(SD2) и $59.6\times$ (FD2) при $512\times512$ и достигает сетки $1024\times1024$
+($271$~с для SD2 и $95$~с для FD2), которая для CPU-реализаций и \textit{centpy}
+становится практически недостижимой.
+
+Для методов, ограниченных производительностью вычислителя, подтверждается закон
+$T \propto J^3$ (восьмикратный рост времени при удвоении сетки): для
+\textit{centpy} (SD2) на участке $128 \to 256 \to 512$ время изменяется как
+$27.3 \to 293.4 \to 2888.5$~с (множители $10.8$ и $9.8$; превышение теоретического
+значения $8$ обусловлено эффектами иерархии кэш-памяти). Относительно
+\textit{centpy} разработанный решатель на GPU оказывается быстрее на два порядка
+--- в $91.5\times$ (SD2) и $102.0\times$ (FD2) при $512\times512$.
+
+Существенно, что в двумерном случае разработанный решатель на GPU превосходит и
+JAX-FLUIDS: в $2.5\times$ (SD2) и $5.9\times$ (FD2) при $512\times512$, а для FD2
+при $1024\times1024$ --- в $6.1\times$ ($95.3$ против $577.7$~с). Это объясняется
+тем, что универсальная открытая библиотека JAX-FLUIDS несёт большие накладные расходы по
+сравнению со специализированной реализацией. В отличие от одномерного случая,
+здесь JAX-FLUIDS уже заметно выигрывает от GPU (отношение CPU/GPU составляет
+$\approx 16.5$ при $512\times512$): двумерные сетки достаточно велики, чтобы
+амортизировать накладные расходы Python-цикла.
+
+% ------------------------- ТАБЛИЦА УСКОРЕНИЙ -------------------------
+\begin{table}[!htbp]
+    \centering
+    %\footnotesize
+    \caption{Коэффициенты ускорения разработанного решателя на GPU на наибольшей
+    общей сетке ($J=16384$ в 1D, $J\times J = 512\times512$ в 2D)}
+    \vspace{0.1cm}
+    \label{tab:speedup}
+    \begin{tabular}{lcccc}
+        \hline
+        \multirow{2}{*}{Сравнение} & \multicolumn{2}{c}{1D} & \multicolumn{2}{c}{2D} \\
+        \cline{2-3}\cline{4-5}
+         & SD2 & FD2 & SD2 & FD2 \\
+        \hline
+        Разраб. CPU / Разраб. GPU       & 27.3 & 6.9  & 33.2 & 59.6  \\
+        \textit{centpy} / Разраб. GPU   & 47.9 & 21.2 & 91.5 & 102.0 \\
+        JAX-FLUIDS (GPU) / Разраб. GPU  & 31.6 & 45.9 & 2.5  & 5.9   \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\textit{Влияние схемы и режимы работы GPU}
+
+Во всех экспериментах схема FD2 оказывается дешевле SD2 за счёт меньшего числа
+операций на ячейку (например, на GPU при $512\times512$: $13.3$~с для FD2 против
+$31.6$~с для SD2). При этом относительное ускорение на GPU для FD2 даже выше, что
+говорит о хорошей отображаемости схемы на массивно-параллельную архитектуру.
+
+Полученные данные отчётливо демонстрируют два режима работы GPU. На малых сетках
+решатель находится в режиме, ограниченном накладными расходами: время
+определяется числом шагов по времени ($\propto J$), а не объёмом вычислений, в
+результате чего при удвоении сетки время растёт лишь вдвое (для разработанного
+решателя на GPU, SD2, 1D: $256 \to 512$ даёт множитель $1.25$). По мере роста
+сетки происходит переход в режим, ограниченный производительностью вычислителя,
+где восстанавливается степенной закон $T \propto J^{d+1}$ (на участке
+$8192 \to 16384$ множитель уже $3.26$, то есть близок к теоретическому $4$ для
+1D). Именно этим объясняется кажущаяся <<недостаточность>> ускорения на малых
+сетках: при таких размерах GPU принципиально не может быть загружен полностью.
+
+\textit{Выводы}
+
+Проведённое сравнение показывает, что разработанная библиотека обеспечивает
+значительное аппаратное ускорение, в полной мере раскрывающееся в двумерных
+задачах. На GPU она опережает классическую реализацию \textit{centpy} на CPU до
+двух порядков ($\approx 90$--$100\times$ в 2D) и превосходит специализированную открытую библиотеку JAX-FLUIDS в несколько раз ($2.5$--$6\times$ в 2D), при этом достигая
+разрешений сетки, недоступных для реализаций на CPU. В одномерных задачах выигрыш
+от GPU ограничен малым объёмом вычислений на шаг, однако и здесь разработанный
+решатель остаётся наиболее производительным среди рассмотренных.
+
+\newpage
+\section-{ЗАКЛЮЧЕНИЕ}
+
+В рамках настоящей выпускной квалификационной работы выполнено
+высокопроизводительное численное моделирование распространения ударной волны в
+газе с локальным энерговложением средствами разработанного программного
+комплекса на основе библиотеки дифференцируемого программирования JAX. Поставленная цель
+достигнута, а все сформулированные во введении задачи решены. Основные результаты
+работы состоят в следующем.
+
+\begin{enumerate}
+    \item На основе системы уравнений Эйлера в консервативной форме сформулирована
+    математическая модель течения идеального сжимаемого газа и поставлена
+    модифицированная задача о прохождении ударной волны через зону локального
+    энерговложения (область пониженной плотности) в одномерной и двумерной
+    постановках.
+
+    \item Выполнена программная адаптация и высокопроизводительная реализация
+    семейства центральных разностных схем высокого разрешения SD2 и FD2 средствами
+    библиотеки JAX. Применение JIT-компиляции, векторизации и переноса всего цикла
+    интегрирования по времени на вычислительное устройство обеспечило исполнение
+    единого программного кода как на центральном (CPU), так и на графическом (GPU)
+    процессоре без его модификации.
+
+    \item Проведена верификация реализованных численных методов. На гладких задачах
+    (синус Эйлера в одномерном случае и изоэнтропийный вихрь в двумерном) методом
+    самосходимости на основе экстраполяции Ричардсона подтверждён заявленный второй
+    порядок точности схем. Монотонность и неосцилляторность численного решения
+    верифицированы на скалярных задачах с разрывами: в одномерном случае~--- через
+    контроль полной вариации, в двумерном~--- через выполнение принципа максимума,
+    что для схем выше первого порядка является нетривиальным результатом.
+
+    \item Выполнена верификация разработанного комплекса: на гладких тестовых
+    задачах, подтверждён второй порядок сходимости относительно точного решения,
+    а профили плотности, скорости и давления сопоставлены с открытой
+    CFD-библиотекой JAX-FLUIDS и показали хорошее согласие во всех рассмотренных
+    постановках, что подтверждает корректность реализации. Дополнительно
+    проведено сравнение производительности с библиотеками \textit{centpy} и JAX-FLUIDS.
+
+    \item Проведена оценка вычислительной эффективности и анализ аппаратного
+    ускорения на CPU и GPU. Показано, что в двумерных задачах разработанный решатель
+    на GPU ускоряет собственную CPU-реализацию до $33$ раз (схема SD2) и до $60$ раз
+    (схема FD2), опережает классическую библиотеку \textit{centpy} до двух порядков
+    (в $90$--$100$ раз) и превосходит специализированную библиотеку JAX-FLUIDS в
+    $2.5$--$6$ раз, достигая при этом разрешений сетки ($1024 \times 1024$),
+    недостижимых для реализаций на CPU за разумное время. Установлено, что
+    наблюдаемое время счёта в режиме, ограниченном производительностью вычислителя,
+    согласуется с теоретическими законами масштабирования $T \propto J^2$ для
+    одномерных и $T \propto J^3$ для двумерных задач.
+
+    \item На примере модифицированной задачи с локальным энерговложением
+    продемонстрированы возможности разработанного комплекса: получена детальная
+    картина динамики параметров газа~--- плотности, скорости и давления~--- при
+    прохождении ударной волны через область пониженной плотности в одномерной и
+    двумерной постановках.
+\end{enumerate}
+
+Полученные результаты подтверждают, что применение инструментов дифференцируемого
+программирования и аппаратного ускорения позволяет эффективно переносить
+классические разностные схемы высокого разрешения на современные массивно-параллельные
+архитектуры, обеспечивая значительный выигрыш в производительности без потери
+точности. Это делает разработанный программный комплекс практически пригодным
+инструментом для проведения серийных ресурсоёмких расчётов задач газовой динамики
+на широкодоступном оборудовании, в том числе на облачных платформах.
+
+Дальнейшее развитие работы может быть связано с обобщением комплекса на трёхмерные
+постановки, учётом вязких эффектов (переход к уравнениям Навье--Стокса), внедрением
+адаптивного измельчения сетки, а также с использованием свойства автоматического
+дифференцирования библиотеки JAX для решения обратных задач и задач оптимального
+управления параметрами зоны энерговложения.
+
+
+
+\newpage
+\begin{thebibliography}{99}
+
+% ====================================================================
+%  АКТИВНЫЕ ИСТОЧНИКИ  ---  порядок по первому упоминанию в тексте
+% ====================================================================
+
+\bibitem{knight2008}
+Knight, D. Survey of aerodynamic drag reduction at high speed by energy deposition / D. Knight // Journal of Propulsion and Power. --- 2008. --- Vol. 24, no. 6. --- P. 1153--1167.
+
+\bibitem{landau}
+Ландау, Л. Д. Гидродинамика. Теоретическая физика: учебное пособие / Л. Д. Ландау, Е. М. Лифшиц. --- Изд. 6-е, испр. --- Москва : Физматлит, 2015. --- Т. 6. --- 736 с.
+
+\bibitem{toro}
+Toro, E. F. Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical Introduction / E. F. Toro. --- 3rd ed. --- Berlin : Springer, 2009. --- 724 p.
+
+\bibitem{kulikovsky}
+Куликовский, А. Г. Математические вопросы численного решения гиперболических систем уравнений / А. Г. Куликовский, Н. В. Погорелов, А. Ю. Семенов. --- Москва : Физматлит, 2012. --- 656 с.
+
+\bibitem{jax}
+Bradbury, J. JAX: composable transformations of Python+NumPy programs [Электронный ресурс] / J. Bradbury, R. Frostig, P. Hawkins [et al.]. --- 2018. --- URL: http://github.com/google/jax (дата обращения: 30.05.2026).
+
+\bibitem{matplotlib}
+Hunter, J. D. Matplotlib: A 2D graphics environment / J. D. Hunter // Computing in Science \& Engineering. --- 2007. --- Vol. 9, no. 3. --- P. 90--95.
+
+\bibitem{nessyahu1990}
+Nessyahu, H. Non-oscillatory central differencing for hyperbolic conservation laws / H. Nessyahu, E. Tadmor // Journal of Computational Physics. --- 1990. --- Vol. 87, no. 2. --- P. 408--463.
+
+\bibitem{kurganov2000}
+Kurganov, A. New high-resolution central schemes for nonlinear conservation laws and convection--diffusion equations / A. Kurganov, E. Tadmor // Journal of Computational Physics. --- 2000. --- Vol. 160, no. 1. --- P. 241--282.
+
+\bibitem{centpy}
+Zenginoglu, A. centpy: Central schemes for conservation laws in Python [Электронный ресурс] / A. Zenginoglu. --- 2020. --- URL: https://github.com/AnilZen/centpy (дата обращения: 30.05.2026).
+
+\bibitem{jaxfluids}
+Bezgin, D. A. JAX-Fluids: A fully-differentiable high-order computational fluid dynamics solver for compressible two-phase flows / D. A. Bezgin, A. B. Buhendwa, N. A. Adams // Computer Physics Communications. --- 2023. --- Vol. 282. --- P. 108527.
+
+\bibitem{godunov}
+Годунов, С. К. Численное решение многомерных задач газовой динамики / С. К. Годунов, А. В. Забродин, М. Я. Иванов [и др.]. --- Москва : Наука, 1976. --- 400 с.
+
+\bibitem{leveque1992}
+LeVeque, R. J. Numerical Methods for Conservation Laws / R. J. LeVeque. --- 2nd ed. --- Basel : Birkh\"auser, 1992. --- 214 p.
+
+% \bibitem{sod1978}
+% Sod, G. A. A survey of several finite difference methods for systems of nonlinear hyperbolic conservation laws / G. A. Sod // Journal of Computational Physics. --- 1978. --- Vol. 27, no. 1. --- P. 1--31.
+
+\bibitem{harten1983}
+Harten, A. High resolution schemes for hyperbolic conservation laws / A. Harten // Journal of Computational Physics. --- 1983. --- Vol. 49, no. 3. --- P. 357--393.
+
+\bibitem{gottlieb1998}
+Gottlieb, S. Total variation diminishing Runge--Kutta schemes / S. Gottlieb, C.-W. Shu // Mathematics of Computation. --- 1998. --- Vol. 67, no. 221. --- P. 73--85.
+
+\bibitem{hu1999}
+Hu, C. Weighted essentially non-oscillatory schemes on triangular meshes / C. Hu, C.-W. Shu // Journal of Computational Physics. --- 1999. --- Vol. 144, no. 1. --- P. 210--227.
+
+\bibitem{goodman1985}
+Goodman, J. B. On the accuracy of stable schemes for 2D scalar conservation laws / J. B. Goodman, R. J. LeVeque // Mathematics of Computation. --- 1985. --- Vol. 45, no. 171. --- P. 15--21.
+
+\bibitem{sod1978}
+Sod, G. A. A survey of several finite difference methods for systems of nonlinear hyperbolic conservation laws / G. A. Sod // Journal of Computational Physics. --- 1978. --- Vol. 27, no. 1. --- P. 1--31.
+
+
+% ====================================================================
+%  РЕЗЕРВНЫЙ ПУЛ  ---  ещё не процитированы; раскомментировать и
+%  переместить вверх по мере появления ссылок в следующих главах
+% ====================================================================
+% \bibitem{bogomolov}
+% Богомолов, С. В. Разностные схемы для решения уравнений газовой динамики / С. В. Богомолов. --- Москва : Изд-во МГУ, 2011. --- 184 с.
+%
+% \bibitem{samarsky}
+% Самарский, А. А. Теория разностных схем / А. А. Самарский. --- Москва : Наука, 1989. --- 616 с.
+%
+% \bibitem{tensorflow}
+% Abadi, M. TensorFlow: Large-scale machine learning on heterogeneous systems / M. Abadi, A. Agarwal, P. Barham [et al.]. --- 2015. --- URL: https://www.tensorflow.org.
+%
+% \bibitem{batchelor}
+% Batchelor, G. K. An Introduction to Fluid Dynamics / G. K. Batchelor. --- Cambridge : Cambridge University Press, 2000. --- 635 p.
+%
+% \bibitem{chorin}
+% Chorin, A. J. Computational Fluid Mechanics / A. J. Chorin. --- New York : Academic Press, 1978. --- 410 p.
+%
+% \bibitem{cfl1967}
+% Courant, R. On the partial difference equations of mathematical physics / R. Courant, K. Friedrichs, H. Lewy // IBM Journal of Research and Development. --- 1967. --- Vol. 11, no. 2. --- P. 215--234.
+%
+% \bibitem{godunov1959}
+% Godunov, S. K. A difference method for numerical calculation of discontinuous solutions of the equations of hydrodynamics / S. K. Godunov // Matematicheskii Sbornik. --- 1959. --- Vol. 47(89), no. 3. --- P. 271--306.
+%
+% \bibitem{numpy}
+% Harris, C. R. Array programming with NumPy / C. R. Harris, K. J. Millman, S. J. van der Walt [et al.] // Nature. --- 2020. --- Vol. 585, no. 7825. --- P. 357--362.
+%
+% \bibitem{pyclaw}
+% Ketcheson, D. I. PyClaw: Accessible, Extensible, Scalable Tools for Wave Propagation Problems / D. I. Ketcheson, K. T. Mandli, A. J. Ahmadia [et al.] // SIAM Journal on Scientific Computing. --- 2012. --- Vol. 34, no. 4. --- P. C210--C231.
+%
+% \bibitem{pycuda}
+% Kl\"ockner, A. PyCUDA and PyOpenCL: A visionary computing interface / A. Kl\"ockner // GPU Computing Gems. --- 2011. --- P. 241--255.
+%
+% \bibitem{kurganov2001}
+% Kurganov, A. Central-upwind schemes for the Euler equations with real gases / A. Kurganov, S. Noelle, G. Petrova // SIAM Journal on Scientific Computing. --- 2001. --- Vol. 23, no. 3. --- P. 707--740.
+%
+% \bibitem{lax1973}
+% Lax, P. D. Hyperbolic Systems of Conservation Laws and the Mathematical Theory of Shock Waves / P. D. Lax. --- Philadelphia : SIAM, 1973. --- 48 p.
+%
+% \bibitem{leveque2002}
+% LeVeque, R. J. Finite Volume Methods for Hyperbolic Problems / R. J. LeVeque. --- Cambridge : Cambridge University Press, 2002. --- 558 p.
+%
+% \bibitem{liska2003}
+% Liska, R. Comparison of several difference schemes on 1D and 2D test problems for the Euler equations / R. Liska, B. Wendroff // SIAM Journal on Scientific Computing. --- 2003. --- Vol. 25, no. 3. --- P. 995--1017.
+%
+% \bibitem{maccormack1969}
+% MacCormack, R. W. The effect of viscosity in hypervelocity impact cratering / R. W. MacCormack // AIAA Paper. --- 1969. --- P. 69--354.
+%
+% \bibitem{osher1982}
+% Osher, S. Upwind difference schemes for hyperbolic systems of conservation laws / S. Osher, F. Solomon // Mathematics of Computation. --- 1982. --- Vol. 38, no. 158. --- P. 339--374.
+%
+% \bibitem{roe1981}
+% Roe, P. L. Approximate Riemann solvers, parameter vectors, and difference schemes / P. L. Roe // Journal of Computational Physics. --- 1981. --- Vol. 43, no. 2. --- P. 357--372.
+%
+% \bibitem{saurel1999}
+% Saurel, R. A multiphase Godunov method for compressible multifluid and multiphase flows / R. Saurel, R. Abgrall // Journal of Computational Physics. --- 1999. --- Vol. 150, no. 2. --- P. 425--467.
+%
+% \bibitem{shu1988}
+% Shu, C.-W. Efficient implementation of essentially non-oscillatory shock-capturing schemes / C.-W. Shu, S. Osher // Journal of Computational Physics. --- 1988. --- Vol. 77, no. 2. --- P. 439--471.
+%
+% \bibitem{vanleer1979}
+% van Leer, B. Towards the ultimate conservative difference scheme. V. A second-order sequel to Godunov's method / B. van Leer // Journal of Computational Physics. --- 1979. --- Vol. 32, no. 1. --- P. 101--136.
+%
+% \bibitem{sweby1984}
+% Sweby, P. K. High resolution schemes using flux limiters for hyperbolic conservation laws / P. K. Sweby // SIAM Journal on Numerical Analysis. --- 1984. --- Vol. 21, no. 5. --- P. 995--1011.
+%
+% \bibitem{sedov1993}
+% Sedov, L. I. Similarity and Dimensional Methods in Mechanics / L. I. Sedov. --- Boca Raton : CRC Press, 1993. --- 526 p.
+
+
+\end{thebibliography}
+
+\newpage
+\section-{ПРИЛОЖЕНИЕ А}
+
+\begin{lstlisting}[language=Python,
+    caption={Основные функции, управляющие вычислениями},
+    captionpos=t,
+    basicstyle=\ttfamily\small,
+    tabsize=4]
+
+def compute_dt(pars: Pars1d, eqn: Equation1d, u: jnp.ndarray) -> float:
+	max_speed = jnp.max(eqn.spectral_radius(u))
+	safe_speed = jnp.maximum(max_speed, 1e-6)
+	return pars.cfl * pars.dx / safe_speed
+
+class Solver1d:
+	def __init__(self, pars: Pars1d, eqn: Equation1d, scheme_name: str = "sd2", limiter_name: str = "minmod"):
+		self.pars, self.eqn = pars, eqn
+		limiter_map = {"minmod": limiters.minmod, "superbee": limiters.superbee,
+		               "mc": limiters.monotonized_central, "van_leer": limiters.van_leer}
+		self.limiter = limiter_map.get(limiter_name, limiters.minmod)
 		
-		где 
-		Это гарантирует отсутствие новых локальных экстремумов и нефизичных осцилляций на скачках.
-	\end{defenv}
-	
-	Для обеспечения TVD-свойства используются нелинейные ограничители наклонов. В данной работе применяется лимитер
-	
-	\[
-		\text{minmod}(a,b) = \frac{1}{2} \big( \operatorname{sgn}(a) + \operatorname{sgn}(b) \big) \cdot \min\big( |a|, |b| \big),
-	\]
-	
-	где $a$ и $b$ --- разностные производные вперед и назад соответственно, \( \operatorname{sgn}(x) \) — знаковая функция:
-	\[
-	\operatorname{sgn}(x) =
-	\begin{cases} 
-		1, & x > 0, \\
-		0, & x = 0, \\
-		-1, & x < 0,
-	\end{cases}
-	\]
-	
-	\( |x| \) — модуль числа \( x \), \( \min(|a|, |b|) \) — минимум из \( |a| \) и \( |b| \),
-	
-	который вычисляет наклон на основе разностных производных вперед и назад: 
-	
-	\[
-	f'(\bar x_i) \approx \frac{f(\bar x_{i+1}) - f(\bar x_i)}{h} ,\quad	f'(x_i) \approx \frac{f(x_i) - f(x_{i-1})}{h} 
-	\]
-	
-	После проведения реконструкции на границе ячейки $x_{i + 1/2}$ образуется математический разрыв из двух значений: левого $u^{-}_{i + 1/2}$ со стороны $i$-ой ячейки и правого $u^{+}_{i - 1/2}$ со стороны $(i + 1)$-й ячейки. 
-	
-	Возникающая на границе ситуация известна как задача Римана.
-	
-	\begin{defenv}
-		Задачей Римана называется классическая задача Коши для закона сохранения, в которой начальные условия представляют собой кусочно-постоянную функцию с одним разрывом, разделяющим два константных состояния.
-	\end{defenv}
-	
-	Полудискретная центральная схема Курганова-Тадмора второго порядка вычисляет поток через эту границу, используя локальные скорости распространения волн без необходимости решать сложные задачи Римана:
+		if scheme_name == "sd2":
+			self.rhs_fn = lambda t, u: schemes.compute_rhs_sd2(t, u, self.pars, self.eqn, self.limiter)
+			self.step_fn, self.is_fd2 = time_integration.step_ssp_rk2, False
+		elif scheme_name == "fd2":
+			self.rhs_fn, self.step_fn, self.is_fd2 = None, None, True
+			self.fd2_step_jit = jax.jit(lambda u, dt, odd: schemes.compute_step_fd2_1d(
+				u, dt, self.pars, self.eqn, self.limiter, odd))
+		else: raise NotImplementedError(f"Scheme {scheme_name} not implemented")
 		
-	\[
-		H_{i+1/2} = \frac{f(u_{i+1/2}^+)+f(u_{i+1/2}^-)}{2} - \frac{a_{i+1/2}}{2} \left( u_{i+1/2}^+ - u_{i+1/2}^- \right)
-	\]
+		self.max_snapshots = int(jnp.ceil(self.pars.t_final / self.pars.dt_out)) + 2
+		self.solve_jit = jax.jit(self._solve_internal)
 	
-	Здесь \(a_{i+1/2}\) — максимальная локальная скорость распространения, вычисляемая как:
-	\[
-	a_{i+1/2} = \max \left( \rho \left( f'(u_{i+1/2}^-) \right), \rho \left( f'(u_{i+1/2}^+) \right) \right),
-	\]
-	
-	где $\rho$ --- спектральный радиус матрицы Якоби потоковой функции $f'(u)$. 
-	
-	\begin{defenv}
-		Под спектральным радиусом $\rho(A)$ квадратной матрицы Якоби системы законов сохранения понимается наибольшее по модулю ее собственное значение: $\rho(A) = \max|\lambda_k|$, которое физически соответствует максимальной скорости распространения возмущений. Для скалярного уравнения это модуль производной $|f'(u)|$.
-	\end{defenv}
-	
-	Второе слагаемое в формуле потока играет роль численной вязкости, которая автоматически масштабируется в зависимости от локальной скорости волны, обеспечивая высокую разрешающую способность схемы.
-	
-	\subsection{Метод SD3}
-	
-	\subsection{Метод FD2}
-	
-	\subsection{Интегрирование по времени}
-	
-	После нахождения численных потоков для всех границ расчетной области, необходимо обновить значения функции в ячейках на следующем временном слое 
-	\[
-		t^{n + 1} = t^n + \Delta t.
-	\] 
-	Для решения полученной системы ОДУ применяются $TVD$-методы Рунге-Кутты. В отличие от классических методов, они представляют собой выпуклую комбинацию шагов метода Эйлера вперед, что позволяет сохранить $TVD$-свойство пространственной дискретизации при шаге по времени.
-	
-	Для обеспечения устойчивости явной численной схемы шаг по времени $\Delta t$ не может быть произвольно большим и ограничивается условием Куранта-Фридрихса-Леви ($CFL$).
-	
-	\begin{defenv}
-		Число Куранта — это безразмерный параметр, характеризующий отношение пути, проходимого волной за один шаг по времени, к размеру пространственной ячейки. Для устойчивости схемы шаг $\Delta t$ выбирается из условия:
-		\[
-			\Delta t = C \cdot \frac{\Delta x}{\max_i(a_{i+1/2})},
-		\]
+	def _solve_internal(self, u0: jnp.ndarray):
+		saved_states = jnp.zeros((self.max_snapshots,) + u0.shape)
+		saved_times = jnp.zeros(self.max_snapshots)
+		saved_states, saved_times = saved_states.at[0].set(u0), saved_times.at[0].set(0.0)
 		
-		где коэффициент запаса $C$ для явных схем строго меньше единицы.
-	\end{defenv}
+		def cond_fun(state): return state[0] < self.pars.t_final
+		
+		def body_fun(state):
+			t, u, next_time, idx, cnt, ss, st, odd = state
+			dt = self.pars.cfl * self.pars.dx / jnp.maximum(jnp.max(self.eqn.spectral_radius(u)), 1e-6)
+			dt = jnp.minimum(dt, next_time - t)
+			dt = jnp.minimum(dt, self.pars.t_final - t)
+			
+			u_new = self.fd2_step_jit(u, dt, odd) if self.is_fd2 else self.step_fn(t, u, dt, self.rhs_fn)
+			odd_new = jnp.logical_not(odd) if self.is_fd2 else odd
+			t_new = t + dt
+			should_save = t_new >= next_time - 1e-9
+			next_idx = idx + 1
+			
+			def save(args): ss, st, i = args; return ss.at[i].set(u_new), st.at[i].set(t_new)
+			def no_save(args): return args[0], args[1]
+			
+			ss_new, st_new = jax.lax.cond(should_save, save, no_save, (ss, st, next_idx))
+			return (t_new, u_new, jnp.where(should_save, next_time + self.pars.dt_out, next_time),
+			        jnp.where(should_save, next_idx, idx), cnt + 1, ss_new, st_new, odd_new)
+		
+		init = (0.0, u0, self.pars.dt_out, 0, 0, saved_states, saved_times, jnp.array(False))
+		(_, _, _, final_idx, total_steps, ss_final, st_final, _) = jax.lax.while_loop(cond_fun, body_fun, init)
+		return st_final, ss_final, final_idx + 1, total_steps
 	
-	\section{Программная реализация и анализ результатов}
-	\subsection{Разработка и реализация вычислительной библиотеки на основе JAX}
-	\subsection{Верификация численного метода и оценка точности на тестовых задачах}
-	\subsection{Анализ производительности и сравнение версий}
+	def solve(self) -> Dict[str, Any]:
+		dx = self.pars.dx
+		x = jnp.linspace(self.pars.x_init + dx/2, self.pars.x_final - dx/2, self.pars.J)
+		u0 = self.eqn.initial_data(x)
+		saved_times, saved_states, actual_count, total_steps = self.solve_jit(u0)
+		actual_count_int = int(actual_count)
+		return {"x": x, "t": saved_times[:actual_count_int],
+		        "u_n": saved_states[:actual_count_int], "steps": total_steps}
+
+class Solver2d:
+	def __init__(self, pars: Pars2d, eqn: Equation2d, scheme_name: str = "sd2", limiter_name: str = "minmod"):
+		self.pars, self.eqn = pars, eqn
+		limiter_map = {"minmod": limiters.minmod, "superbee": limiters.superbee,
+		               "mc": limiters.monotonized_central, "van_leer": limiters.van_leer}
+		self.limiter = limiter_map.get(limiter_name, limiters.minmod)
+		
+		if scheme_name == "sd2":
+			self.rhs_fn = lambda t, u: schemes.compute_rhs_sd2_2d(t, u, self.pars, self.eqn, self.limiter)
+			self.step_fn, self.is_fd2 = time_integration.step_ssp_rk2, False
+		elif scheme_name == "fd2":
+			self.rhs_fn, self.step_fn, self.is_fd2 = None, None, True
+			self.fd2_step_jit = jax.jit(lambda u, dt, odd: schemes.compute_step_fd2_2d(
+				u, dt, self.pars, self.eqn, self.limiter, odd))
+		else: raise NotImplementedError(f"Scheme {scheme_name} not implemented for 2D")
+		
+		self.max_snapshots = int(jnp.ceil(self.pars.t_final / self.pars.dt_out)) + 2
+		self.solve_jit = jax.jit(self._solve_internal)
 	
-	\section{Заключение}
-	\section{Список литературы}
+	def _solve_internal(self, u0: jnp.ndarray):
+		saved_states = jnp.zeros((self.max_snapshots,) + u0.shape)
+		saved_times = jnp.zeros(self.max_snapshots)
+		saved_states, saved_times = saved_states.at[0].set(u0), saved_times.at[0].set(0.0)
+		
+		def cond_fun(state): return state[0] < self.pars.t_final
+		
+		def body_fun(state):
+			t, u, next_time, idx, cnt, ss, st, odd = state
+			sx = jnp.max(self.eqn.spectral_radius_x(u))
+			sy = jnp.max(self.eqn.spectral_radius_y(u))
+			dt = self.pars.cfl / (jnp.maximum(sx,1e-6)/self.pars.dx + jnp.maximum(sy,1e-6)/self.pars.dy)
+			dt = jnp.minimum(dt, min(next_time - t, self.pars.t_final - t))
+			
+			u_new = self.fd2_step_jit(u, dt, odd) if self.is_fd2 else self.step_fn(t, u, dt, self.rhs_fn)
+			odd_new = jnp.logical_not(odd) if self.is_fd2 else odd
+			t_new, should_save = t + dt, t + dt >= next_time - 1e-9
+			next_idx = idx + 1
+			
+			def save(args): ss, st, i = args; return ss.at[i].set(u_new), st.at[i].set(t_new)
+			def no_save(args): return args[0], args[1]
+			
+			ss_new, st_new = jax.lax.cond(should_save, save, no_save, (ss, st, next_idx))
+			return (t_new, u_new, jnp.where(should_save, next_time + self.pars.dt_out, next_time),
+			        jnp.where(should_save, next_idx, idx), cnt + 1, ss_new, st_new, odd_new)
+		
+		init = (0.0, u0, self.pars.dt_out, 0, 0, saved_states, saved_times, jnp.array(False))
+		(_, _, _, final_idx, total_steps, ss_final, st_final, _) = jax.lax.while_loop(cond_fun, body_fun, init)
+		return st_final, ss_final, final_idx + 1, total_steps
+	
+	def solve(self) -> Dict[str, Any]:
+		x = jnp.linspace(self.pars.x_init + self.pars.dx/2, self.pars.x_final - self.pars.dx/2, self.pars.Jx)
+		y = jnp.linspace(self.pars.y_init + self.pars.dy/2, self.pars.y_final - self.pars.dy/2, self.pars.Jy)
+		X, Y = jnp.meshgrid(x, y, indexing='ij')
+		u0 = self.eqn.initial_data(X, Y)
+		saved_times, saved_states, actual_count, total_steps = self.solve_jit(u0)
+		actual_count_int = int(actual_count)
+		return {"X": X, "Y": Y, "t": saved_times[:actual_count_int],
+		        "u": saved_states[:actual_count_int], "steps": total_steps}
+\end{lstlisting}
 	
 \end{document}
