@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from typing import Callable, Tuple
-from core import Equation1d, Pars1d, Equation2d, Pars2d
-from limiters import minmod
+from .core import Equation1d, Pars1d, Equation2d, Pars2d
+from .limiters import minmod
 
 LimiterFunc = Callable[[jnp.ndarray, jnp.ndarray], jnp.ndarray]
 

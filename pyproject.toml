@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jax-centpy"
+version = "0.1.0"
+description = "JAX-реализация центральных схем (centpy) для гиперболических уравнений"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "jax",
+    "jaxlib",
+    "numpy",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+analysis = ["pandas", "scienceplots"]
+
+[tool.setuptools]
+packages = ["jax_centpy"]
